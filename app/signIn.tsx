@@ -4,9 +4,9 @@ import { Feather } from '@expo/vector-icons';
 import Loading from '@/components/Loading';
 import { useRouter } from 'expo-router';
 import { useAuth } from '../context/authContext';
-// import * as SecureStore from 'expo-secure-store';
-// import { getDoc, doc } from 'firebase/firestore'; 
-// import { db } from '../_dbconfig/dbconfig';
+import * as SecureStore from 'expo-secure-store';
+import { getDoc, doc } from 'firebase/firestore'; 
+import { db } from '../_dbconfig/dbconfig';
 import ErrorModal from '@/components/ErrorModal'; // Import the ErrorModal
 
 export default function SignIn() {
@@ -18,24 +18,24 @@ export default function SignIn() {
   const [modalMessage, setModalMessage] = useState(''); // Modal message
 
   const router = useRouter();
-  // const { login } = useAuth();
+  const { login } = useAuth();
 
-  // useEffect(() => {
-  //   const getData = async () => {
-  //     try {
-  //       const email = await SecureStore.getItemAsync('email');
-  //       if(email){
-  //         setEmail(email);
-  //       }
-  //     } catch (error) {
+  useEffect(() => {
+    const getData = async () => {
+      try {
+        const email = await SecureStore.getItemAsync('email');
+        if(email){
+          setEmail(email);
+        }
+      } catch (error) {
         
-  //     }
-  //   }
+      }
+    }
 
-  //   getData();
-  // }, [])
+    getData();
+  }, [])
 
-  /*useEffect(() => {
+  useEffect(() => {
     const getData = async () => {
       try {
         const email = await SecureStore.getItemAsync('email');
@@ -100,7 +100,7 @@ export default function SignIn() {
   
     getData();
   }, []); // Empty dependency array to run once on mount
-  */
+  
 
   const togglePasswordVisibility = () => {
     setPasswordVisible(!passwordVisible);
@@ -115,8 +115,8 @@ export default function SignIn() {
 
     try {
       setLoading(true);
-      // await login(email, password);
-      router.replace('./tabs/Dashboard')
+      await login(email, password);
+      //router.replace('./tabs/Dashboard')
     } catch (error: any) {
       // Check for specific Firebase error codes
       if (error.code === 'auth/invalid-email' || error.code === 'auth/wrong-password') {

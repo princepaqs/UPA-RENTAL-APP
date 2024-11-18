@@ -1,0 +1,72 @@
+[
+  {
+    "id": 1,
+    "name": "Paquiado",
+    "date": "October 20, 2002",
+    "reviews": [
+      "Lorem ipsum dolor sit amet, consectetur adipisicing elit. Nisi dolore tempore fuga distinctio esse aperiam.",
+      "Ducimus voluptatibus voluptate expedita, nesciunt harum officiis ipsum officia.",
+      "Adipisci perspiciatis animi corrupti architecto. Iure! Lorem ipsum dolor sit amet, consectetur adipisicing elit.",
+      "Nisi dolore tempore fuga distinctio esse aperiam. Ducimus voluptatibus voluptate expedita.",
+      "Nisi dolore tempore fuga distinctio esse aperiam. Ducimus voluptatibus voluptate expedita."
+    ],
+    "rating": 4,
+    "image": "../../../assets/images/profile.png"
+  },
+  {
+    "id": 2,
+    "name": "John Doe",
+    "date": "January 12, 2023",
+    "reviews": [
+      "Lorem ipsum dolor sit amet, consectetur adipisicing elit. Nisi dolore tempore fuga distinctio esse aperiam.",
+      "Ducimus voluptatibus voluptate expedita, nesciunt harum officiis ipsum officia.",
+      "Adipisci perspiciatis animi corrupti architecto. Iure! Lorem ipsum dolor sit amet, consectetur adipisicing elit.",
+      "Nisi dolore tempore fuga distinctio esse aperiam. Ducimus voluptatibus voluptate expedita.",
+      "Nisi dolore tempore fuga distinctio esse aperiam. Ducimus voluptatibus voluptate expedita."
+    ],
+    "rating": 5,
+    "image": "../../../assets/images/profile.png"
+  },
+  {
+    "id": 3,
+    "name": "Jane Smith",
+    "date": "August 25, 2021",
+    "reviews": [
+      "Lorem ipsum dolor sit amet, consectetur adipisicing elit. Nisi dolore tempore fuga distinctio esse aperiam.",
+      "Ducimus voluptatibus voluptate expedita, nesciunt harum officiis ipsum officia.",
+      "Adipisci perspiciatis animi corrupti architecto. Iure! Lorem ipsum dolor sit amet, consectetur adipisicing elit.",
+      "Nisi dolore tempore fuga distinctio esse aperiam. Ducimus voluptatibus voluptate expedita.",
+      "Nisi dolore tempore fuga distinctio esse aperiam. Ducimus voluptatibus voluptate expedita."
+    ],
+    "rating": 3,
+    "image": "../../../assets/images/profile.png"
+  },
+  {
+    "id": 4,
+    "name": "Manny Pacquiao",
+    "date": "March 5, 2024",
+    "reviews": [
+      "Lorem ipsum dolor sit amet, consectetur adipisicing elit. Nisi dolore tempore fuga distinctio esse aperiam.",
+      "Ducimus voluptatibus voluptate expedita, nesciunt harum officiis ipsum officia.",
+      "Adipisci perspiciatis animi corrupti architecto. Iure! Lorem ipsum dolor sit amet, consectetur adipisicing elit.",
+      "Nisi dolore tempore fuga distinctio esse aperiam. Ducimus voluptatibus voluptate expedita.",
+      "Nisi dolore tempore fuga distinctio esse aperiam. Ducimus voluptatibus voluptate expedita."
+    ],
+    "rating": 4,
+    "image": "../../../assets/images/profile.png"
+  },
+  {
+    "id": 5,
+    "name": "Mike Tyson",
+    "date": "May 9, 2020",
+    "reviews": [
+      "Lorem ipsum dolor sit amet, consectetur adipisicing elit. Nisi dolore tempore fuga distinctio esse aperiam.",
+      "Ducimus voluptatibus voluptate expedita, nesciunt harum officiis ipsum officia.",
+      "Adipisci perspiciatis animi corrupti architecto. Iure! Lorem ipsum dolor sit amet, consectetur adipisicing elit.",
+      "Nisi dolore tempore fuga distinctio esse aperiam. Ducimus voluptatibus voluptate expedita.",
+      "Nisi dolore tempore fuga distinctio esse aperiam. Ducimus voluptatibus voluptate expedita."
+    ],
+    "rating": 2,
+    "image": "../../../assets/images/profile.png"
+  }
+]

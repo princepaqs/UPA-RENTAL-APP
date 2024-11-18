@@ -5,6 +5,7 @@ import { StyleSheet, Text, View } from 'react-native';
 import HomeHeader from '@/components/HomeHeader';
 import { Feather, Octicons } from '@expo/vector-icons'; // Example icon library
 import { MyTabBar } from '@/components/TabBar';
+import { FilterProvider } from './FilterContext';
 
 
 const Tab = createBottomTabNavigator();
@@ -12,6 +13,7 @@ const Tab = createBottomTabNavigator();
 export default function Dashboard() {
 
   return (
+    <FilterProvider>
     <Tab.Navigator tabBar={props => <MyTabBar {...props}/>}
       screenOptions={{
         headerShown: false,
@@ -53,5 +55,6 @@ export default function Dashboard() {
         }}
       />
     </Tab.Navigator>
+    </FilterProvider>
   );
 }

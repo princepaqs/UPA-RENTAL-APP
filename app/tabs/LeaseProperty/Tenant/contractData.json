@@ -1,0 +1,48 @@
+{
+  "date": "2024-10-23",
+  "propertyStatus": "Rented",
+  "nextDueDate": "Nov. 1, 2024",
+  "landlord": {
+    "name": "John Doe",
+    "address": "123 Main St, Cityville",
+    "contactNumber": "+1234567890",
+    "email": "johndoe@example.com"
+  },
+  "tenant": {
+    "name": "Jane Smith",
+    "address": "456 Elm St, Townsville",
+    "contactNumber": "+0987654321",
+    "email": "janesmith@example.com"
+  },
+  "property": {
+    "name": "Test Property",
+    "address": "789 Maple St, Villagetown",
+    "type": "Apartment"
+  },
+  "leaseTerm": {
+    "months": "6 months",
+    "duration": "6",
+    "startDate": "2024-11-01",
+    "endDate": "2025-10-31"
+  },
+  "rent": {
+    "amount": "1000",
+    "dueDay": "1st"
+
+  },
+  "securityDeposit": {
+    "amount": "1000",
+    "refundDays": "30"
+  },
+  "advancePayment": {
+    "amount": "1000"
+  },
+  "utilities": "The Tenant shall be responsible for all utilities unless otherwise agreed.",
+  "maintenance": "The Tenant shall keep the premises clean and report any maintenance issues promptly.",
+  "houseRules": "No smoking, no pets allowed.",
+  "termination": {
+    "noticePeriod": "30"
+  },
+  "dataPrivacy": "Both parties agree to comply with data privacy laws.",
+  "signatureNote": "By signing below, both parties agree to the terms outlined."
+}

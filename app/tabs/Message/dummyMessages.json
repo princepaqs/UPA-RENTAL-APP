@@ -1,0 +1,40 @@
+[
+  {
+    "id": 1,
+    "name": "John Doe",
+    "messages": [
+      {
+        "text": "Hey, how are you?",
+        "time": "9:00 AM",
+        "image": "profile.png"
+      },
+      {
+        "text": "Looking forward to our meeting!",
+        "time": "10:00 AM",
+        "image": "profile.png"
+      }
+    ]
+  },
+  {
+    "id": 2,
+    "name": "Jane Smith",
+    "messages": [
+      {
+        "text": "Did you finish the report? Here are the details...",
+        "time": "11:30 AM",
+        "image": "profile.png"
+      }
+    ]
+  },
+  {
+    "id": 3,
+    "name": "Alice Johnson",
+    "messages": [
+      {
+        "text": "Let’s catch up later. I have some updates on the project that I need to share with you!",
+        "time": "12:45 PM",
+        "image": "profile.png"
+      }
+    ]
+  }
+]
