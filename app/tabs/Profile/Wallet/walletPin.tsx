@@ -1,4 +1,4 @@
-import { View, Text, TouchableOpacity, Pressable, TextInput } from 'react-native';
+import { View, Text, TouchableOpacity, Pressable, TextInput, Alert } from 'react-native';
 import React, { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'expo-router';
 import WrongPinModal from '../../../tabs/Modals/ChangePinModal';
@@ -6,6 +6,7 @@ import * as SecureStore from 'expo-secure-store';
 import { getDoc, doc } from 'firebase/firestore';
 import { db } from '../../../../_dbconfig/dbconfig';
 import LoadingModal from '@/components/LoadingModal';
+import { useAuth } from '@/context/authContext';
 
 // Define the keys for the number pad
 const numberPadKeys = [
@@ -29,26 +30,69 @@ export default function LoginPin() {
   const [failedAttempts, setFailedAttempts] = useState(0);
   const [isTimeout, setIsTimeout] = useState(false);
   const [timeoutEnd, setTimeoutEnd] = useState<number | null>(null);
+  const { topUpWallet, payRent, addWalletTransaction } = useAuth();
 
   const userPin = async (pin: string) => {
     setLoading(true);
-    const tenantId = await SecureStore.getItemAsync('uid');
-    console.log('Tenant ID:', tenantId);
-    if (pin && tenantId && pin.length === 6) {
-      const userRef = doc(db, 'users', tenantId);
-      const userSnap = await getDoc(userRef);
-      if (userSnap.exists() && userSnap.data().userPin === pin) {
-        setFailedAttempts(0); // Reset on successful login
-        setError('');
-        console.log('Test Login Pin')
-        const routes = await SecureStore.getItemAsync('routes');
-        router.replace(`./${routes}`);
-      } else {
-        handleFailedAttempt(); // Call failed attempt handler
+    try {
+      const tenantId = await SecureStore.getItemAsync('uid');
+      console.log('Tenant ID:', tenantId);
+  
+      if (pin && tenantId && pin.length === 6) {
+        const userRef = doc(db, 'users', tenantId);
+        const userSnap = await getDoc(userRef);
+  
+        if (userSnap.exists() && userSnap.data().userPin === pin) {
+          setFailedAttempts(0);
+          setError('');
+          console.log('Test Login Pin');
+  
+          const routes = await SecureStore.getItemAsync('routes') || '';
+          const route = await checkRoute(tenantId, routes);
+          console.log(route);
+          if (route) {
+            router.replace(`./${route}`); // Replace only if route is valid
+          } else {
+            console.error('Invalid route returned from checkRoute');
+          }
+        } else {
+          handleFailedAttempt();
+        }
       }
+    } catch (error) {
+      console.error('Error during PIN verification:', error);
+      Alert.alert('Error', 'An error occurred. Please try again.');
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
+  
+
+  const checkRoute = async (uid: string, routes: string) => {
+    const transactionType = await SecureStore.getItemAsync('transactionType') || 'no value';
+    const transactionPaymentId = await SecureStore.getItemAsync('transactionPaymentId') || 'no value';
+    const transactionOwnerId = await SecureStore.getItemAsync('transactionOwnerId') || 'no value';
+    const transactionDate = await SecureStore.getItemAsync('transactionDate') || 'no value';
+    const transactionLeaseStart = await SecureStore.getItemAsync('transactionLeaseStart') || 'no value';
+    const transactionLeaseEnd = await SecureStore.getItemAsync('transactionLeaseEnd') || 'no value';
+    const transactionAmount = await SecureStore.getItemAsync('transactionAmount') || 'no value';
+    const transactionStatus = await SecureStore.getItemAsync('transactionStatus') || 'no value';
+    if(!transactionType || !transactionPaymentId || !transactionOwnerId || !transactionDate || !transactionLeaseStart || !transactionLeaseEnd || !transactionAmount || !transactionStatus){
+      Alert.alert('Error', 'Missing fields')
+      return routes = '';
+    }
+    switch(routes){
+      case '/TopUp/receiptTransaction': 
+        topUpWallet(uid, transactionAmount);
+        addWalletTransaction(uid, transactionType, '', transactionDate, transactionAmount, '');
+        return '/TopUp/receiptTransaction';
+      case '/Payment/paymentReceipt': 
+        payRent(transactionPaymentId, transactionOwnerId, uid, transactionAmount, transactionLeaseStart, transactionLeaseEnd);
+        addWalletTransaction(uid, transactionType, transactionPaymentId, transactionDate, transactionAmount, transactionStatus);
+        return '/Payment/paymentReceipt';
+      default: return 'defaultFallbackRoute';
+    }
+  }  
 
   const handleFailedAttempt = () => {
     setFailedAttempts((prev) => prev + 1);

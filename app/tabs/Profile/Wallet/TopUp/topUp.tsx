@@ -73,7 +73,7 @@ export default function TopUp() {
       }*/
   };
 
-    const handleContinue = () => {
+    const handleContinue = async () => {
         const numericAmount = Number(amount);
 
         if (!amount || isNaN(numericAmount) || numericAmount < 20 || numericAmount > 100000) {

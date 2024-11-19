@@ -82,7 +82,9 @@ export default function Wallet() {
             value: parseInt(data.value),  // Ensure the value is correctly retrieved
           };
         });
-  
+        
+        console.log(transactions.length);
+        console.log(transactions)
         setTransactionData(transactions as TransactionData[]);
       }
     } catch (error) {
@@ -158,8 +160,7 @@ export default function Wallet() {
             <View className='flex flex-col items-center space-y-1'>
               <TouchableOpacity className='p-2.5 bg-[#333333] rounded-full' 
               onPress={async () => {
-                router.push('./walletPin')
-                await SecureStore.setItemAsync('routes', '/TopUp/topUp')
+                router.push('./TopUp/topUp')
                 }}>
                 <Feather name="plus" size={30} color="white" />
               </TouchableOpacity>
@@ -169,8 +170,7 @@ export default function Wallet() {
             <View className='flex flex-col items-center space-y-1'>
               <TouchableOpacity className='p-2.5 bg-[#333333] rounded-full'
               onPress={async () => {
-                router.push('./walletPin')
-                await SecureStore.setItemAsync('routes', '/Withdraw/withdraw')
+                router.push('./Withdraw/withdraw')
                 }}>
                 <Feather name="minus" size={30} color="white" />
               </TouchableOpacity>
@@ -180,8 +180,7 @@ export default function Wallet() {
             <View className='flex flex-col items-center space-y-1'>
               <TouchableOpacity className='p-2.5 bg-[#333333] rounded-full'
               onPress={async () => {
-                router.push('./walletPin')
-                await SecureStore.setItemAsync('routes', '/Paymnent/payment')
+                router.push('./Payment/payment')
                 }}>
                 <Feather name="arrow-up" size={30} color="white" />
               </TouchableOpacity>
@@ -191,8 +190,7 @@ export default function Wallet() {
             <View className='flex flex-col items-center space-y-1'>
               <TouchableOpacity className='p-2.5 bg-[#333333] rounded-full'
               onPress={async () => {
-                router.push('./walletPin')
-                await SecureStore.setItemAsync('routes', '/Transfer/transfer')
+                router.push('./Transfer/transfer')
                 }}>
                 <AntDesign name="swap" size={30} color="white" />
               </TouchableOpacity>
@@ -208,7 +206,7 @@ export default function Wallet() {
             }
           >
             <View className='px-5 h-screen'>
-              <Text className='text-lg font-bold'>Transaction</Text>
+              <Text className='text-lg font-bold'>Transactions</Text>
 
               {transactionData.length === 0 ? (
                 <Text className='text-center text-sm text-gray-500 mt-4'>

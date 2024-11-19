@@ -464,6 +464,12 @@ export default function _layout() {
           header: ()=> <HomeHeader/>
         }}
       />
+      <Stack.Screen
+        name='Profile/Wallet/walletPin'
+        options={{
+          header: ()=> <HomeHeader/>
+        }}
+      />
 
       <Stack.Screen
         name='Profile/LegalDocuments'

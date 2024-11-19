@@ -797,7 +797,10 @@ export default function MyLease() {
                 }
                  className='h-full pb-20 space-y-2'
                 >
-                  <TouchableOpacity className='w-full items-end' onPress={() => router.push('../tabs/MyLease/paymentHistorySchedule')}>
+                  <TouchableOpacity className='w-full items-end' onPress={async () => {
+                    router.push('../tabs/MyLease/paymentHistorySchedule')
+                    await SecureStore.setItemAsync('paymentTransactionId', rentData ? rentData.transactionId : '')
+                    }}>
                     <Text className='text-xs text-[#D9534F]'>Payment History & Schedule</Text>
                   </TouchableOpacity>
                   <View className="flex-col  rounded-lg mb-4">

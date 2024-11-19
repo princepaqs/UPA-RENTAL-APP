@@ -1,11 +1,10 @@
-import { View, Text, TouchableOpacity, ActivityIndicator } from 'react-native';
+import { View, Text, TouchableOpacity, ActivityIndicator, Alert } from 'react-native';
 import React, { useEffect, useState } from 'react';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { saveTransactionData } from '../secureStorage'; // Import secure storage functions
 import { getAmount } from '../sharedData'; // Adjust the path accordingly
 import * as SecureStore from 'expo-secure-store';
-import { useAuth } from '@/context/authContext';
 import { doc, getDoc } from 'firebase/firestore';
 import { db } from '@/_dbconfig/dbconfig';
 
@@ -14,7 +13,6 @@ const fees = 15.00; // Set your fees
 export default function ReviewTransaction() {
     const router = useRouter();
     const amount = getAmount(); // Get the amount from the shared data
-    const { topUpWallet, addWalletTransaction } = useAuth();
     const [loading, setLoading] = useState(false);
     const [tenantId, setTenantId] = useState<string>(''); 
     const [name, setName] = useState<string>(''); 
@@ -76,14 +74,23 @@ export default function ReviewTransaction() {
     }, [])
 
     const handleContinue = async () => {
-        
-        if(tenantId){
-            topUpWallet(tenantId, transactionData.amount.toString());
-            addWalletTransaction(tenantId, 'Top Up', 'Successful', transactionData.dateTime, transactionData.total.toString(), '');
-            setLoading(true); // Set loading to true when starting the process
-            await saveTransactionData(transactionData); // Save transaction data securely
-            setLoading(false); // Reset loading state after saving data
-            router.replace('./receiptTransaction'); // Navigate to the receipt transaction screen
+        try {
+            if(tenantId){
+                setLoading(true); // Set loading to true when starting the process
+                await saveTransactionData(transactionData); // Save transaction data securely
+                await SecureStore.setItemAsync('routes', '/TopUp/receiptTransaction')
+                await SecureStore.setItemAsync('transactionType', 'Top Up')
+                await SecureStore.setItemAsync('transactionPaymentId', '')
+                await SecureStore.setItemAsync('transactionDate', transactionData.dateTime);
+                await SecureStore.setItemAsync('transactionAmount', transactionData.total.toString())
+                await SecureStore.setItemAsync('transactionStatus', '')
+                setLoading(false); // Reset loading state after saving data
+                router.replace('../walletPin');
+            }else{
+            Alert.alert('Error', 'Wallet transaction failed.')
+            }
+        } catch (error) {
+            Alert.alert('Error', 'Wallet transaction failed.')
         }
     };
 
