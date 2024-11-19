@@ -3,19 +3,19 @@
       "id": 1,
       "notifStatus": "Unread",
       "date": "11/28/2024",
-      "title": "Lease Expiring Soon – Would You Like to Extend?",
-      "message": "Your lease is set to expire in 2 weeks. Would you like to extend your contract? Click here to let us know if you wish to continue staying at the property, and we’ll guide you through the next steps!",
+      "title": "Contract Renewal Rejected",
+      "message": "Unfortunately, your contract renewal request has been rejected. Please contact the property owner for further clarification or to discuss other options.",
       "type": "lease-extension",
-      "status": "Urgent"
+      "status": "Rejected"
     },
     {
       "id": 2,
       "notifStatus": "Unread",
       "date": "11/28/2024",
-      "title": "Lease Expiring Soon – Would You Like to Extend?",
-      "message": "Your lease is set to expire in 2 weeks. Would you like to extend your contract? Click here to let us know if you wish to continue staying at the property, and we’ll guide you through the next steps!",
+      "title": "Contract Renewal Approved!",
+      "message": "Your contract renewal for Caloocan City has been approved. Please sign the new lease agreement within 7 days to confirm the renewal.",
       "type": "lease-extension",
-      "status": "Urgent"
+      "status": "Approved"
     },
     {
       "id": 3,

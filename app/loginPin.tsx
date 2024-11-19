@@ -1,4 +1,4 @@
-import { View, Text, TouchableOpacity, Pressable, TextInput } from 'react-native';
+import { View, Text, TouchableOpacity, Pressable, TextInput, Dimensions } from 'react-native';
 import React, { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'expo-router';
 import WrongPinModal from './tabs/Modals/ChangePinModal';
@@ -6,7 +6,10 @@ import * as SecureStore from 'expo-secure-store';
 import { getDoc, doc } from 'firebase/firestore';
 import { db } from '../_dbconfig/dbconfig';
 import LoadingModal from '@/components/LoadingModal';
+const { width } = Dimensions.get('window');
 
+// Define the key size as a percentage of the screen width
+const KEY_SIZE = Math.min(width * 0.2, 80);
 // Define the keys for the number pad
 const numberPadKeys = [
   '1', '2', '3',
@@ -148,7 +151,7 @@ export default function LoginPin() {
               {row.map((key, index) => (
                 <Pressable
                   key={index}
-                  className='w-16 h-16 bg-[#D9534F] rounded-full flex justify-center items-center m-2.5'
+                  className='w-20 h-20 lg:w-24 lg:h-24 bg-[#D9534F] rounded-full flex justify-center items-center m-2.5'
                   onPress={() => handleChange(key)}
                 >
                   <Text className='text-2xl text-white font-normal'>{key}</Text>

@@ -232,7 +232,7 @@ export default function MyLease() {
           // After collecting all leases, update state once
           setMultipleLeases(newLeases);
           setTotalLease(totalLeaseData);
-          console.log(newLeases)
+          // console.log(newLeases)
           
           /* Automatically set selectedLeaseId if there's only one lease
           if (newLeases.length === 1) {
@@ -339,17 +339,21 @@ export default function MyLease() {
     const contractRef = await getDoc(doc(db, 'contracts', transactionId));
     if(contractRef.exists()){
       const data = contractRef.data();
-      console.log("DATA",data)
+      // console.log("DATA",data)
       if(data){
         if (data.status === "Active"){
           setSelectedLeaseId(transactionId); // Set the clicked lease as the selected one
           //console.log('Transaction Id', transactionId);
           setActiveTab('rent'); // Show the "Rent Section" initially when a lease is clicked\
           setIsLeaseVisible(false); // Step 2: Hide lease listing on click
-        } else {
-          console.log(data.status)
-          await SecureStore.setItemAsync('contractId', transactionId);
-          router.push('./MyLease/ReceivedContract')
+        } 
+          else if (data.status === "Pending") {
+            await SecureStore.setItemAsync('contractId', transactionId);
+            router.push('./MyLease/ReceivedContract')
+        } 
+          else if (data.status === "Renewal") {
+            await SecureStore.setItemAsync('contractId', transactionId);
+            router.push('./Renewal/ReceivedContract')
         }
       }
     }
@@ -573,7 +577,7 @@ export default function MyLease() {
                 }
               }
             }
-            console.log()
+
             console.log('Latest paymentId:', latestPaymentId, rentData?.propertyStatus);
           } else {
             console.log('No payments found for this transaction.');
@@ -719,14 +723,14 @@ export default function MyLease() {
                         {multipleLease.propertyStatus === 'Rented' ? (
                           <View className='flex-row items-center space-x-1'>
                             <Text numberOfLines={1} ellipsizeMode="tail" className="text-xs text-[#6C6C6C]">
-                            Application Status: 
-                          </Text><Text
-                          className="w-2.5 h-2.5 rounded-full bg-[#0FA958]"
-                          
-                        ></Text>
-                        <Text numberOfLines={1} ellipsizeMode="tail" className="text-xs font-bold text-[#0FA958]">
-                          Approved
-                        </Text>
+                            {multipleLease.propertyStatus === 'Rented' ? "Application Status:" : "Renewal Status:"} 
+                            </Text>
+                            <Text
+                            className="w-2.5 h-2.5 rounded-full bg-[#0FA958]"
+                            ></Text>
+                            <Text numberOfLines={1} ellipsizeMode="tail" className="text-xs font-bold text-[#0FA958]">
+                              Approved
+                            </Text>
                           </View>
                         ) : (
                           <View>
@@ -741,16 +745,14 @@ export default function MyLease() {
                       </View>
                     </View>
                     {(multipleLease.propertyStatus === 'Rented') ?  (
-                          <>
                             <View className='border-t border-gray-400 py-1.5 mt-2'>
                               <Text className='text-[10px]'><Text className='text-[#0FA958] font-bold'>Congratulations!</Text> Your application is approved. Please sign the contract and complete the downpayment and advance payment within <Text className='text-[#EF5A6F] font-bold'>24 hours</Text> to secure your lease</Text>
                             </View>
-                          </>
-                        ) : (
-                          <>
-                          
-                          </>
-                        )}
+                        ) : multipleLease.propertyStatus === 'Renewal' ? (
+                            <View className='border-t border-gray-400 py-1.5 mt-2'>
+                              <Text className='text-[10px]'><Text className='text-[#0FA958] font-bold'>Congratulations!</Text> Your application is approved. Please sign the contract and complete the downpayment and advance payment within <Text className='text-[#EF5A6F] font-bold'>7 days</Text> to secure your lease</Text>
+                            </View>
+                        ) : null }
                   </TouchableOpacity>
                 ))
               ) : null}

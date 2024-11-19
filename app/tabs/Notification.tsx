@@ -32,7 +32,7 @@ export default function Notification() {
   const propertyAddress = 'Caloocan City';
 
   const handleNotificationPress = (notification: NotificationItem) => {
-    if (notification.type === 'lease-extension') {
+    if (notification.type === 'lease-extension' && notification.status !== 'Approved' && notification.status !== 'Rejected') {
       setModalTitle('Lease Extension Request');
       setModalMessage(`Do you wish to extend your lease at ${propertyAddress}?`);
       setModalActions([
