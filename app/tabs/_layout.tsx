@@ -16,12 +16,21 @@ export default function _layout() {
           header: ()=> <NavigatorHeader/>
         }}
       />
+
       <Stack.Screen
         name='Notification'
         options={{
           header: ()=> <HomeHeader/>
         }}
       />
+
+      <Stack.Screen
+        name='ReSubmissionForm'
+        options={{
+          header: ()=> <HomeHeader/>
+        }}
+      />
+      
       <Stack.Screen
         name='SearchFilter'
         options={{
