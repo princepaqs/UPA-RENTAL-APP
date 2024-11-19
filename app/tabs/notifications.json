@@ -1,0 +1,147 @@
+[
+    {
+      "id": 1,
+      "notifStatus": "Unread",
+      "date": "11/28/2024",
+      "title": "Lease Expiring Soon – Would You Like to Extend?",
+      "message": "Your lease is set to expire in 2 weeks. Would you like to extend your contract? Click here to let us know if you wish to continue staying at the property, and we’ll guide you through the next steps!",
+      "type": "lease-extension",
+      "status": "Urgent"
+    },
+    {
+      "id": 2,
+      "notifStatus": "Unread",
+      "date": "11/28/2024",
+      "title": "Lease Expiring Soon – Would You Like to Extend?",
+      "message": "Your lease is set to expire in 2 weeks. Would you like to extend your contract? Click here to let us know if you wish to continue staying at the property, and we’ll guide you through the next steps!",
+      "type": "lease-extension",
+      "status": "Urgent"
+    },
+    {
+      "id": 3,
+      "notifStatus": "Unread",
+      "date": "11/28/2024",
+      "title": "Lease Expiring Soon – Would You Like to Extend?",
+      "message": "Your lease is set to expire in 2 weeks. Would you like to extend your contract? Click here to let us know if you wish to continue staying at the property, and we’ll guide you through the next steps!",
+      "type": "lease-extension",
+      "status": "Urgent"
+    },
+    {
+      "id": 4,
+      "notifStatus": "Unread",
+      "date": "11/28/2024",
+      "title": "Lease Expiring Soon – Would You Like to Extend?",
+      "message": "Your lease is set to expire in 2 weeks. Would you like to extend your contract? Click here to let us know if you wish to continue staying at the property, and we’ll guide you through the next steps!",
+      "type": "lease-extension",
+      "status": "Urgent"
+    },
+    {
+      "id": 5,
+      "notifStatus": "Unread",
+      "date": "11/28/2024",
+      "title": "Lease Expiring Soon – Would You Like to Extend?",
+      "message": "Your lease is set to expire in 2 weeks. Would you like to extend your contract? Click here to let us know if you wish to continue staying at the property, and we’ll guide you through the next steps!",
+      "type": "lease-extension",
+      "status": "Urgent"
+    },
+    {
+      "id": 6,
+      "notifStatus": "Unread",
+      "date": "11/28/2024",
+      "title": "Lease Expiring Soon – Would You Like to Extend?",
+      "message": "Your lease is set to expire in 2 weeks. Would you like to extend your contract? Click here to let us know if you wish to continue staying at the property, and we’ll guide you through the next steps!",
+      "type": "lease-extension",
+      "status": "Urgent"
+    },
+    {
+      "id": 1,
+      "notifStatus": "Read",
+      "date": "11/28/2024",
+      "title": "Application Approved",
+      "message": "Congratulations! Your application has been approved.",
+      "type": "approval",
+      "status": "Success"
+    },
+    {
+      "id": 2,
+      "notifStatus": "Read",
+      "date": "11/28/2024",
+      "title": "Application Approved",
+      "message": "Congratulations! Your application has been approved.",
+      "type": "approval",
+      "status": "Success"
+    },
+    {
+      "id": 3,
+      "notifStatus": "Read",
+      "date": "11/28/2024",
+      "title": "Application Approved",
+      "message": "Congratulations! Your application has been approved.",
+      "type": "approval",
+      "status": "Success"
+    },
+    {
+      "id": 4,
+      "notifStatus": "Read",
+      "date": "11/28/2024",
+      "title": "Application Approved",
+      "message": "Congratulations! Your application has been approved.",
+      "type": "approval",
+      "status": "Success"
+    },
+    {
+      "id": 5,
+      "notifStatus": "Read",
+      "date": "11/28/2024",
+      "title": "Application Approved",
+      "message": "Congratulations! Your application has been approved.",
+      "type": "approval",
+      "status": "Success"
+    },
+    {
+      "id": 6,
+      "notifStatus": "Read",
+      "date": "11/28/2024",
+      "title": "Application Approved",
+      "message": "Congratulations! Your application has been approved.",
+      "type": "approval",
+      "status": "Success"
+    },
+    {
+      "id": 7,
+      "notifStatus": "Read",
+      "date": "11/28/2024",
+      "title": "Application Approved",
+      "message": "Congratulations! Your application has been approved.",
+      "type": "approval",
+      "status": "Success"
+    },
+    {
+      "id": 8,
+      "notifStatus": "Read",
+      "date": "11/28/2024",
+      "title": "Application Approved",
+      "message": "Congratulations! Your application has been approved.",
+      "type": "approval",
+      "status": "Success"
+    },
+    {
+      "id": 9,
+      "notifStatus": "Read",
+      "date": "11/28/2024",
+      "title": "Application Approved",
+      "message": "Congratulations! Your application has been approved.",
+      "type": "approval",
+      "status": "Success"
+    },
+    {
+      "id": 10,
+      "notifStatus": "Read",
+      "date": "11/28/2024",
+      "title": "Application Approved",
+      "message": "Congratulations! Your application has been approved.",
+      "type": "approval",
+      "status": "Success"
+    }
+  ]
+  

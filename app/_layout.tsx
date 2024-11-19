@@ -14,7 +14,7 @@ const MainLayout = () => {
     const inApp = segments[0] === 'tabs';
     if (isAuthenticated && !inApp) {
       // Redirect to home - use valid route typing
-      router.replace('/signIn'); 
+      //router.replace('/signIn'); 
     } else if (isAuthenticated === false) {
       // Redirect to signIn - use valid route typing
       router.replace('/signUp');

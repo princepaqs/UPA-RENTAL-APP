@@ -1,0 +1,18 @@
+{
+    "refNo": "1234567890",
+    "transactionId": "1",
+    "transactionType": "Payment",
+    "dateTime": "2024-10-05 10:30 AM",
+    "senderName": "John Doe",
+    "senderEmail": "johndoe@example.com",
+    "receiptName": "Jane Smith",
+    "receiptEmail": "janesmith@example.com",
+    "transferPurpose": "Rent Payment",
+    "transferAmount": "5,000",
+    "billingPeriod": "October 20, 2024",
+    "fee": "50",
+    "total": "5,050",
+    "address": "Caloocan City, NCR",
+    "propertyID": "1234567890"
+  }
+  

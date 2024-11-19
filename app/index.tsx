@@ -1,90 +1,84 @@
 import { useRouter } from 'expo-router';
 import React, { useEffect, useRef, useState } from 'react';
 import { View, Text, Animated, Button } from 'react-native';
-// import * as SecureStore from 'expo-secure-store';
-// import { getDownloadURL, ref } from 'firebase/storage'; 
-// import { db, storage } from '../_dbconfig/dbconfig'; 
-// import { collection, getDocs, query, where, doc, getDoc } from 'firebase/firestore';
-// import { useAuth } from '@/context/authContext';
+import * as SecureStore from 'expo-secure-store';
+import { getDownloadURL, ref } from 'firebase/storage'; 
+import { db, storage } from '../_dbconfig/dbconfig'; 
+import { collection, getDocs, query, where, doc, getDoc } from 'firebase/firestore';
+import { useAuth } from '@/context/authContext';
 
 export default function SignIn() {
   const bgOpacity = useRef(new Animated.Value(0)).current;  // Animation for background opacity
   const logoOpacity = useRef(new Animated.Value(0)).current; // Animation for logo opacity
   const textOpacity = useRef(new Animated.Value(0)).current; // Animation for text opacity
   const [isVisible, setIsVisible] = useState(true);  // State to track visibility
-  // const { login } = useAuth();
+  const { login } = useAuth();
+
   useEffect(() => {
     fadeIn();
-      setTimeout(() => {
-        fadeOut();
-        router.replace('./signIn')
-      }, 1500);
-  }, [])
+    const getData = async () => {
+      try {
+        const email = await SecureStore.getItemAsync('email');
+        const password = await SecureStore.getItemAsync('password') || '';
+        const token = await SecureStore.getItemAsync('token');
+        const tenantId = await SecureStore.getItemAsync('uid');
+        const usePassword = await SecureStore.getItemAsync('usePassword');
+        console.log(tenantId);
 
-  // useEffect(() => {
-  //   fadeIn();
-  //   const getData = async () => {
-  //     try {
-  //       const email = await SecureStore.getItemAsync('email');
-  //       const password = await SecureStore.getItemAsync('password') || '';
-  //       const token = await SecureStore.getItemAsync('token');
-  //       const tenantId = await SecureStore.getItemAsync('uid');
-  //       const usePassword = await SecureStore.getItemAsync('usePassword');
-  //       console.log(tenantId);
-
-  //       if(!password){
-  //         router.replace('./signIn');
-  //       } else if (email && password && token && tenantId) {
-  //         const userRef = doc(db, 'users', tenantId);
-  //         const userSnap = await getDoc(userRef);
+        if(!password){
+          router.replace('./signIn');
+        } else if (email && password && token && tenantId) {
+          const userRef = doc(db, 'users', tenantId);
+          const userSnap = await getDoc(userRef);
           
-  //         if (userSnap.exists()) {
-  //           const userData = userSnap.data();
-  //           const uLog = userData.userLoginTime; 
+          if (userSnap.exists()) {
+            const userData = userSnap.data();
+            const uLog = userData.userLoginTime; // Assuming this is stored as a timestamp in Firestore
   
+            // Check if uLog exists and handle different possible types
+            if (uLog) {
+              let lastLoginTime;
 
-  //           if (uLog) {
-  //             let lastLoginTime;
+              if (uLog.toMillis) {
+                // If uLog is a Firestore Timestamp object
+                lastLoginTime = uLog.toMillis();
+              } else if (typeof uLog === 'number') {
+                // If uLog is a Unix timestamp (in milliseconds)
+                lastLoginTime = uLog;
+              } else if (typeof uLog === 'string') {
+                // If uLog is stored as a string (e.g., ISO 8601 date)
+                lastLoginTime = new Date(uLog).getTime();
+              }
 
-  //             if (uLog.toMillis) {
- 
-  //               lastLoginTime = uLog.toMillis();
-  //             } else if (typeof uLog === 'number') {
-  
-  //               lastLoginTime = uLog;
-  //             } else if (typeof uLog === 'string') {
+              //console.log(lastLoginTime, token, email, password);
 
-  //               lastLoginTime = new Date(uLog).getTime();
-  //             }
-
-
-  //             const oneHourInMs = 3600000;
-  //             if (Date.now() - lastLoginTime < oneHourInMs && email && password) {
-  //               login(email, password);
-  //             } else {
-  //               router.replace('/signIn');
-  //             }
-  //           } else {
- 
-  //             return;
-  //           }
-  //         }
+              const oneHourInMs = 3600000;
+              if (Date.now() - lastLoginTime < oneHourInMs && email && password) {
+                login(email, password); // Ensure email and password are strings
+              } else {
+                router.replace('/signIn');
+              }
+            } else {
+              //console.error("userLoginTime is undefined");
+              return;
+            }
+          }
           
-  //       }
-  //       else {
-  //         setTimeout(() => {
-  //           router.replace('/signIn');
-  //         }, 1500);
-  //       }
+        }
+        else {
+          setTimeout(() => {
+            router.replace('/signIn');
+          }, 1500);
+        }
 
-  //     } catch (e) {
-  //       console.error("Error retrieving user data: ", e);
-
-  //     }
-  //   };
+      } catch (e) {
+        console.error("Error retrieving user data: ", e);
+        // Handle error
+      }
+    };
   
-  //   getData();
-  // }, []); 
+    getData();
+  }, []); // Empty dependency array to run once on mount
 
   // Function to trigger fade-in
   const fadeIn = () => {
@@ -132,13 +126,13 @@ export default function SignIn() {
   const router = useRouter();
   return (
     isVisible && (
-      <View className=" bg-white h-screen w-full items-start justify-center">
+      <View className="flex-1 items-start justify-center relative">
         {/* Animated Background Image */}
         <Animated.Image
           className="w-full h-full absolute"
           source={require('../assets/images/bg.png')}
           style={{ opacity: bgOpacity }} // Apply opacity animation
-          resizeMode='cover'
+          resizeMode="cover"
         />
 
         {/* Animated Logo */}

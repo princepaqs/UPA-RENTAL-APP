@@ -1,0 +1,30 @@
+{
+  "uid": 1,
+  "balance": 100.00,
+  "transactions": [
+    {
+      "id": 1,
+      "type": "Top Up",
+      "amount": 700.00,
+      "date": "Sep 28, 2024 10:00 AM"
+    },
+    {
+      "id": 2,
+      "type": "Withdraw",
+      "amount": 1000.00,
+      "date": "Sep 27, 2024 5:00 PM"
+    },
+    {
+      "id": 3,
+      "type": "Payment",
+      "amount": 700.00,
+      "date": "Sep 26, 2024 2:30 PM"
+    },
+    {
+      "id": 4,
+      "type": "Transfer",
+      "amount": 700.00,
+      "date": "Sep 25, 2024 11:15 AM"
+    }
+  ]
+}

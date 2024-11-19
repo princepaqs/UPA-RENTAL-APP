@@ -1,0 +1,44 @@
+[
+  {
+    "id": 1,
+    "propertyType": "Apartment",
+    "dueDate": "2024-10-10",
+    "amount": "₱15,000",
+    "billingPeriod": "October 2024",
+    "landlord": "John Doe",
+    "email": "john.doe@example.com",
+    "purpose": "Rent",
+    "transactionId": "TXN123456",
+    "dateTime": "2024-10-05 14:00",
+    "fee": "₱100",
+    "total": "₱15,100"
+  },
+  {
+    "id": 2,
+    "propertyType": "House",
+    "dueDate": "2024-10-15",
+    "amount": "₱25,000",
+    "billingPeriod": "October 2024",
+    "landlord": "Jane Smith",
+    "email": "jane.smith@example.com",
+    "purpose": "Rent",
+    "transactionId": "TXN789012",
+    "dateTime": "2024-10-05 14:15",
+    "fee": "₱150",
+    "total": "₱25,150"
+  },
+  {
+    "id": 3,
+    "propertyType": "Condo",
+    "dueDate": "2024-10-20",
+    "amount": "₱18,000",
+    "billingPeriod": "October 2024",
+    "landlord": "Sarah Lee",
+    "email": "sarah.lee@example.com",
+    "purpose": "Rent",
+    "transactionId": "TXN345678",
+    "dateTime": "2024-10-05 14:30",
+    "fee": "₱120",
+    "total": "₱18,120"
+  }
+]
