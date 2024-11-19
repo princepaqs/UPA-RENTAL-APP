@@ -207,7 +207,7 @@ export default function Wallet() {
               <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
             }
           >
-            <View className='px-5 h-screen'>
+            <View className='px-5 h-full pb-28 mb-28'>
               <Text className='text-lg font-bold'>Transaction</Text>
 
               {transactionData.length === 0 ? (
