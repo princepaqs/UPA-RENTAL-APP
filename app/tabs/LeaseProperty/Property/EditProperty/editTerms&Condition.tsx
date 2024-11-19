@@ -30,10 +30,12 @@ export default function AddTerms() {
   const [noPetsAllowed, setNoPetsAllowed] = useState(false);
   const [acceptTerms, setAcceptTerms] = useState(false);
   const [loading, setLoading] = useState(false); // Loading state
-  const { addProperty } = useAuth();
+  const { editProperty } = useAuth();
 
   const handleContinue = async () => {
-    if (!petPolicy || !houseRules) {
+    const ownerId = await SecureStore.getItemAsync('uid');
+    const propertyId = await SecureStore.getItemAsync('propertyId');
+    if (!petPolicy || !houseRules || !ownerId || !propertyId) {
       Alert.alert('Error', 'Please fill all fields!');
       return;
     } else {
@@ -43,9 +45,9 @@ export default function AddTerms() {
       } else {
         setLoading(true); // Start loading
         try {
-          await SecureStore.setItemAsync('propertyPetPolicy', petPolicy);
-          await SecureStore.setItemAsync('propertyHouseRules', houseRules);
-          // await addProperty();
+          await SecureStore.setItemAsync('editpropertyPetPolicy', petPolicy);
+          await SecureStore.setItemAsync('editpropertyHouseRules', houseRules);
+          await editProperty(propertyId, ownerId);
         } catch (error) {
           Alert.alert('Error!', 'Something went wrong.');
         } finally {

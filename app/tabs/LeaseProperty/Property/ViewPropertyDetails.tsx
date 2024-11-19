@@ -1,4 +1,4 @@
-import { View, Text, Linking, ScrollView, Image, TouchableOpacity } from 'react-native';
+import { View, Text, Linking, ScrollView, Image, TouchableOpacity, Alert } from 'react-native';
 import React, { useEffect, useState } from 'react';
 import { AntDesign, FontAwesome, FontAwesome6, Ionicons, MaterialCommunityIcons, MaterialIcons, Octicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
@@ -8,6 +8,7 @@ import { getDownloadURL, ref } from "firebase/storage";
 import * as SecureStore from 'expo-secure-store';
 import HouseRulesModal from '../../Modals/HouseRulesModal';
 import DeleteConfirmationModal from '../../Modals/DeleteConfirmationModal';
+import { useAuth } from '@/context/authContext';
 
 const tenant = {
   name: "Prince Louie Paquiado",
@@ -88,6 +89,7 @@ export default function ViewPropertyDetails() {
   const [tenantData, setTenantData] = useState<Tenant | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [hasContract, setHasContract] = useState(true);
+  const { deleteProperty } = useAuth();
 
   const handlePhoneCall = () => {
     Linking.openURL(`tel:${tenant?.tenantContactNo || '09123456789'}`);
@@ -96,7 +98,14 @@ export default function ViewPropertyDetails() {
   const handleDeleteConfirm = () => {
     // Handle the delete action here
     setDeleteModalVisible(false);
-    console.log("Property deleted");
+    if(contractData){
+        deleteProperty(contractData?.propertyId, contractData?.propertyId);    
+        console.log("Property deleted");
+    }else{
+        console.log("Error");
+    }
+    
+    
   };
 
   const getAllImageUrls = async (propertyId: string, fileNames: string[]) => {
@@ -366,12 +375,26 @@ export default function ViewPropertyDetails() {
                     <Text className='text-lg font-bold'>Property Details</Text>
                     <View className='flex-row space-x-1'>
                         <TouchableOpacity className='flex-row items-center space-x-1 bg-[#333333] px-2 py-1 rounded-lg'
-                        onPress={() => router.push('./EditProperty/editProperty')}>
+                        onPress={async() => {
+                            
+                            if(propertyData?.status == 'Occupied'){
+                                router.push('./EditProperty/editTerms&Condition');
+                            }else {
+                                router.push('./EditProperty/editProperty')
+                            }
+                        }}>
+                            
                             <MaterialIcons name="edit" size={15} color="white" />
                             <Text className=' text-white text-xs font-bold'>Edit</Text>
                         </TouchableOpacity>
                         <TouchableOpacity className='flex-row items-center space-x-1 bg-[#D9534F] px-2 py-1 rounded-lg'
-                            onPress={() => setDeleteModalVisible(true)} 
+                            onPress={async () => {
+                                if(propertyData?.status == 'Occupied'){
+                                    Alert.alert('Error', 'Property still occupied. Unable to delete the property')
+                                }else{
+                                    setDeleteModalVisible(true)
+                                }
+                            }} 
                         >
                             <MaterialIcons name="delete" size={15} color="white" />
                             <Text className=' text-white text-xs font-bold'>Delete</Text>

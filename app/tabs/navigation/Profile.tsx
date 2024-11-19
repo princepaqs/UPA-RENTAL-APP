@@ -5,6 +5,7 @@ import { useRouter } from 'expo-router';
 import { useAuth } from '../../../context/authContext';
 import * as SecureStore from 'expo-secure-store';
 import { getDownloadURL, ref } from 'firebase/storage'; 
+import { getDoc, setDoc, doc, getDocs, collection, updateDoc, deleteDoc, query, where } from 'firebase/firestore'; // For saving data in Firestore (optional)
 import { db, storage } from '../../../_dbconfig/dbconfig'; 
 
 const dummyData = {
@@ -22,6 +23,7 @@ export default function Profile() {
   const [fullName, setFullName] = useState<string | null>(null);
   const [profilePicUrl, setProfilePicUrl] = useState<string | null>(null);
   const [accountId, setAccountId] = useState<string | null>(null);
+  const [role, setRole] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -54,6 +56,13 @@ export default function Profile() {
 
     if (uid) {
       try {
+        const userRef = await getDoc(doc(db, 'users', uid))
+        if(userRef.exists()){
+          const data = userRef.data();
+          if(data){
+            setRole(data.role);
+          }
+        }
         const profilePictureFileName = `${uid}-profilepictures`;
         const profilePictureRef = ref(storage, `profilepictures/${profilePictureFileName}`);
         const downloadURL = await getDownloadURL(profilePictureRef);
@@ -62,6 +71,8 @@ export default function Profile() {
         console.error('Error fetching profile picture:', error);
       }
     }
+
+    
     setRefreshing(false); // Reset refreshing state after fetching
   };
 
@@ -88,9 +99,6 @@ export default function Profile() {
       }, 2000); // Adjust the delay as needed
     }
   };
-
-  const newMessage = 1;
-  const newNotification = 1;
 
   return (
     <View className='bg-[#F6F6F6]'>
@@ -138,7 +146,7 @@ export default function Profile() {
           </TouchableOpacity>
 
           {/* My Lease Section */}
-          {(dummyData?.user.status === 'Owner' || accountStatus !== 'Under-review') ? (
+          {(role === 'Owner' && accountStatus !== 'Under-review') ? (
             <TouchableOpacity
             className='px-8' 
             onPress={() => handleNavigate('../tabs/LeaseProperty/PropertyDashboard')}
@@ -155,7 +163,7 @@ export default function Profile() {
               </View>
             </View>
           </TouchableOpacity>
-          ) : (dummyData?.user.status === 'Pending' || accountStatus !== 'Under-review') ? (
+          ) : (role === 'Pending' && accountStatus !== 'Under-review') ? (
             <TouchableOpacity
             className='px-8' 
             onPress={() => handleNavigate('../tabs/LeaseProperty/PropertyDashboard')}

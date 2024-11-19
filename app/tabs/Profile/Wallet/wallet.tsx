@@ -157,7 +157,10 @@ export default function Wallet() {
           <View className='flex flex-row items-center justify-between py-5 px-3 border-b mb-2 border-gray-600'>
             <View className='flex flex-col items-center space-y-1'>
               <TouchableOpacity className='p-2.5 bg-[#333333] rounded-full' 
-              onPress={() => router.push('./TopUp/topUp')}>
+              onPress={async () => {
+                router.push('./walletPin')
+                await SecureStore.setItemAsync('routes', '/TopUp/topUp')
+                }}>
                 <Feather name="plus" size={30} color="white" />
               </TouchableOpacity>
               <Text className='text-xs'>Top up</Text>
@@ -165,7 +168,10 @@ export default function Wallet() {
 
             <View className='flex flex-col items-center space-y-1'>
               <TouchableOpacity className='p-2.5 bg-[#333333] rounded-full'
-              onPress={() => router.push('./Withdraw/withdraw')}>
+              onPress={async () => {
+                router.push('./walletPin')
+                await SecureStore.setItemAsync('routes', '/Withdraw/withdraw')
+                }}>
                 <Feather name="minus" size={30} color="white" />
               </TouchableOpacity>
               <Text className='text-xs'>Withdraw</Text>
@@ -173,7 +179,10 @@ export default function Wallet() {
 
             <View className='flex flex-col items-center space-y-1'>
               <TouchableOpacity className='p-2.5 bg-[#333333] rounded-full'
-              onPress={() => router.push('./Payment/payment')}>
+              onPress={async () => {
+                router.push('./walletPin')
+                await SecureStore.setItemAsync('routes', '/Paymnent/payment')
+                }}>
                 <Feather name="arrow-up" size={30} color="white" />
               </TouchableOpacity>
               <Text className='text-xs'>Payment</Text>
@@ -181,7 +190,10 @@ export default function Wallet() {
 
             <View className='flex flex-col items-center space-y-1'>
               <TouchableOpacity className='p-2.5 bg-[#333333] rounded-full'
-              onPress={() => router.push('./Transfer/transfer')}>
+              onPress={async () => {
+                router.push('./walletPin')
+                await SecureStore.setItemAsync('routes', '/Transfer/transfer')
+                }}>
                 <AntDesign name="swap" size={30} color="white" />
               </TouchableOpacity>
               <Text className='text-xs'>Transfer</Text>

@@ -62,15 +62,15 @@ export default function AddNewProperty() {
     }
 
     try {
-      await SecureStore.setItemAsync('propertyMonthlyRent', monthlyRentPrice);
-      await SecureStore.setItemAsync('propertyLeaseDuration', leaseDuration);
-      await SecureStore.setItemAsync('propertySecurityDepositMonth', securityDepositMonths);
-      await SecureStore.setItemAsync('propertySecurityDepositAmount', securityDepositAmount);
-      await SecureStore.setItemAsync('propertyAdvancePaymentAmount', advancePaymentAmount);
-      await SecureStore.deleteItemAsync('propertyWaterFee');
-      await SecureStore.deleteItemAsync('propertyGasFee');
-      await SecureStore.deleteItemAsync('propertyElectricFee');
-      await SecureStore.deleteItemAsync('propertyInternetFee');
+      await SecureStore.setItemAsync('editpropertyMonthlyRent', monthlyRentPrice);
+      await SecureStore.setItemAsync('editpropertyLeaseDuration', leaseDuration);
+      await SecureStore.setItemAsync('editpropertySecurityDepositMonth', securityDepositMonths);
+      await SecureStore.setItemAsync('editpropertySecurityDepositAmount', securityDepositAmount);
+      await SecureStore.setItemAsync('editpropertyAdvancePaymentAmount', advancePaymentAmount);
+      await SecureStore.deleteItemAsync('editpropertyWaterFee');
+      await SecureStore.deleteItemAsync('editpropertyGasFee');
+      await SecureStore.deleteItemAsync('editpropertyElectricFee');
+      await SecureStore.deleteItemAsync('editpropertyInternetFee');
       
       const propertyType = await SecureStore.getItemAsync('propertyType');
       if(propertyType === 'Dorm' || propertyType === 'Bedspace'){

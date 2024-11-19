@@ -1,13 +1,26 @@
 import { View, Text, TouchableOpacity, Image, FlatList, ScrollView, Alert, ActivityIndicator } from 'react-native'
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { Entypo, Ionicons } from '@expo/vector-icons'
 import { useRouter } from 'expo-router';
 import * as ImagePicker from 'expo-image-picker';
+import { getItemAsync } from 'expo-secure-store';
+import { getDoc, setDoc, doc, getDocs, collection, updateDoc, deleteDoc, query, where } from 'firebase/firestore'; // For saving data in Firestore (optional)
+import { db, storage } from '../../../_dbconfig/dbconfig'; 
+import { useAuth } from '@/context/authContext';
+import * as SecureStore from 'expo-secure-store';
+
+interface User {
+    id: string;
+    name: string;
+    email: string;
+}
 
 export default function upgradeToOwner() {
     const router = useRouter();
+    const { upgradeRole } = useAuth();
     const [images, setImages] = useState<{ uri: string; fileName: string }[]>([]);
     const [loading, setLoading] = useState(false);
+    const [userData, setUserData] = useState<User | null>(null);
 
     const pickImage = async () => {
         let result = await ImagePicker.launchImageLibraryAsync({
@@ -29,27 +42,70 @@ export default function upgradeToOwner() {
         }
       };
 
-    const handleSubmit = async () => {
+      const handleSubmit = async () => {
         setLoading(true);
-      
+    
         if (images.length === 0) {
+            // Display alert if no images are uploaded
             setTimeout(() => {
-                Alert.alert('Upgrade to Owner', 'Please upload required documents');
-            setLoading(false); // Stop loading
+                Alert.alert('Upgrade to Owner', 'Please upload the required documents.');
+                setLoading(false); // Stop loading
             }, 1000);
             return;
-        } else {
-            setTimeout(() => {
-                router.replace('./upgradeRequestSubmitted');
-                setLoading(false);
-            }, 1500);
         }
     
+        // Proceed if images are available
+        setTimeout(async () => {
+            try {
+                const uid = await SecureStore.getItemAsync('uid');
+    
+                if (uid && images.length > 0) {
+                    // Log and pass URIs for upgrade
+                    const imageUris = images.map((image) => image.uri); // Assuming `images` is an array
+                    console.log('Uploaded Image URIs:', imageUris);
+    
+                    await upgradeRole(uid, imageUris[0]); // Pass array of URIs
+                    Alert.alert('Success', 'Your request to upgrade has been submitted.');
+                    
+                    // Uncomment and use this if navigating to another route
+                    router.replace('./upgradeRequestSubmitted');
+                } else {
+                    Alert.alert('Error', 'Error uploading required documents.');
+                }
+            } catch (error) {
+                console.error('Error in handleSubmit:', error);
+                Alert.alert('Error', 'An unexpected error occurred.');
+            } finally {
+                setLoading(false); // Stop loading in both success and error cases
+            }
+        }, 1500);
     };
+    
+
+    useEffect(() => {
+        const fetchData = async () => {
+            const uid = await getItemAsync('uid');
+            if(uid){
+                const userRef = await getDoc(doc(db, 'users', uid));
+                if(userRef.exists()){
+                    const data = userRef.data()
+                    if(data){
+                        setUserData({
+                            id: uid,
+                            name: `${data.firstName} ${data.middleName} ${data.lastName}`,
+                            email: data.email,
+                        })
+                    }
+                }
+            }
+        }
+
+        fetchData()
+    }, [])
     
     
       
-    const User = {   
+    const Users = {   
         name: 'John Doe',
         email: 'johndoe@gmail.com',
     }
@@ -78,11 +134,11 @@ export default function upgradeToOwner() {
                 <View className='flex-col space-y-5 mt-8'>
                     <View className='flex-col space-y-2'>
                         <Text className='text-xs font-bold'>Full Name</Text>
-                        <Text className='text-xs font-bold text-gray-500'>{User.name}</Text>
+                        <Text className='text-xs font-bold text-gray-500'>{userData?.name}</Text>
                     </View>
                     <View className='flex-col space-y-2'>
                         <Text className='text-xs font-bold'>Email</Text>
-                        <Text className='text-xs font-bold text-gray-500'>{User.email}</Text>
+                        <Text className='text-xs font-bold text-gray-500'>{userData?.email}</Text>
                     </View>
                 </View>
 

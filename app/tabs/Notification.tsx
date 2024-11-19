@@ -119,8 +119,8 @@ export default function Notification() {
               <Text className="pl-4 text-sm font-bold mt-4 mb-2">Unread Notifications</Text>
               <Text className='text-[11px] font-bold mt-4 mb-2 text-white py-0.5 px-2 bg-[#EF5A6F] rounded-full'>{unreadNotifications.length}</Text>
             </View>
-            {unreadNotifications.slice(0, showAllUnread ? unreadNotifications.length : 1).map(renderNotificationItem)}
-            {unreadNotifications.length > 1 && (
+            {unreadNotifications.slice(0, showAllUnread ? unreadNotifications.length : 3).map(renderNotificationItem)}
+            {unreadNotifications.length > 3 && (
               <TouchableOpacity onPress={() => setShowAllUnread(!showAllUnread)} className=" items-center px-4 pl-4 mb-4">
                 <Text className="text-sm text-gray-500">
                   {showAllUnread ? 'See Less' : 'See More'}
@@ -130,8 +130,8 @@ export default function Notification() {
             <View className='w-full border-t border-gray-300'></View>
 
             <Text className="pl-4 text-sm font-bold mt-4 mb-2">Read Notifications</Text>
-            {readNotifications.slice(0, showAllRead ? readNotifications.length : 4).map(renderNotificationItem)}
-            {readNotifications.length > 4 && (
+            {readNotifications.slice(0, showAllRead ? readNotifications.length : 1).map(renderNotificationItem)}
+            {readNotifications.length > 1 && (
               <TouchableOpacity onPress={() => setShowAllRead(!showAllRead)} className="items-center pl-4 mb-4">
                 <Text className="text-sm text-gray-500">
                   {showAllRead ? 'Show Less' : 'Show More'}

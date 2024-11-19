@@ -99,13 +99,13 @@ export default function AddNewProperty() {
       Alert.alert('Error', 'Please fill all the fields!');
       return;
     } else {
-      await SecureStore.setItemAsync('propertyName', propertyName);
-      await SecureStore.setItemAsync('propertyType', typeProperty);
-      await SecureStore.setItemAsync('noOfBedrooms', numberBedroom);
-      await SecureStore.setItemAsync('noOfBathrooms', numberBathroom);
-      await SecureStore.setItemAsync('noOfTenants', numberTenant);
-      await SecureStore.setItemAsync('furnishing', furnishing);
-      await SecureStore.setItemAsync('images', JSON.stringify(images));
+      await SecureStore.setItemAsync('editpropertyName', propertyName);
+      await SecureStore.setItemAsync('editpropertyType', typeProperty);
+      await SecureStore.setItemAsync('editnoOfBedrooms', numberBedroom);
+      await SecureStore.setItemAsync('editnoOfBathrooms', numberBathroom);
+      await SecureStore.setItemAsync('editnoOfTenants', numberTenant);
+      await SecureStore.setItemAsync('editfurnishing', furnishing);
+      await SecureStore.setItemAsync('editimages', JSON.stringify(images));
       router.push('./editPropertyLocation');
     }
   };
