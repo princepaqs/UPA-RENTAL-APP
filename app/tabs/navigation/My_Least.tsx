@@ -674,16 +674,18 @@ export default function MyLease() {
 
       {totalLeaseData > 0 ? (
         // Multiple Leases View
-        <View className="ml-2 w-full">
+        <View className="w-full">
           {isLeaseVisible && <Text className="text-2xl font-bold my-5">My Lease</Text>}
   
           {/* Lease Listing */}
-          <View className="flex flex-col items-center gap-3 mb-20">
+          <View className=" flex-col items-center ">
             <ScrollView
               showsVerticalScrollIndicator={false}
               refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
-              className="h-full w-full pb-20 space-y-2"
+              className="h-5/6"
+              contentContainerStyle={{ flexGrow: 1 }}
             >
+              <View className='flex flex-col mb-20 flex-wrap space-y-4'>
               {loading ? (
                 <View className="flex-1 w-full h-full justify-center items-center">
                   <ActivityIndicator size="large" color="gray" />
@@ -752,6 +754,7 @@ export default function MyLease() {
                   </TouchableOpacity>
                 ))
               ) : null}
+              </View>
             </ScrollView>
   
             {selectedLeaseId && !isLeaseVisible && (
