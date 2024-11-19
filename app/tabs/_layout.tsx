@@ -415,11 +415,25 @@ export default function _layout() {
           header: ()=> <HomeHeader/>
         }}
       />
-
+ 
       <Stack.Screen
         name='MyLease/ReceivedContract'
         options={{
-          header: ()=> <HomeHeader/>
+         header: ()=> <HomeHeader/>
+        }}
+      />
+
+      <Stack.Screen
+        name='Renewal/ReceivedContract'
+        options={{
+         header: ()=> <HomeHeader/>
+        }}
+      />
+
+      <Stack.Screen
+        name='Renewal/successContract'
+        options={{
+         header: ()=> <HomeHeader/>
         }}
       />
 

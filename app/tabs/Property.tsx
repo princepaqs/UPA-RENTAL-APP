@@ -764,9 +764,9 @@ const handlePhoneCall = () => {
         </Animated.View>
         
         {/* pre palitan mo nalang ng  userData?.accountStatus !== 'Under-review' at available !== 'yes'  pinakita ko lang yan*/}
-        {(userData?.uid !== ownerData?.id && userData?.accountStatus === 'Under-review') && ( 
-          <View className={`${available}` === 'yes' ? 'bottom-[145px]' : 'bottom-10'}>
-            {available === 'yes' ?
+        {(userData?.uid !== ownerData?.id && userData?.accountStatus !== 'Under-review') && ( 
+          <View className={`${available}` !== 'yes' ? 'bottom-[145px]' : 'bottom-10'}>
+            {available !== 'yes' ?
             <View className='p-4 flex flex-row items-center justify-between space-x-2 rounded-2xl bg-[#508D4E] shadow-md mx-4 mb-5'>
             <Image className='w-[40px] h-[40px]' source={require('../../assets/images/availability.png')} />
             <View className='flex flex-col flex-1'>
