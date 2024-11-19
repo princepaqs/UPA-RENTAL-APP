@@ -149,11 +149,11 @@ export default function AddNewProperty() {
               selectedValue={typeProperty}
               onValueChange={(value: string) => {
                 setTypeProperty(value);
-                // if (value === "Studio Unit") {
-                //   setNumberBedroom("1");
-                // } else {
-                //   setNumberBedroom(null); // Reset bedroom number if not Studio Unit
-                // }
+                if (value === "Studio Unit") {
+                  setNumberBedroom("1");
+                } else {
+                  setNumberBedroom(null); // Reset bedroom number if not Studio Unit
+                }
               }}
             />
 
@@ -161,7 +161,7 @@ export default function AddNewProperty() {
             <View className='pt-4'>
               <Text className='px-2 pb-1 text-sm font-semibold'>No. of Bedroom/s</Text>
               <View className='flex flex-row px-4 py-1.5 items-center bg-gray-100 rounded-2xl'>
-                {/*typeProperty === "Studio Unit" ? (
+                {typeProperty === "Studio Unit" ? (
                   <Text className='flex-1 font-semibold text-xs ml-4'>Studio Unit</Text>
                 ) : (
                   <TextInput
@@ -180,7 +180,7 @@ export default function AddNewProperty() {
                     keyboardType='numeric'
                     value={numberBedroom || ''}
                   />
-                )*/}
+                )}
               </View>
               {exceededLimit && (
                 <Text className='text-red-500 text-xs mt-1 px-4'>
