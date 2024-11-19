@@ -1,15 +1,14 @@
-import { View, Text, TouchableOpacity, Pressable, TextInput, Dimensions } from 'react-native';
+import { View, Text, TouchableOpacity, Pressable, TextInput, Alert } from 'react-native';
 import React, { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'expo-router';
-import WrongPinModal from './tabs/Modals/ChangePinModal';
+import WrongPinModal from '../../../tabs/Modals/ChangePinModal';
 import * as SecureStore from 'expo-secure-store';
 import { getDoc, doc } from 'firebase/firestore';
-import { db } from '../_dbconfig/dbconfig';
+import { db } from '../../../../_dbconfig/dbconfig';
 import LoadingModal from '@/components/LoadingModal';
-const { width } = Dimensions.get('window');
+import PasswordConfirmationModal from '../../Modals/PasswordConfirmationModal';
+import { useAuth } from '@/context/authContext';
 
-// Define the key size as a percentage of the screen width
-const KEY_SIZE = Math.min(width * 0.2, 80);
 // Define the keys for the number pad
 const numberPadKeys = [
   '1', '2', '3',
@@ -32,24 +31,89 @@ export default function LoginPin() {
   const [failedAttempts, setFailedAttempts] = useState(0);
   const [isTimeout, setIsTimeout] = useState(false);
   const [timeoutEnd, setTimeoutEnd] = useState<number | null>(null);
+  const [password, setPassword] = useState('');
+  const [passwordConfirmModalVisible, setPasswordConfirmModalVisible] = useState<boolean>(false)
+  const { topUpWallet, payRent, addWalletTransaction } = useAuth();
 
   const userPin = async (pin: string) => {
     setLoading(true);
-    const tenantId = await SecureStore.getItemAsync('uid');
-    console.log('Tenant ID:', tenantId);
-    if (pin && tenantId && pin.length === 6) {
-      const userRef = doc(db, 'users', tenantId);
-      const userSnap = await getDoc(userRef);
-      if (userSnap.exists() && userSnap.data().userPin === pin) {
-        setFailedAttempts(0); // Reset on successful login
-        setError('');
-        console.log('Test Login Pin')
-        router.replace('../routes/userRoutes');
-      } else {
-        handleFailedAttempt(); // Call failed attempt handler
+    try {
+      const tenantId = await SecureStore.getItemAsync('uid');
+      console.log('Tenant ID:', tenantId);
+  
+      if (pin && tenantId && pin.length === 6) {
+        const userRef = doc(db, 'users', tenantId);
+        const userSnap = await getDoc(userRef);
+  
+        if (userSnap.exists() && userSnap.data().userPin === pin) {
+          setFailedAttempts(0);
+          setError('');
+          console.log('Test Login Pin');
+          pushRoute(tenantId);
+        } else {
+          handleFailedAttempt();
+        }
       }
+    } catch (error) {
+      console.error('Error during PIN verification:', error);
+      Alert.alert('Error', 'An error occurred. Please try again.');
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
+  };
+  
+
+  const checkRoute = async (uid: string, routes: string) => {
+    const transactionType = await SecureStore.getItemAsync('transactionType') || 'no value';
+    const transactionPaymentId = await SecureStore.getItemAsync('transactionPaymentId') || 'no value';
+    const transactionOwnerId = await SecureStore.getItemAsync('transactionOwnerId') || 'no value';
+    const transactionDate = await SecureStore.getItemAsync('transactionDate') || 'no value';
+    const transactionLeaseStart = await SecureStore.getItemAsync('transactionLeaseStart') || 'no value';
+    const transactionLeaseEnd = await SecureStore.getItemAsync('transactionLeaseEnd') || 'no value';
+    const transactionAmount = await SecureStore.getItemAsync('transactionAmount') || 'no value';
+    const transactionStatus = await SecureStore.getItemAsync('transactionStatus') || 'no value';
+    if(!transactionType || !transactionPaymentId || !transactionOwnerId || !transactionDate || !transactionLeaseStart || !transactionLeaseEnd || !transactionAmount || !transactionStatus){
+      Alert.alert('Error', 'Missing fields')
+      return routes = '';
+    }
+    switch(routes){
+      case '/TopUp/receiptTransaction': 
+        topUpWallet(uid, transactionAmount);
+        addWalletTransaction(uid, transactionType, '', transactionDate, transactionAmount, '');
+        return '/TopUp/receiptTransaction';
+      case '/Payment/paymentReceipt': 
+        payRent(transactionPaymentId, transactionOwnerId, uid, transactionAmount, transactionLeaseStart, transactionLeaseEnd);
+        addWalletTransaction(uid, transactionType, transactionPaymentId, transactionDate, transactionAmount, transactionStatus);
+        return '/Payment/paymentReceipt';
+      default: return 'defaultFallbackRoute';
+    }
+  }  
+
+  const pushRoute = async (tenantId: string) => {
+    const routes = await SecureStore.getItemAsync('routes') || '';
+          const route = await checkRoute(tenantId, routes);
+          console.log(route);
+          if (route) {
+            router.replace(`./${route}`); // Replace only if route is valid
+          } else {
+            console.error('Invalid route returned from checkRoute');
+          }
+  }
+
+  const validatePassword = async (inputPassword: string): Promise<boolean> => {
+    const storedPassword = await SecureStore.getItemAsync('password');
+    console.log('Password',storedPassword);
+    return storedPassword === inputPassword;
+  };
+
+  const handlePasswordConfirmation = async (inputPassword: string) => {
+    const isValid = await validatePassword(inputPassword);
+    const tenantId = await SecureStore.getItemAsync('uid');
+    if (isValid && tenantId) {
+      await pushRoute(tenantId); // Call the pushRoute function
+    } else {
+      Alert.alert('Error', 'Invalid password. Please try again.');
+    }
   };
 
   const handleFailedAttempt = () => {
@@ -78,7 +142,7 @@ export default function LoginPin() {
     // Check if the user hasn't entered a PIN and redirect to sign in
     const redirectIfNoPin = async () => {
       if (!pin) {
-        router.replace('/signIn');
+        router.replace('./wallet');
         await SecureStore.deleteItemAsync('password');
       }
     };
@@ -151,7 +215,7 @@ export default function LoginPin() {
               {row.map((key, index) => (
                 <Pressable
                   key={index}
-                  className='w-20 h-20 lg:w-24 lg:h-24 bg-[#D9534F] rounded-full flex justify-center items-center m-2.5'
+                  className='w-16 h-16 bg-[#D9534F] rounded-full flex justify-center items-center m-2.5'
                   onPress={() => handleChange(key)}
                 >
                   <Text className='text-2xl text-white font-normal'>{key}</Text>
@@ -172,19 +236,20 @@ export default function LoginPin() {
         <TouchableOpacity
           className='mt-4'
           onPress={async () => {
-            router.replace('/signIn');
-            await SecureStore.deleteItemAsync('password');
-            await SecureStore.deleteItemAsync('token');
-            const usePassword = 'true';
-            if (usePassword) {
-              await SecureStore.setItemAsync('usePassword', usePassword);
-            }
+            setPasswordConfirmModalVisible(true);
           }}
         >
           <Text className='text-xs text-center'>
             Forgot your PIN? <Text className='text-red-500 underline'>Login with password</Text>
-          </Text>
+          </Text> 
         </TouchableOpacity>
+
+        {/* Modal for using Password for Transaction */}
+        <PasswordConfirmationModal
+          visible={passwordConfirmModalVisible}
+          onClose={() => setPasswordConfirmModalVisible(false)}
+          onConfirm={(password) => handlePasswordConfirmation(password)}
+        />
 
         {/* Modal for incorrect PIN */}
         <WrongPinModal

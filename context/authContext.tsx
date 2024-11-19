@@ -26,10 +26,10 @@ interface AuthContextType {
     topUpWallet: (uid: string, value: string) => Promise<void>;
     withdrawWallet: (uid: string, value: string) => Promise<void>;
     addWalletTransaction: (uid: string, transactionType: string, paymentTransactionId: string, date: string, value: string, status: string) => Promise<void>;
-    upgradeRole: (uid: string) => Promise<void>;
+    upgradeRole: (uid: string, permit: string) => Promise<void>;
     resetPassword: (email: string) => Promise<void>;
     addProperty: () => Promise<void>;
-    editProperty: (email: string, uid: string) => Promise<void>;
+    editProperty: (propertyId: string, ownerId: string) => Promise<void>;
     deleteProperty: (email: string, uid: string) => Promise<void>;
     rentProperty: () => Promise<void>;
     withdrawRent: (transactionId: string) => Promise<void>;
@@ -227,7 +227,7 @@ export const AuthContextProvider = ({ children }: { children: ReactNode }) => {
 
         if (user) {
         // Function to upload images
-        const uploadImageToStorage = async (uri: string, folderName: string, uid: string) => {
+            const uploadImageToStorage = async (uri: string, folderName: string, uid: string) => {
             if (!uri) return ''; // Skip upload if no URI
             try {
             //const sanitizedEmail = email.toLowerCase();
@@ -282,6 +282,11 @@ export const AuthContextProvider = ({ children }: { children: ReactNode }) => {
             latitude: '0',
             longitude: '0',
             accountStatus: 'Under-review',
+            profilePicUrlStatus: 'Pending',
+            barangayClearanceStatus: 'Pending',
+            nbiClearanceStatus: 'Pending',
+            govtIdStatus: 'Pending',
+            proofOfIncomeStatus: 'Pending',
             createdAt: new Date(),
         };
 
@@ -408,21 +413,51 @@ export const AuthContextProvider = ({ children }: { children: ReactNode }) => {
         }
     }
 
-    const upgradeRole = async (tenantId: string) => {
-        // This is where the tenant becomes the owner
-        if (tenantId) {
-          const userRef = doc(db, 'users', tenantId); // Reference to the user's document
+    // const upgradeRole = async (tenantId: string) => {
+    //     // This is where the tenant becomes the owner
+    //     if (tenantId) {
+    //       const userRef = doc(db, 'users', tenantId); // Reference to the user's document
           
-          // Update the user's role to 'owner'
-          await updateDoc(userRef, {
-            role: 'Owner'
-          });
+    //       // Update the user's role to 'owner'
+    //       await updateDoc(userRef, {
+    //         role: 'Owner'
+    //       });
       
-          console.log(`Role for tenant ${tenantId} upgraded to owner.`);
-        } else {
-          console.log('Tenant ID is missing.');
+    //       console.log(`Role for tenant ${tenantId} upgraded to owner.`);
+    //     } else {
+    //       console.log('Tenant ID is missing.');
+    //     }
+    //   };
+
+    const upgradeRole = async (tenantId: string, permit: string) => {
+        if (tenantId && permit) {
+            // Function to upload images
+            console.log(permit);
+            const uploadImageToStorage = async (uri: string, folderName: string, uid: string) => {
+                if (!uri) return ''; // Skip upload if no URI
+                try {
+                //const sanitizedEmail = email.toLowerCase();
+                const fileName = `${uid}-${folderName}`;
+                const storageRef = ref(storage, `${folderName}/${fileName}`);
+                const response = await fetch(uri);
+                const blob = await response.blob();
+                await uploadBytes(storageRef, blob);
+                return fileName;
+                } catch (error) {
+                console.error("Error uploading image:", error);
+                throw error;
+                }
+            };
+
+            const ownerPermit = await uploadImageToStorage(permit, 'ownerpermits', tenantId)
+
+            if(ownerPermit){
+                await updateDoc(doc(db, 'users', tenantId), {ownerPermit} );
+            }else{
+                console.log('Error uploading ownerPermit')
+            }
         }
-      };
+    }
 
     const editUser = async(uid: string, phoneNo: string, profession: string, salary: string, email: string, profilePictureUrl: string) => {
         console.log('UID:', uid);
@@ -626,7 +661,7 @@ export const AuthContextProvider = ({ children }: { children: ReactNode }) => {
                 Alert.alert("Error", "User ID is missing!");
                 return;
             }
-            upgradeRole(uid); // change it once there is a modal in lease my property
+            //upgradeRole(uid); // change it once there is a modal in lease my property
     
             // Count the number of properties in the database
             const propertiesSnapshot = await getDocs(collection(db, 'properties', uid, 'propertyId')); // Adjust the path if necessary
@@ -744,6 +779,34 @@ export const AuthContextProvider = ({ children }: { children: ReactNode }) => {
     
             // Navigate to property dashboard or success page
             router.replace('../PropertyDashboard');
+
+            await SecureStore.deleteItemAsync('propertyName');
+            await SecureStore.deleteItemAsync('propertyType');
+            await SecureStore.deleteItemAsync('noOfBedrooms');
+            await SecureStore.deleteItemAsync('noOfBathrooms');
+            await SecureStore.deleteItemAsync('noOfTenants');
+            await SecureStore.deleteItemAsync('furnishing');
+            await SecureStore.deleteItemAsync('images');
+            await SecureStore.deleteItemAsync('propertyHomeAddress');
+            await SecureStore.deleteItemAsync('propertyRegion');
+            await SecureStore.deleteItemAsync('propertyCity');
+            await SecureStore.deleteItemAsync('propertyBarangay');
+            await SecureStore.deleteItemAsync('propertyZipCode');
+            await SecureStore.deleteItemAsync('propertyLatitude');
+            await SecureStore.deleteItemAsync('propertyLongitude');
+            await SecureStore.deleteItemAsync('propertyMonthlyRent');
+            await SecureStore.deleteItemAsync('propertyLeaseDuration');
+            await SecureStore.deleteItemAsync('propertySecurityDepositMonth');
+            await SecureStore.deleteItemAsync('propertySecurityDepositAmount');
+            await SecureStore.deleteItemAsync('propertyAdvancePaymentAmount');
+            // Uncomment and delete these if needed
+            // await SecureStore.deleteItemAsync('propertyWaterFee');
+            // await SecureStore.deleteItemAsync('propertyElectricFee');
+            // await SecureStore.deleteItemAsync('propertyGasFee');
+            // await SecureStore.deleteItemAsync('propertyInternetFee');
+            await SecureStore.deleteItemAsync('propertyPetPolicy');
+            await SecureStore.deleteItemAsync('propertyHouseRules');
+
         } catch (error) {
             console.error("Error adding property:", error);
         }
@@ -751,12 +814,158 @@ export const AuthContextProvider = ({ children }: { children: ReactNode }) => {
     
     
 
-    const editProperty = async() => {
-        
+    const editProperty = async(propertyId: string, ownerId: string,) => {
+        try {
+            const propertyName = await SecureStore.getItemAsync('editpropertyName');
+            const propertyType = await SecureStore.getItemAsync('editpropertyType');
+            const noOfBedrooms = await SecureStore.getItemAsync('editnoOfBedrooms');
+            const noOfBathrooms = await SecureStore.getItemAsync('editnoOfBathrooms');
+            const noOfTenants = await SecureStore.getItemAsync('editnoOfTenants');
+            const furnishing = await SecureStore.getItemAsync('editfurnishing');
+            const imagesValue = await SecureStore.getItemAsync('editimages'); // Assuming this is a JSON string
+            const images = imagesValue ? JSON.parse(imagesValue) : []; // Parse the JSON string into an array
+            const propertyHomeAddress = await SecureStore.getItemAsync('editpropertyHomeAddress');
+            const propertyRegion = await SecureStore.getItemAsync('editpropertyRegion');
+            const propertyCity = await SecureStore.getItemAsync('editpropertyCity');
+            const propertyBarangay = await SecureStore.getItemAsync('editpropertyBarangay');
+            const propertyZipCode = await SecureStore.getItemAsync('editpropertyZipCode');
+            const propertyLatitude = await SecureStore.getItemAsync('editpropertyLatitude');
+            const propertyLongitude = await SecureStore.getItemAsync('editpropertyLongitude');
+            const propertyMonthlyRent = await SecureStore.getItemAsync('editpropertyMonthlyRent');
+            const propertyLeaseDuration = await SecureStore.getItemAsync('editpropertyLeaseDuration');
+            const propertySecurityDepositMonth = await SecureStore.getItemAsync('editpropertySecurityDepositMonth');
+            const propertySecurityDepositAmount = await SecureStore.getItemAsync('editpropertySecurityDepositAmount');
+            const propertyAdvancePaymentAmount = await SecureStore.getItemAsync('editpropertyAdvancePaymentAmount');
+            // const propertyWaterFee = await SecureStore.getItemAsync('editpropertyWaterFee') || '';
+            // const propertyElectricFee = await SecureStore.getItemAsync('editpropertyElectricFee') || '';
+            // const propertyGasFee = await SecureStore.getItemAsync('editpropertyGasFee') || '';
+            // const propertyInternetFee = await SecureStore.getItemAsync('editpropertyInternetFee') || '';
+            const propertyPetPolicy = await SecureStore.getItemAsync('editpropertyPetPolicy');
+            const propertyHouseRules = await SecureStore.getItemAsync('editpropertyHouseRules');
+
+            if (!propertyName && !propertyType && !noOfBedrooms && !noOfBathrooms && !noOfTenants && 
+                !furnishing && images.length === 0 && !propertyHomeAddress && !propertyRegion && 
+                !propertyCity && !propertyBarangay && !propertyZipCode && !propertyLatitude && 
+                !propertyLongitude && !propertyMonthlyRent && !propertyLeaseDuration && 
+                !propertySecurityDepositMonth && !propertySecurityDepositAmount && 
+                !propertyAdvancePaymentAmount) {
+
+                // Handle missing data, for example, show an alert, set defaults, or navigate
+                console.log(ownerId, propertyId);
+                console.log(propertyPetPolicy, propertyHouseRules);
+
+                if (ownerId && propertyId) {
+                    await updateDoc(doc(db, 'properties', ownerId, 'properties', propertyId), { 
+                        propertyPetPolicy, 
+                        propertyHouseRules 
+                    });
+                    Alert.alert('Success', 'Successfully updated property.');
+                } else {
+                    Alert.alert('Error', 'Error updating property.');
+                }
+
+            } else {
+                // Proceed with the rest of your logic if all data is available
+                console.log("All required data is available.");
+                
+                if (ownerId && propertyId) {
+
+                    const uploadImageToStorage = async (uri: string, fileName: string, propertyId: string) => {
+                        try {
+                            // Define the path with folders
+                            const storageRef = ref(storage, `properties/${propertyId}/images/${fileName}`);
+                            
+                            // Fetch the image and convert it to a blob
+                            const response = await fetch(uri);
+                            const blob = await response.blob();
+                            
+                            // Upload the file to the specified path in Firebase Storage
+                            await uploadBytes(storageRef, blob);
+                            return fileName;
+                        } catch (error) {
+                            console.error("Error uploading image:", error);
+                            throw error;
+                        }
+                    };
+                    
+                    // Upload property images
+                    const uploadedImageUrls = [];
+                    for (const image of images) {
+                        const imageUrl = await uploadImageToStorage(image.uri, image.fileName, propertyId);
+                        uploadedImageUrls.push(imageUrl);
+                    }
+
+                    await updateDoc(doc(db, 'properties', ownerId, 'properties', propertyId), { 
+                        propertyName, 
+                        propertyType, 
+                        noOfBedrooms, 
+                        noOfBathrooms, 
+                        noOfTenants, 
+                        furnishing, 
+                        images: uploadedImageUrls, 
+                        propertyHomeAddress, 
+                        propertyRegion, 
+                        propertyCity, 
+                        propertyBarangay, 
+                        propertyZipCode, 
+                        propertyLatitude, 
+                        propertyLongitude, 
+                        propertyMonthlyRent, 
+                        propertyLeaseDuration, 
+                        propertySecurityDepositMonth, 
+                        propertySecurityDepositAmount, 
+                        propertyAdvancePaymentAmount,
+                        propertyPetPolicy, 
+                        propertyHouseRules
+                    });
+                    Alert.alert('Success', 'Successfully updated property with all details.');
+                } else {
+                    Alert.alert('Error', 'Error updating property.');
+                }
+            }
+
+
+            await SecureStore.deleteItemAsync('editpropertyName');
+            await SecureStore.deleteItemAsync('editpropertyType');
+            await SecureStore.deleteItemAsync('editnoOfBedrooms');
+            await SecureStore.deleteItemAsync('editnoOfBathrooms');
+            await SecureStore.deleteItemAsync('editnoOfTenants');
+            await SecureStore.deleteItemAsync('editfurnishing');
+            await SecureStore.deleteItemAsync('editimages');
+            await SecureStore.deleteItemAsync('editpropertyHomeAddress');
+            await SecureStore.deleteItemAsync('editpropertyRegion');
+            await SecureStore.deleteItemAsync('editpropertyCity');
+            await SecureStore.deleteItemAsync('editpropertyBarangay');
+            await SecureStore.deleteItemAsync('editpropertyZipCode');
+            await SecureStore.deleteItemAsync('editpropertyLatitude');
+            await SecureStore.deleteItemAsync('editpropertyLongitude');
+            await SecureStore.deleteItemAsync('editpropertyMonthlyRent');
+            await SecureStore.deleteItemAsync('editpropertyLeaseDuration');
+            await SecureStore.deleteItemAsync('editpropertySecurityDepositMonth');
+            await SecureStore.deleteItemAsync('editpropertySecurityDepositAmount');
+            await SecureStore.deleteItemAsync('editpropertyAdvancePaymentAmount');
+            // Uncomment and delete these if needed
+            // await SecureStore.deleteItemAsync('propertyWaterFee');
+            // await SecureStore.deleteItemAsync('propertyElectricFee');
+            // await SecureStore.deleteItemAsync('propertyGasFee');
+            // await SecureStore.deleteItemAsync('propertyInternetFee');
+            await SecureStore.deleteItemAsync('editpropertyPetPolicy');
+            await SecureStore.deleteItemAsync('editpropertyHouseRules');
+        } catch (error) {
+            Alert.alert('Error', `${error}`);
+        }
     }
 
-    const deleteProperty = async() => {
+    const deleteProperty = async(propertyId: string, ownerId: string) => {
+        try {
+            if(!propertyId || !ownerId) {
+                Alert.alert('Error', 'Error deleting property.');
+            }
 
+            await deleteDoc(doc(db, 'properties', ownerId, 'propertyId', propertyId));
+        } catch (error) {
+            Alert.alert('Error', `${error}`);
+        }
     }
 
     const rentProperty = async () => {

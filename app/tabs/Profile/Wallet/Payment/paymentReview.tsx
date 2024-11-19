@@ -119,31 +119,41 @@ export default function paymentReview() {
               console.log(paymentStatus, dateNextDue, currentDate);
           
               // Initiate the rent payment
-              await payRent(
-                paymentData.transactionId, 
-                paymentData.ownerId, 
-                paymentData.tenantId, 
-                paymentData.paymentAmount, 
-                rentData.propertyLeaseStart, 
-                rentData.propertyLeaseEnd
-              );
+              // await payRent(
+              //   paymentData.transactionId, 
+              //   paymentData.ownerId, 
+              //   paymentData.tenantId, 
+              //   paymentData.paymentAmount, 
+              //   rentData.propertyLeaseStart, 
+              //   rentData.propertyLeaseEnd
+              // );
           
-              // Add the wallet transaction with the determined status
-              await addWalletTransaction(
-                paymentData.tenantId,
-                'Payment',
-                paymentData.transactionId,
-                formatDate(currentDate),
-                paymentData.paymentAmount,
-                paymentStatus
-              );
+              // // Add the wallet transaction with the determined status
+              // await addWalletTransaction(
+              //   paymentData.tenantId,
+              //   'Payment',
+              //   paymentData.transactionId,
+              //   formatDate(currentDate),
+              //   paymentData.paymentAmount,
+              //   paymentStatus
+              // );
+
+              await SecureStore.setItemAsync('routes', '/Payment/paymentReceipt')
+              await SecureStore.setItemAsync('transactionType', 'Payment')
+              await SecureStore.setItemAsync('transactionPaymentId', paymentData.transactionId)
+              await SecureStore.setItemAsync('transactionOwnerId', paymentData.ownerId);
+              await SecureStore.setItemAsync('transactionDate', formatDate(currentDate));
+              await SecureStore.setItemAsync('transactionAmount', paymentData.paymentAmount)
+              await SecureStore.setItemAsync('transactionLeaseStart', rentData.propertyLeaseStart);
+              await SecureStore.setItemAsync('transactionLeaseEnd', rentData.propertyLeaseEnd);
+              await SecureStore.setItemAsync('transactionStatus', paymentStatus)
           
               // Optionally update property status
               // await updateDoc(doc(db, 'properties', paymentData.ownerId, 'propertyId', paymentData.propertyId), {status: "Rented"});
               // await updateDoc(doc(db, 'propertyTransactions', paymentData.transactionId), {status: "Rented"});
           
               // Navigate to the receipt transaction screen
-              router.replace('./paymentReceipt');
+              router.replace('../walletPin');
               
             } catch (error) {
               Alert.alert('Payment Error', 'There was an issue processing the payment. Please try again.');

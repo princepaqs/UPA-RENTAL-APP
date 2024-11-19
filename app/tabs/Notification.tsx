@@ -1,9 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, TouchableOpacity, ScrollView } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
+import { useNavigation, useRouter } from 'expo-router';
 import NotificationModal from './Modals/NotificationModal';
 import notificationsData from './notifications.json';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { RootStackParamList } from './type'; // Adjust path accordingly
+
+type NavigationProp = NativeStackNavigationProp<RootStackParamList, 'Dashboard'>;
+
 
 // TypeScript type for NotificationItem
 type NotificationItem = {
@@ -30,23 +35,49 @@ export default function Notification() {
   const [showAllRead, setShowAllRead] = useState(false);
 
   const propertyAddress = 'Caloocan City';
+  const navigation = useNavigation<NavigationProp>();
 
+  
   const handleNotificationPress = (notification: NotificationItem) => {
-    if (notification.type === 'lease-extension') {
+    if (notification.type === 'lease-extension' && notification.status !== 'Approved' && notification.status !== 'Rejected') {
+      setModalVisible(true);
       setModalTitle('Lease Extension Request');
       setModalMessage(`Do you wish to extend your lease at ${propertyAddress}?`);
       setModalActions([
         { label: 'No', onPress: handleNo, color: '#EF5A6F' },
         { label: 'Yes', onPress: handleYes, color: '#38A169' },
       ]);
-    } else {
+    } 
+      else if (notification.type === 'lease-extension' && notification.status === 'Approved') {
+        navigation.navigate('Dashboard', { screen: 'My_Least' });
+
+    } 
+      else if (notification.type === 'account-registration' && notification.status === 'Rejected') {
+        setModalVisible(true);
+        setModalTitle('Request Re-Submission Form');
+        setModalMessage(`Do you want to request re-submit your documents?`);
+        setModalActions([
+            
+            { 
+                label: 'Yes', 
+                onPress: () => {
+                    handleCloseModal();
+                    router.push('./ReSubmissionForm');
+                }, 
+                color: '#EF5A6F',
+            },
+            { label: 'No', onPress: handleCloseModal, color: '#333333' },
+        ]);
+    }  
+     else {
+      setModalVisible(true);
       setModalTitle(notification.title);
       setModalMessage(notification.message);
       setModalActions([
         { label: 'OK', onPress: handleCloseModal, color: '#38A169' },
       ]);
     }
-    setModalVisible(true);
+    
   };
 
   const handleYes = () => {
@@ -119,8 +150,8 @@ export default function Notification() {
               <Text className="pl-4 text-sm font-bold mt-4 mb-2">Unread Notifications</Text>
               <Text className='text-[11px] font-bold mt-4 mb-2 text-white py-0.5 px-2 bg-[#EF5A6F] rounded-full'>{unreadNotifications.length}</Text>
             </View>
-            {unreadNotifications.slice(0, showAllUnread ? unreadNotifications.length : 1).map(renderNotificationItem)}
-            {unreadNotifications.length > 1 && (
+            {unreadNotifications.slice(0, showAllUnread ? unreadNotifications.length : 3).map(renderNotificationItem)}
+            {unreadNotifications.length > 3 && (
               <TouchableOpacity onPress={() => setShowAllUnread(!showAllUnread)} className=" items-center px-4 pl-4 mb-4">
                 <Text className="text-sm text-gray-500">
                   {showAllUnread ? 'See Less' : 'See More'}
@@ -130,8 +161,8 @@ export default function Notification() {
             <View className='w-full border-t border-gray-300'></View>
 
             <Text className="pl-4 text-sm font-bold mt-4 mb-2">Read Notifications</Text>
-            {readNotifications.slice(0, showAllRead ? readNotifications.length : 4).map(renderNotificationItem)}
-            {readNotifications.length > 4 && (
+            {readNotifications.slice(0, showAllRead ? readNotifications.length : 1).map(renderNotificationItem)}
+            {readNotifications.length > 1 && (
               <TouchableOpacity onPress={() => setShowAllRead(!showAllRead)} className="items-center pl-4 mb-4">
                 <Text className="text-sm text-gray-500">
                   {showAllRead ? 'Show Less' : 'Show More'}

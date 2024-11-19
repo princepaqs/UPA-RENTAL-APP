@@ -163,13 +163,13 @@ export default function AddPropertyLocation() {
         console.log('Property Data:', propertyData);
         await SecureStore.setItemAsync('propertyLocation', JSON.stringify(propertyData));*/
 
-        await SecureStore.setItemAsync('propertyHomeAddress', address.address);
-        await SecureStore.setItemAsync('propertyRegion', address.region);
-        await SecureStore.setItemAsync('propertyCity', address.city);
-        await SecureStore.setItemAsync('propertyBarangay', address.barangay);
-        await SecureStore.setItemAsync('propertyZipCode', address.zipCode);
-        await SecureStore.setItemAsync('propertyLatitude', marker?.latitude.toString());
-        await SecureStore.setItemAsync('propertyLongitude', marker?.longitude.toString());
+        await SecureStore.setItemAsync('editpropertyHomeAddress', address.address);
+        await SecureStore.setItemAsync('editpropertyRegion', address.region);
+        await SecureStore.setItemAsync('editpropertyCity', address.city);
+        await SecureStore.setItemAsync('editpropertyBarangay', address.barangay);
+        await SecureStore.setItemAsync('editpropertyZipCode', address.zipCode);
+        await SecureStore.setItemAsync('editpropertyLatitude', marker?.latitude.toString());
+        await SecureStore.setItemAsync('editpropertyLongitude', marker?.longitude.toString());
         router.push('./editRentalDetails');
       } 
     } catch (error) {

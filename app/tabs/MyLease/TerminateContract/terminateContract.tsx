@@ -202,11 +202,8 @@ export default function TerminateContract() {
                         <></>
                     )}
                     <View className='flex-row space-x-4 px-2'>
-                    <TouchableOpacity className='w-1/2 items-center border rounded-full'>
-                        <Text className='py-3 text-xs font-bold'
-                        onPress={() => router.back()}
-                        >
-                            Back</Text>
+                    <TouchableOpacity className='w-1/2 items-center border rounded-full' onPress={() => router.back()}>
+                        <Text className='py-3 text-xs font-bold'>Back</Text>
                     </TouchableOpacity>
                     <TouchableOpacity
                         className='w-1/2 items-center bg-[#D9534F] rounded-full'

@@ -16,12 +16,21 @@ export default function _layout() {
           header: ()=> <NavigatorHeader/>
         }}
       />
+
       <Stack.Screen
         name='Notification'
         options={{
           header: ()=> <HomeHeader/>
         }}
       />
+
+      <Stack.Screen
+        name='ReSubmissionForm'
+        options={{
+          header: ()=> <HomeHeader/>
+        }}
+      />
+      
       <Stack.Screen
         name='SearchFilter'
         options={{
@@ -415,11 +424,25 @@ export default function _layout() {
           header: ()=> <HomeHeader/>
         }}
       />
-
+ 
       <Stack.Screen
         name='MyLease/ReceivedContract'
         options={{
-          header: ()=> <HomeHeader/>
+         header: ()=> <HomeHeader/>
+        }}
+      />
+
+      <Stack.Screen
+        name='Renewal/ReceivedContract'
+        options={{
+         header: ()=> <HomeHeader/>
+        }}
+      />
+
+      <Stack.Screen
+        name='Renewal/successContract'
+        options={{
+         header: ()=> <HomeHeader/>
         }}
       />
 
@@ -460,6 +483,12 @@ export default function _layout() {
 
       <Stack.Screen
         name='Profile/Wallet/wallet'
+        options={{
+          header: ()=> <HomeHeader/>
+        }}
+      />
+      <Stack.Screen
+        name='Profile/Wallet/walletPin'
         options={{
           header: ()=> <HomeHeader/>
         }}
