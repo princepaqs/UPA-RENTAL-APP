@@ -21,19 +21,19 @@
       "id": 3,
       "notifStatus": "Unread",
       "date": "11/28/2024",
-      "title": "Lease Expiring Soon – Would You Like to Extend?",
-      "message": "Your lease is set to expire in 2 weeks. Would you like to extend your contract? Click here to let us know if you wish to continue staying at the property, and we’ll guide you through the next steps!",
-      "type": "lease-extension",
-      "status": "Urgent"
+      "title": "Account Successfully Approved",
+      "message": "Congratulations! Your account has been successfully approved by the admin. You can now access all features and begin using the application.",
+      "type": "account-registration",
+      "status": "Approved"
     },
     {
       "id": 4,
       "notifStatus": "Unread",
       "date": "11/28/2024",
-      "title": "Lease Expiring Soon – Would You Like to Extend?",
-      "message": "Your lease is set to expire in 2 weeks. Would you like to extend your contract? Click here to let us know if you wish to continue staying at the property, and we’ll guide you through the next steps!",
-      "type": "lease-extension",
-      "status": "Urgent"
+      "title": "Account Registration Rejected",
+      "message": "Your account registration has been rejected by the admin. Please review the provided details and resubmit your application if necessary.",
+      "type": "account-registration",
+      "status": "Rejected"
     },
     {
       "id": 5,
