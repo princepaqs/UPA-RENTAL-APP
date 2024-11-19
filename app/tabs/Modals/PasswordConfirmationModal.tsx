@@ -38,6 +38,7 @@ const PasswordConfirmationModal: React.FC<PasswordConfirmationModalProps> = ({
             <Pressable
               onPress={() => {
                 onConfirm(password);
+                console.log(password);
                 setPassword('');
                 onClose();
               }}

@@ -6,6 +6,7 @@ import * as SecureStore from 'expo-secure-store';
 import { getDoc, doc } from 'firebase/firestore';
 import { db } from '../../../../_dbconfig/dbconfig';
 import LoadingModal from '@/components/LoadingModal';
+import PasswordConfirmationModal from '../../Modals/PasswordConfirmationModal';
 import { useAuth } from '@/context/authContext';
 
 // Define the keys for the number pad
@@ -30,6 +31,8 @@ export default function LoginPin() {
   const [failedAttempts, setFailedAttempts] = useState(0);
   const [isTimeout, setIsTimeout] = useState(false);
   const [timeoutEnd, setTimeoutEnd] = useState<number | null>(null);
+  const [password, setPassword] = useState('');
+  const [passwordConfirmModalVisible, setPasswordConfirmModalVisible] = useState<boolean>(false)
   const { topUpWallet, payRent, addWalletTransaction } = useAuth();
 
   const userPin = async (pin: string) => {
@@ -46,15 +49,7 @@ export default function LoginPin() {
           setFailedAttempts(0);
           setError('');
           console.log('Test Login Pin');
-  
-          const routes = await SecureStore.getItemAsync('routes') || '';
-          const route = await checkRoute(tenantId, routes);
-          console.log(route);
-          if (route) {
-            router.replace(`./${route}`); // Replace only if route is valid
-          } else {
-            console.error('Invalid route returned from checkRoute');
-          }
+          pushRoute(tenantId);
         } else {
           handleFailedAttempt();
         }
@@ -94,6 +89,33 @@ export default function LoginPin() {
     }
   }  
 
+  const pushRoute = async (tenantId: string) => {
+    const routes = await SecureStore.getItemAsync('routes') || '';
+          const route = await checkRoute(tenantId, routes);
+          console.log(route);
+          if (route) {
+            router.replace(`./${route}`); // Replace only if route is valid
+          } else {
+            console.error('Invalid route returned from checkRoute');
+          }
+  }
+
+  const validatePassword = async (inputPassword: string): Promise<boolean> => {
+    const storedPassword = await SecureStore.getItemAsync('password');
+    console.log('Password',storedPassword);
+    return storedPassword === inputPassword;
+  };
+
+  const handlePasswordConfirmation = async (inputPassword: string) => {
+    const isValid = await validatePassword(inputPassword);
+    const tenantId = await SecureStore.getItemAsync('uid');
+    if (isValid && tenantId) {
+      await pushRoute(tenantId); // Call the pushRoute function
+    } else {
+      Alert.alert('Error', 'Invalid password. Please try again.');
+    }
+  };
+
   const handleFailedAttempt = () => {
     setFailedAttempts((prev) => prev + 1);
     if (failedAttempts + 1 >= MAX_ATTEMPTS) {
@@ -120,7 +142,7 @@ export default function LoginPin() {
     // Check if the user hasn't entered a PIN and redirect to sign in
     const redirectIfNoPin = async () => {
       if (!pin) {
-        router.replace('/signIn');
+        router.replace('./wallet');
         await SecureStore.deleteItemAsync('password');
       }
     };
@@ -211,22 +233,23 @@ export default function LoginPin() {
         )}
 
         {/* "Forgot PIN?" text */}
-        {/* <TouchableOpacity
+        <TouchableOpacity
           className='mt-4'
           onPress={async () => {
-            router.replace('/signIn');
-            await SecureStore.deleteItemAsync('password');
-            await SecureStore.deleteItemAsync('token');
-            const usePassword = 'true';
-            if (usePassword) {
-              await SecureStore.setItemAsync('usePassword', usePassword);
-            }
+            setPasswordConfirmModalVisible(true);
           }}
         >
           <Text className='text-xs text-center'>
             Forgot your PIN? <Text className='text-red-500 underline'>Login with password</Text>
           </Text> 
-        </TouchableOpacity>*/}
+        </TouchableOpacity>
+
+        {/* Modal for using Password for Transaction */}
+        <PasswordConfirmationModal
+          visible={passwordConfirmModalVisible}
+          onClose={() => setPasswordConfirmModalVisible(false)}
+          onConfirm={(password) => handlePasswordConfirmation(password)}
+        />
 
         {/* Modal for incorrect PIN */}
         <WrongPinModal
