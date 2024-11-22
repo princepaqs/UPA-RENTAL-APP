@@ -52,7 +52,7 @@ interface Property {
 
 export default function ContractPreview() {
   const router = useRouter();
-  const { approveTenant } = useAuth();
+  const { approveTenant, sendNotification } = useAuth();
   const Fullname = useRef("");
   const [transactionData, setTransactionData] = useState<Transaction | null>(null);
   const [ownerData, setOwnerData] = useState<Owner | null>(null);
@@ -101,6 +101,8 @@ export default function ContractPreview() {
           propertyData?.propertyTerminationPeriod!,
       );
       router.replace('./contractSuccess')
+
+      sendNotification(transactionData? transactionData.tenantId : '', 'approval', 'Application Approved', 'Congratulations! Your application has been approved', 'Success', 'Unread');
     }else{
       Alert.alert('Contract', "Please enter your correct fullname!");
       return;

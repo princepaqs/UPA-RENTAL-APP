@@ -30,7 +30,7 @@ interface TransactionData {
 
 export default function PendingApplication() {
     const router = useRouter();
-    const { approveTenant, rejectTenant } = useAuth();
+    const { sendNotification, rejectTenant } = useAuth();
     
     const [transactionData, setTransactionData] = useState<TransactionData | null>(null);
     // State for modals
@@ -73,6 +73,7 @@ export default function PendingApplication() {
         // Implement reject logic here
         if(transactionData){
             rejectTenant(transactionData?.transactionId);
+            sendNotification(transactionData?.transactionId, 'rejection', 'Application Rejected', "I'm sorry, your application has been rejected.", 'Rejected', 'Unread')
             router.replace('./tenants')
         }
         Alert.alert("Rejected", "Application has been rejected.", [{ text: "OK", onPress: () => setRejectModalVisible(false) }]);
