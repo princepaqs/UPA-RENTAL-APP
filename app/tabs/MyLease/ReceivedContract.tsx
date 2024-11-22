@@ -8,6 +8,7 @@ import { collection, getDocs, query, where, doc, getDoc, orderBy, limit, Timesta
 import { db, storage } from '../../../_dbconfig/dbconfig';
 import { getDownloadURL, ref } from "firebase/storage";
 import * as SecureStore from 'expo-secure-store';
+import { useAuth } from '@/context/authContext';
 
 interface Contract {
   createdAt: Timestamp;
@@ -42,6 +43,7 @@ interface Contract {
 export default function ReceivedContract() {
   const router = useRouter();
   const Fullname = useRef("");
+  const { sendNotification } = useAuth();
   const [contractData, setContractData] = useState<Contract | null>(null);
 
   const handleNext = () => {
@@ -55,6 +57,7 @@ export default function ReceivedContract() {
       return;
     }else{
       router.replace('./payDepositeAdvance')
+      sendNotification(contractData?.tenantId, 'approval', 'Application Rejected', `Your lease contract has been successfully signed. Your lease is now secured, and you can now view and review the contract details.`, 'Success', 'Unread')
     }
   }
 

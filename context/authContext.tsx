@@ -1046,6 +1046,8 @@ export const AuthContextProvider = ({ children }: { children: ReactNode }) => {
                 });
     
                 console.log('Transaction created successfully.');
+
+                sendNotification(tenantId, 'approval', 'Rent Application', `Your application has been successfully submitted. The property owner will review your application and notify you of their decision soon.`, 'Success', 'Unread');
             } catch (error) {
                 console.error('Error creating transaction:', error);
             }
@@ -1172,6 +1174,7 @@ export const AuthContextProvider = ({ children }: { children: ReactNode }) => {
             if(propertyLeaseDuration === 'Long-term (1 year)'){
                 const paymentDuration = '12';
                 await setDoc(doc(db, 'rentTransactions', transactionId), {
+                    createdAt: new Date(),
                     transactionId,
                     ownerId,
                     propertyId,
@@ -1190,6 +1193,7 @@ export const AuthContextProvider = ({ children }: { children: ReactNode }) => {
             } else{
                 const paymentDuration = '6';
                 await setDoc(doc(db, 'rentTransactions', transactionId), {
+                    createdAt: new Date(),
                     transactionId,
                     ownerId,
                     propertyId,

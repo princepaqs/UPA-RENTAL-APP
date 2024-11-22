@@ -57,6 +57,7 @@ export default function SignIn() {
                 login(email, password); // Ensure email and password are strings
               } else {
                 router.replace('/signIn');
+                await SecureStore.deleteItemAsync('isNotificationSent');
               }
             } else {
               //console.error("userLoginTime is undefined");
