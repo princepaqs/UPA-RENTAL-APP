@@ -639,6 +639,7 @@ export default function MyLease() {
 
   const checkDate = async (dateString: string) => {
     await SecureStore.setItemAsync('isNotificationSent', 'true');
+    const uid = await SecureStore.getItemAsync('uid');
     // Convert the date string (Month dd, YYYY) into a Date object
     console.log(dateString);
     const targetDate = new Date(dateString);
@@ -652,27 +653,27 @@ export default function MyLease() {
     threeDaysBefore.setDate(threeDaysBefore.getDate() - 3);
   
     // Check the conditions
-    if (today.getTime() === threeDaysBefore.getTime()) {
-      sendNotification(rentData ? rentData.tenantId : '', 'approval', 
+    if (today.getTime() === threeDaysBefore.getTime() && uid) {
+      sendNotification(uid, 'approval', 
         `Rent Due on ${dateString}`, `Reminder: Your rent is due on ${dateString}. Please ensure timely payment to avoid any issues.`, 'Urgent', 'Unread')
       console.log('Today is 3 days before the target date.');
-    } else if (today.getTime() === targetDate.getTime()) {
-      sendNotification(rentData ? rentData.tenantId : '', 'approval', 
+    } else if (today.getTime() === targetDate.getTime() && uid) {
+      sendNotification(uid, 'approval', 
         `Rent Due on ${dateString}`, `Reminder: Your rent is due today. Please complete your payment to avoid any issues.`, 'Urgent', 'Unread')
       console.log('Today is the target date.');
-    } else if (today.getTime() > targetDate.getTime()) {
-      sendNotification(rentData ? rentData.tenantId : '', 'approval', 
+    } else if (today.getTime() > targetDate.getTime() && uid) {
+      sendNotification(uid, 'approval', 
         `Rent Due on ${dateString}`, `Your rent payment was due yesterday and has not been received. Please complete the payment as soon as possible to avoid late fees.`, 'Urgent', 'Unread')
       console.log('Today exceeds the target date.');
-    } else if (today.getTime() < threeDaysBefore.getTime()) {
-      sendNotification(rentData ? rentData.tenantId : '', 'approval', 
+    } else if (today.getTime() < threeDaysBefore.getTime() && uid) {
+      sendNotification(uid, 'approval', 
         `Rent Due on ${dateString}`, `Reminder: Your rent was due on ${dateString}, and payment has not been received. Please make your payment immediately to avoid further action.`, 'Urgent', 'Unread')
       console.log('Error: Today is more than 3 days before the target date.');
     } else {
       console.log('Today is either more or less than the target date.');
-      console.log(rentData?.tenantId, dateString);
-      sendNotification(rentData ? rentData.tenantId : '', 'approval', 
-        `Rent Due on ${dateString}`, `Reminder: Your rent is due on ${dateString}. Please ensure timely payment to avoid any issues.`, 'Urgent', 'Unread')
+      console.log(uid, dateString);
+      // sendNotification(rentData ? rentData.tenantId : '', 'approval', 
+      //   `Rent Due on ${dateString}`, `Reminder: Your rent is due on ${dateString}. Please ensure timely payment to avoid any issues.`, 'Urgent', 'Unread')
     }
   };
   
