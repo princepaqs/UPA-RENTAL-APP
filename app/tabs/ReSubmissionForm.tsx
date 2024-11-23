@@ -3,10 +3,27 @@ import React, { useEffect, useState } from 'react'
 import { Ionicons } from '@expo/vector-icons'
 import { useRouter } from 'expo-router';
 import * as ImagePicker from 'expo-image-picker';
+import * as SecureStore from 'expo-secure-store';
+import { getDownloadURL, ref } from 'firebase/storage'; 
+import { db, storage } from '../../_dbconfig/dbconfig'; 
+import { onSnapshot, collection, getDocs, query, where, doc, getDoc, updateDoc } from 'firebase/firestore';
 type DocumentState = {
     uri: string | null;
     name: string | null;
-  };
+};
+
+interface User {
+  profilePicture: number | {uri : string};
+  barangayClearance: number | {uri : string};
+  nbiClearance: number | {uri : string};
+  govtID: number | {uri : string};
+  proofOfIncome: number | {uri : string};
+  profilePicUrlStatus: string;
+  barangayClearanceStatus: string;
+  nbiClearanceStatus: string;
+  govtIdStatus: string;
+  proofOfIncomeStatus: string;
+}
 
 export default function ReSubmissionForm() {
   const router = useRouter();
@@ -20,6 +37,7 @@ export default function ReSubmissionForm() {
   const [nbiClearance, setNbiClearance] = useState<DocumentState>({ uri: null, name: null });
   const [govtID, setGovtID] = useState<DocumentState>({ uri: null, name: null });
   const [proofOfIncome, setProofOfIncome] = useState<DocumentState>({ uri: null, name: null });
+  const [user, setUser] = useState<User | null>(null);
 
   const requestCameraPermissions = async () => {
     const { status } = await ImagePicker.requestCameraPermissionsAsync();
@@ -31,6 +49,65 @@ export default function ReSubmissionForm() {
   useEffect(() => {
     requestCameraPermissions();
   }, []);
+
+  useEffect(() => {
+    const fetchImagesStatus = async () => {
+      const uid = await SecureStore.getItemAsync('uid');
+      if (uid) {
+        const userRef = await getDoc(doc(db, 'users'))
+        if(userRef.exists()){
+          const data = userRef.data();
+          if(data){
+            try {
+              // File references
+              const profilePictureFileName = `${uid}-profilepictures`;
+              const profilePictureRef = ref(storage, `profilepictures/${profilePictureFileName}`);
+              const barangayClearanceFileName = `${uid}-barangayclearances`;
+              const barangayClearanceRef = ref(storage, `barangayclearances/${barangayClearanceFileName}`);
+              const nbiClearanceName = `${uid}-nbiclearances`;
+              const nbiClearanceRef = ref(storage, `nbiclearances/${nbiClearanceName}`);
+              const govtIdName = `${uid}-govtids`;
+              const govtIdRef = ref(storage, `govtids/${govtIdName}`);
+              const proofOfIncomeName = `${uid}-proofofincome`;
+              const proofOfIncomeRef = ref(storage, `proofofincome/${proofOfIncomeName}`);
+      
+              // Fetch URLs with error handling
+              const profilePicUrl = await getDownloadURL(profilePictureRef).catch(() => null);
+              const barangayClearanceUrl = await getDownloadURL(barangayClearanceRef).catch(() => null);
+              const nbiClearanceUrl = await getDownloadURL(nbiClearanceRef).catch(() => null);
+              const govtIdUrl = await getDownloadURL(govtIdRef).catch(() => null);
+              const proofOfIncomeUrl = await getDownloadURL(proofOfIncomeRef).catch(() => null);
+      
+              // Update state
+              setUser({
+                profilePicture: profilePicUrl ? { uri: profilePicUrl } : require('../../assets/images/profile.png'),
+                barangayClearance: barangayClearanceUrl
+                  ? { uri: barangayClearanceUrl }
+                  : require('../../assets/images/profile.png'),
+                nbiClearance: nbiClearanceUrl
+                  ? { uri: nbiClearanceUrl }
+                  : require('../../assets/images/profile.png'),
+                govtID: govtIdUrl ? { uri: govtIdUrl } : require('../../assets/images/profile.png'),
+                proofOfIncome: proofOfIncomeUrl
+                  ? { uri: proofOfIncomeUrl }
+                  : require('../../assets/images/profile.png'),
+                profilePicUrlStatus: data.profilePicUrlStatus,
+                barangayClearanceStatus: data.barangayClearanceStatus,
+                nbiClearanceStatus: data.nbiClearanceStatus,
+                govtIdStatus: data.govtIdStatus,
+                proofOfIncomeStatus: data.proofOfIncomeStatus,
+              });
+            } catch (error) {
+              console.error('Error fetching images:', error);
+            }
+          }
+        }
+      }
+    };
+  
+    fetchImagesStatus();
+  }, []);
+  
 
   const getFileName = (uri: string): string => {
     return uri.split('/').pop() || '';
@@ -94,11 +171,11 @@ const handleSubmit = () => {
             className='mb-28'
           >
         {[
-        { label: 'Profile Picture', value: profilePicture, setter: setProfilePicture, required: true, status: 'Approved' },
-        { label: 'Barangay Clearance', value: barangayClearance, setter: setBarangayClearance, required: false, status: 'Rejected' },
-        { label: 'NBI Clearance', value: nbiClearance, setter: setNbiClearance, required: false, status: 'Rejected' },
-        { label: 'Government Issued ID', value: govtID, setter: setGovtID, required: true, status: 'Approved' },
-        { label: 'Proof of Income', value: proofOfIncome, setter: setProofOfIncome, required: true, status: 'Approved' },
+        { label: 'Profile Picture', value: user ? user.profilePicture : require('../../assets/images/profile.png'), setter: setProfilePicture, required: true, status: user?.profilePicUrlStatus },
+        { label: 'Barangay Clearance', value: user?.barangayClearance, setter: setBarangayClearance, required: false, status: user?.barangayClearanceStatus },
+        { label: 'NBI Clearance', value: user?.nbiClearance, setter: setNbiClearance, required: false, status: user?.nbiClearanceStatus },
+        { label: 'Government Issued ID', value: user?.govtID, setter: setGovtID, required: true, status: user?.govtIdStatus },
+        { label: 'Proof of Income', value: user?.proofOfIncome, setter: setProofOfIncome, required: true, status: user?.proofOfIncomeStatus },
         ].map((item, index) => (
         <View key={index} className='mb-5'>
             <View className='px-2 flex-row items-center space-x-2 mb-2'>
