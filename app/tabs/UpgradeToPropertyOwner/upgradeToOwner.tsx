@@ -17,7 +17,7 @@ interface User {
 
 export default function upgradeToOwner() {
     const router = useRouter();
-    const { upgradeRole } = useAuth();
+    const { upgradeRole, sendNotification } = useAuth();
     const [images, setImages] = useState<{ uri: string; fileName: string }[]>([]);
     const [loading, setLoading] = useState(false);
     const [userData, setUserData] = useState<User | null>(null);
@@ -66,7 +66,7 @@ export default function upgradeToOwner() {
     
                     await upgradeRole(uid, imageUris[0]); // Pass array of URIs
                     Alert.alert('Success', 'Your request to upgrade has been submitted.');
-                    
+                    sendNotification(uid, 'owner-upgrade', 'Property Owner Application Submitted', 'Your application to become a property owner has been successfully submitted and is now under review by the admin. You will be notified once approved.', 'Success', 'Unread')
                     // Uncomment and use this if navigating to another route
                     router.replace('./upgradeRequestSubmitted');
                 } else {
