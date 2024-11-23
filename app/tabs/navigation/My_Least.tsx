@@ -670,6 +670,9 @@ export default function MyLease() {
       console.log('Error: Today is more than 3 days before the target date.');
     } else {
       console.log('Today is either more or less than the target date.');
+      console.log(rentData?.tenantId, dateString);
+      sendNotification(rentData ? rentData.tenantId : '', 'approval', 
+        `Rent Due on ${dateString}`, `Reminder: Your rent is due on ${dateString}. Please ensure timely payment to avoid any issues.`, 'Urgent', 'Unread')
     }
   };
   

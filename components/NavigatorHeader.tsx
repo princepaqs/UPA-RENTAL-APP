@@ -16,9 +16,17 @@ interface Message {
   status: string;
 }
 
+interface Notification {
+  id: string;
+  uid: string;
+  createdAt: Timestamp;
+  notifStatus: string;
+}
+
 export default function MessageHeader() {
   const router = useRouter();
   const [messages, setMessages] = useState<Message[]>([]);
+  const [notifications, setNotifications] = useState<Notification[]>([]);
   const [uid, setUID] = useState<string>('');
   const [newMessages, setNewMessages] = useState<number>(0);
   const [newNotifications, setNewNotifications] = useState<number>(0);
@@ -33,33 +41,58 @@ export default function MessageHeader() {
     initializeUser();
   }, []);
 
+  // Function to retrieve messages and set up real-time listeners
+  const subscribeToMessages = async () => {
+    const messageSenderId = await SecureStore.getItemAsync('uid');
+    if (!messageSenderId) return;
+
+    const messageQueries = [
+      query(collection(db, 'messages'), where('userId1', '==', messageSenderId)),
+      query(collection(db, 'messages'), where('userId2', '==', messageSenderId)),
+    ];
+
+    const unsubscribeFunctions = messageQueries.map((messageQuery) =>
+      onSnapshot(messageQuery, (snapshot) => {
+        const newMessagesList = snapshot.docs.map((doc) => ({
+          messageId: doc.id,
+          ...doc.data(),
+        })) as Message[];
+
+        handleNewMessages(newMessagesList);
+      })
+    );
+
+    // Cleanup listeners on component unmount
+    return () => unsubscribeFunctions.forEach((unsubscribe) => unsubscribe());
+  };
+
+  const subscribeToNotifications = async () => {
+    const notificationReceiver = await SecureStore.getItemAsync('uid');
+    if (!notificationReceiver) return;
+
+    const notificationQueries = [
+      query(collection(db, 'notifications', uid, 'notificationId'), where('uid', '==', notificationReceiver), where('notifStatus', '==', 'Unread')),
+    ];
+
+    const unsubscribeFunctions = notificationQueries.map((notifQuery) =>
+      onSnapshot(notifQuery, (snapshot) => {
+        const newNotifList = snapshot.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        })) as Notification[];
+
+        setNotifications(newNotifList);
+        setNewNotifications(notifications.length)
+      })
+    );
+
+    // Cleanup listeners on component unmount
+    return () => unsubscribeFunctions.forEach((unsubscribe) => unsubscribe());
+  };
+
   useEffect(() => {
-    // Function to retrieve messages and set up real-time listeners
-    const subscribeToMessages = async () => {
-      const messageSenderId = await SecureStore.getItemAsync('uid');
-      if (!messageSenderId) return;
-
-      const messageQueries = [
-        query(collection(db, 'messages'), where('userId1', '==', messageSenderId)),
-        query(collection(db, 'messages'), where('userId2', '==', messageSenderId)),
-      ];
-
-      const unsubscribeFunctions = messageQueries.map((messageQuery) =>
-        onSnapshot(messageQuery, (snapshot) => {
-          const newMessagesList = snapshot.docs.map((doc) => ({
-            messageId: doc.id,
-            ...doc.data(),
-          })) as Message[];
-
-          handleNewMessages(newMessagesList);
-        })
-      );
-
-      // Cleanup listeners on component unmount
-      return () => unsubscribeFunctions.forEach((unsubscribe) => unsubscribe());
-    };
-
     subscribeToMessages();
+    subscribeToNotifications();
   }, [uid]);
 
   // Process new message data, remove duplicates, and update counts
