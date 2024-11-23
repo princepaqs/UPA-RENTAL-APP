@@ -45,7 +45,7 @@ interface Payment {
 
 export default function paymentReview() {
   const router = useRouter();
-  const { payRent, addWalletTransaction } = useAuth();
+  const { sendNotification } = useAuth();
   const [loading, setLoading] = useState(false);
   const [rentData, setRentData] = useState<Rent | null>(null);
   const [paymentData, setPaymentData] = useState<Payment | null>(null);
@@ -169,6 +169,10 @@ export default function paymentReview() {
               leaseStart: rentData?.propertyLeaseStart,
               leaseEnd: rentData?.propertyLeaseEnd
             });
+            const tenantId = await SecureStore.getItemAsync('uid');
+            if(tenantId){
+                sendNotification(tenantId, 'wallet-topup-failed', 'Top-Up Unsuccessful', `Your payment of ₱${rentData?.propertyRentAmount} was not processed. Please check your payment details and try again.`, 'Rejected', 'Unread');
+            }
           }
           
       }, 1000);

@@ -33,7 +33,7 @@ export default function LoginPin() {
   const [timeoutEnd, setTimeoutEnd] = useState<number | null>(null);
   const [password, setPassword] = useState('');
   const [passwordConfirmModalVisible, setPasswordConfirmModalVisible] = useState<boolean>(false)
-  const { topUpWallet, payRent, addWalletTransaction } = useAuth();
+  const { topUpWallet, payRent, addWalletTransaction, sendNotification } = useAuth();
 
   const userPin = async (pin: string) => {
     setLoading(true);
@@ -79,10 +79,12 @@ export default function LoginPin() {
     switch(routes){
       case '/TopUp/receiptTransaction': 
         topUpWallet(uid, transactionAmount);
+        sendNotification(uid, 'wallet-topup', 'Top-Up Successful', `Your wallet has been successfully topped up with ₱${transactionAmount}. You can now use the funds for payments and transactions.`, 'Success', 'Unread')
         addWalletTransaction(uid, transactionType, '', transactionDate, transactionAmount, '');
         return '/TopUp/receiptTransaction';
       case '/Payment/paymentReceipt': 
         payRent(transactionPaymentId, transactionOwnerId, uid, transactionAmount, transactionLeaseStart, transactionLeaseEnd);
+        sendNotification(uid, 'wallet-payment', 'Payment Successful', `Your payment of ₱${transactionAmount} has been successfully processed.`, 'Success', 'Unread')
         addWalletTransaction(uid, transactionType, transactionPaymentId, transactionDate, transactionAmount, transactionStatus);
         return '/Payment/paymentReceipt';
       default: return 'defaultFallbackRoute';
