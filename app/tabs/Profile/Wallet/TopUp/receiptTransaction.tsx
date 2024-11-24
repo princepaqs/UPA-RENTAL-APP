@@ -6,7 +6,10 @@ import { getTransactionData, TransactionData } from '../secureStorage'; // Impor
 import { Image } from 'react-native';
 import * as FileSystem from 'expo-file-system'; // Import FileSystem for reading/writing files
 import TopUp from './topUp';
-import { ref } from 'firebase/storage';
+import * as SecureStore from 'expo-secure-store';
+import { getDownloadURL, ref } from 'firebase/storage'; 
+import { db, storage } from '../../../../../_dbconfig/dbconfig'; 
+import { collection, getDocs, query, where, doc, getDoc, setDoc } from 'firebase/firestore';
 import { captureScreen } from 'react-native-view-shot';
 import * as MediaLibrary from 'expo-media-library';
 const walletDataPath = FileSystem.documentDirectory + './walletData.json'; // Path to walletData.json file
@@ -16,7 +19,7 @@ export default function ReceiptTransaction() {
     const [transactionData, setTransactionData] = useState<TransactionData | null>(null); // State to hold transaction data
     const [loading, setLoading] = useState(false);
     const [walletBalance, setWalletBalance] = useState<number>(0); // State to hold wallet balance
-
+    const [transactionId, setTransactionId] = useState<string>('');
 
     const hanndleDownload = async () => {
         try {
@@ -83,30 +86,6 @@ export default function ReceiptTransaction() {
         }
     };
 
-    const handleContinue = async () => {
-        setLoading(true);
-
-        try {
-            // Calculate the new balance
-            const newBalance = walletBalance + (transactionData?.total ?? 0);
-
-            // Update walletData with the new balance
-            const updatedWalletData = { balance: newBalance };
-
-            // Write the updated walletData back to the file
-            await FileSystem.writeAsStringAsync(walletDataPath, JSON.stringify(updatedWalletData));
-
-            // Simulate a loading period (1 second)
-            setTimeout(() => {
-                setLoading(false);
-                router.back();
-            }, 1000);
-        } catch (error) {
-            console.error('Error updating wallet data:', error);
-            setLoading(false);
-        }
-    };
-
     const { transactionID, name, email, dateTime, amount, total } = transactionData ?? {}; // Default to empty object if null
 
     // Ensure amounts are valid numbers
@@ -122,8 +101,47 @@ export default function ReceiptTransaction() {
         return `${date}${randomNumbers}`; // Format: YYYYMMDDXXXX
     };
 
+    const receiptData = {
+        referenceNo: generateTransactionID(),
+        transactionId: transactionID,
+        name: name,
+        email: email,
+        dateTime: dateTime,
+        amount: formattedAmount,
+        total: formattedTotal,
+    }
 
-    
+    const handleContinue = async () => {
+        setLoading(true);
+
+        try {
+            // Calculate the new balance
+            const newBalance = walletBalance + (transactionData?.total ?? 0);
+
+            // Update walletData with the new balance
+            const updatedWalletData = { balance: newBalance };
+
+            // Write the updated walletData back to the file
+            await FileSystem.writeAsStringAsync(walletDataPath, JSON.stringify(updatedWalletData));
+            if(receiptData.transactionId){
+                await setDoc(doc(db, 'receipts', receiptData.transactionId, 'receiptId', receiptData.referenceNo), receiptData)
+            }
+
+            // Simulate a loading period (1 second)
+            setTimeout(() => {
+                setLoading(false);
+                router.back();
+            }, 1000);
+        } catch (error) {
+            console.error('Error updating wallet data:', error);
+            setLoading(false);
+        }
+    };
+
+
+
+
+
     return (
         
             <View className="bg-[#B33939] flex-1">
@@ -152,9 +170,9 @@ export default function ReceiptTransaction() {
                                     <Text className='text-xs text-[#6C6C6C] font-bold'>Date Time</Text>
                                 </View>
                                 <View className='flex-col w-1/2 space-y-2'>
-                                    <Text className='text-xs text-[#6C6C6C]'>{generateTransactionID()}</Text>
-                                    <Text className='text-xs text-[#6C6C6C]'>{transactionID}</Text>
-                                    <Text className='text-xs text-[#6C6C6C]'>{dateTime}</Text>
+                                    <Text className='text-xs text-[#6C6C6C]'>{receiptData.referenceNo}</Text>
+                                    <Text className='text-xs text-[#6C6C6C]'>{receiptData.transactionId}</Text>
+                                    <Text className='text-xs text-[#6C6C6C]'>{receiptData.dateTime}</Text>
                                 </View>
                             </View>
 
@@ -164,8 +182,8 @@ export default function ReceiptTransaction() {
                                     <Text className='text-xs text-[#6C6C6C] font-bold'>Email</Text>
                                 </View>
                                 <View className='flex-col w-1/2 space-y-2'>
-                                    <Text className='text-xs text-[#6C6C6C]'>{name}</Text>
-                                    <Text className='text-xs text-[#6C6C6C]'>{email}</Text>
+                                    <Text className='text-xs text-[#6C6C6C]'>{receiptData.name}</Text>
+                                    <Text className='text-xs text-[#6C6C6C]'>{receiptData.email}</Text>
                                 </View>
                             </View>
 
