@@ -37,15 +37,27 @@ export default function Notification() {
   const propertyAddress = 'Caloocan City';
   const navigation = useNavigation<NavigationProp>();
 
-  
+  const accountStatus = 'Owner'
+
   const handleNotificationPress = (notification: NotificationItem) => {
     if (notification.type === 'lease-extension' && notification.status !== 'Approved' && notification.status !== 'Rejected') {
       setModalVisible(true);
       setModalTitle('Lease Extension Request');
       setModalMessage(`Do you wish to extend your lease at ${propertyAddress}?`);
       setModalActions([
-        { label: 'No', onPress: handleNo, color: '#EF5A6F' },
-        { label: 'Yes', onPress: handleYes, color: '#38A169' },
+        { label: 'No', onPress: accountStatus !== 'Owner' 
+          ? handleNo 
+          : () => { 
+              handleCloseModal(); 
+              router.replace('./OwnerLeaseAvailability/setRentalDetails'); 
+            }, color: '#EF5A6F' },
+
+        { label: 'Yes', onPress: accountStatus !== 'Owner' 
+          ? handleYes 
+          : () => { 
+              handleCloseModal(); 
+              router.replace('./OwnerLeaseExtend/rentalDetails'); 
+            }, color: '#38A169' },
       ]);
     } 
       else if (notification.type === 'lease-extension' && notification.status === 'Approved') {
@@ -55,7 +67,7 @@ export default function Notification() {
       else if (notification.type === 'account-registration' && notification.status === 'Rejected') {
         setModalVisible(true);
         setModalTitle('Request Re-Submission Form');
-        setModalMessage(`Do you want to request re-submit your documents?`);
+        setModalMessage(`Do you want to request re-submit your documents?`);  
         setModalActions([
             
             { 

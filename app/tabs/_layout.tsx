@@ -25,6 +25,34 @@ export default function _layout() {
       />
 
       <Stack.Screen
+        name='OwnerLeaseExtend/rentalDetails'
+        options={{
+          header: ()=> <HomeHeader/>
+        }}
+      />
+
+      <Stack.Screen
+        name='OwnerLeaseExtend/contractQuestion'
+        options={{
+          header: ()=> <HomeHeader/>
+        }}
+      />
+
+      <Stack.Screen
+        name='OwnerLeaseAvailability/setRentalDetails'
+        options={{
+          header: ()=> <HomeHeader/>
+        }}
+      />
+
+      <Stack.Screen
+        name='OwnerLeaseAvailability/setTerms&Condition'
+        options={{
+          header: ()=> <HomeHeader/>
+        }}
+      />
+
+      <Stack.Screen
         name='ReSubmissionForm'
         options={{
           header: ()=> <HomeHeader/>
