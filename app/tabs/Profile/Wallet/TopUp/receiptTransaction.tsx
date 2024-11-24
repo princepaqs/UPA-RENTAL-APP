@@ -129,18 +129,14 @@ export default function ReceiptTransaction() {
             <View className="bg-[#B33939] flex-1">
                 <View className="bg-gray-100 h-screen mt-10 rounded-t-2xl flex-1">
                 <ImageBackground
-            source={require('../../../../../assets/images/receipt_bg.png')}
-            className='flex-1 w-full h-full'
-            resizeMode="stretch"
-        >
+                source={require('../../../../../assets/images/receipt_bg.png')}
+                className='flex-1 w-full h-full'
+                resizeMode="stretch"
+                >
                     <View className='px-6 items-center justify-center'>
                         {/* Header */}
                         <View className="flex flex-row items-center justify-between px-6 pt-8 mb-6">
-                            {/* <TouchableOpacity onPress={() => router.back()}>
-                                <View className="flex flex-row items-center">
-                                    <Ionicons name="chevron-back-circle-outline" size={25} color="black" />
-                                </View>
-                            </TouchableOpacity> */}
+
                         </View>
 
                         <View className='items-center space-y-2 pt-28'>
