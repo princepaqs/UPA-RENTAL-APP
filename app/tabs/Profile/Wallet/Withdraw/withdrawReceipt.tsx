@@ -1,8 +1,11 @@
-import { View, Text, TouchableOpacity, ActivityIndicator, Image } from 'react-native'
+import { View, Text, TouchableOpacity, ActivityIndicator, Image, ImageBackground, Pressable } from 'react-native'
 import React, { useState } from 'react'
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import transferData from './transferData.json';
+import { captureScreen } from 'react-native-view-shot';
+import * as MediaLibrary from 'expo-media-library';
+
 export default function withdrawReceipt() {
     const router = useRouter();
     const [loading, setLoading] = useState(false);
@@ -15,25 +18,54 @@ export default function withdrawReceipt() {
         }, 1000);
     };
 
+    const hanndleDownload = async () => {
+        try {
+            setLoading(true);
+  
+            // Capture the screen as an image
+            const screenshotUri = await captureScreen({
+                format: 'jpg',
+                quality: 0.8,
+            });
+  
+            // Request permission to access media library
+            const { status } = await MediaLibrary.requestPermissionsAsync();
+            if (status === 'granted') {
+                // Save the screenshot to the photo album
+                const asset = await MediaLibrary.createAssetAsync(screenshotUri);
+                await MediaLibrary.createAlbumAsync('ScreenShots', asset, false); // Creates a 'ScreenShots' album if it doesn't exist
+  
+                // Optionally, show a success message
+                alert('Receipt downloaded successfully!');
+            } else {
+                alert('Permission to access media library is required to save the screenshot.');
+            }
+        } catch (error) {
+            console.error('Error downloading receipt:', error);
+            alert('Failed to download receipt.');
+        } finally {
+            setLoading(false);
+        }
+    };
 
 
   return (
     <View className="bg-[#B33939] flex-1">
-        <View className="bg-gray-100 mt-14 rounded-t-2xl flex-1">
-        <View className='px-6'>
-          {/* <View className="flex flex-row items-center justify-between px-6 pt-8">
-            <TouchableOpacity onPress={() => router.back()}>
-              <View className="flex flex-row items-center">
-                <Ionicons name="chevron-back-circle-outline" size={25} color="black" />
-              </View>
-            </TouchableOpacity>
+        <View className="bg-gray-100 h-screen mt-10 rounded-t-2xl flex-1">
+                <ImageBackground
+                source={require('../../../../../assets/images/receipt_bg.png')}
+                className='flex-1 w-full h-full'
+                resizeMode="stretch"
+                >
+                    <View className='px-6 items-center justify-center'>
+                        {/* Header */}
+                        <View className="flex flex-row items-center justify-between px-6 pt-8 mb-6">
 
-          </View> */}
+                        </View>
 
-          <View className='items-center space-y-2'>
-                        <Image className="w-28 h-28" source={require('../../../../../assets/images/upalogo.png')} />
-                            <Text className="text-lg font-bold text-center text-[#6C6C6C] ">Transaction Receipt</Text>
-                    </View>
+                        <View className='items-center space-y-2 pt-20'>
+                            <Text className="text-lg font-bold text-center text-[#6C6C6C]">Transaction Receipt</Text>
+                        </View>
 {/* Details Transaction Receipt */}
 <View className='w-full flex-col space-y-4 rounded-xl my-4'>
                             <View className='w-full flex-row items-center justify-start space-x-2 border-t pt-4 border-gray-300 px-4'>
@@ -88,22 +120,29 @@ export default function withdrawReceipt() {
                         </View>
 
                         <View className='w-full items-center mt-5'>
-                        <View className='px-5 mb-5'>
-                            <Text className='text-xs text-center text-[#6C6C6C]'>Your account has been successfully topped up. Thank you for choosing us!</Text>
+                            <View className='px-5 mb-5'>
+                                <Text className='text-xs text-center text-[#6C6C6C]'>Your withdrawal has been successfully processed. Thank you for choosing us!</Text>
+                            </View>
+                            <Pressable className='mb-4'
+                            onPress={hanndleDownload}>
+                                <Text className='text-xs text-[#EF5A6F]'>Download Receipt</Text>
+                            </Pressable>
+                            {loading ? ( // Show loading indicator when loading is true
+                                <ActivityIndicator size="large" color="#D9534F" />
+                            ) : (
+                                <View className='px-6 w-full'>
+                                    <TouchableOpacity
+                                        onPress={handleConfirm}
+                                        className="w-full py-3 bg-[#333333] rounded-xl items-center space-x-2"
+                                    >
+                                        <Text className="font-bold text-white">Continue</Text>
+                                    </TouchableOpacity>
+                                </View>
+                            )}
                         </View>
-                        <TouchableOpacity className='mb-4'>
-                            <Text className='text-xs text-[#EF5A6F]'>Download Receipt</Text>
-                        </TouchableOpacity>
-                    {loading ? ( // Show loading indicator when loading is true
-                            <ActivityIndicator size="large" color="#D9534F" />
-                        ) : (
-                            <TouchableOpacity className='w-2/3 items-center justify-center rounded-2xl bg-[#D9534F]' onPress={handleConfirm}>
-                                <Text className='text-xs text-center py-3 font-bold text-white'>Done</Text>
-                            </TouchableOpacity>
-                        )}
-                    </View>
 
         </View>
+        </ImageBackground>
         </View>
     </View>
   )
