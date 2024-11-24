@@ -20,6 +20,7 @@ interface Contract {
 
 export default function TerminateContract() {
     const router = useRouter();
+    const { sendNotification } = useAuth()
     const [contractData, setContractData] = useState<Contract | null>(null);
     const [moveInDateModalVisible, setMoveInDateModalVisible] = useState(false);
     const [submitModalVisible, setSubmitModalVisible] = useState(false); // State for submit modal
@@ -67,11 +68,15 @@ export default function TerminateContract() {
         setSubmitModalVisible(true);
     };
 
-    const handleConfirmSubmit = () => {
+    const handleConfirmSubmit = async () => {
         setSubmitModalVisible(false); // Hide the modal
         if (userStatus === 'Owner') {
             //for owner function
             console.log("Termination owner request submitted.");
+            const uid = await SecureStore.getItemAsync('uid');
+            if(uid){
+                sendNotification(uid, 'termination-contract', 'Termination Request Submitted' ,'Your termination request has been successfully sent to the property owner. Please await their approval or response.', 'Urgent', 'Unread');
+            }
         } else {
             //for tenant function
             console.log("Termination tenant request submitted.");

@@ -46,7 +46,7 @@ export default function payDepositeAdvance() {
   const router = useRouter();
   const [rentData, setRentData] = useState<Rent | null>(null);
   const [paymentData, setPaymentData] = useState<Payment | null>(null);
-  const { payRent, addWalletTransaction } = useAuth();
+  const { payRent, addWalletTransaction, sendNotification } = useAuth();
   const [loading, setLoading] = useState(false);
   const formatDate = (date: Date) => {
     return date.toLocaleString('en-US', {
@@ -81,6 +81,7 @@ export default function payDepositeAdvance() {
 
             if(paymentData && rentData){
               payRent(paymentData?.transactionId, paymentData?.ownerId, paymentData?.tenantId, rentData?.propertyRentAmount, rentData.propertyLeaseStart, rentData.propertyLeaseEnd);
+              sendNotification(paymentData?.tenantId, 'approval', 'Payment Successful', `Your advance and downpayment have been successfully processed. Your lease is now secured, and the next steps will be provided shortly.`, 'Success', 'Unread')
               addWalletTransaction(paymentData?.tenantId, 'Payment', paymentData?.transactionId, formatDate(new Date()), rentData?.propertyRentAmount, 'PAY_ONTIME');
               await updateDoc(doc(db, 'propertyTransactions', paymentData.transactionId), {status: 'Approved'});
               await updateDoc(doc(db, 'properties', paymentData?.ownerId, 'propertyId', paymentData?.propertyId), {status: "Occupied"})

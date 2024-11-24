@@ -49,6 +49,7 @@ const dummyData = {
 };
 
 interface LeaseData {
+  createdAt: Date;
   transactionId: string;
   ownerId: string;
   ownerImage: { uri : string} | number;
@@ -68,6 +69,7 @@ interface LeaseData {
 }
 
 interface MultipleLease {
+  createdAt: Date;
   id: string;
   propertyName: string;
   propertyMonthlyRent: string;
@@ -83,6 +85,7 @@ interface MultipleLease {
 }
 
 interface Rent {
+  // createdAt: Date;
   transactionId: string;
   ownerId: string;
   propertyId: string;
@@ -111,6 +114,7 @@ interface TransactionData {
 
 export default function MyLease() {
   const router = useRouter();
+  const { sendNotification } = useAuth();
   const [activeTab, setActiveTab] = useState('rent'); // State to toggle between "rent" and "contract"
   const [leaseDataMap, setLeaseDataMap] = useState<Record<string, LeaseData>>({});
   const [selectedLeaseId, setSelectedLeaseId] = useState<string | null>(null);
@@ -118,6 +122,7 @@ export default function MyLease() {
   const [rentData, setRentData] = useState<Rent | null>(null);
   const [walletBalance, setWalletBalance] = useState<number>(0); // State to hold wallet balance
   const [transactionData, setTransactionData] = useState<TransactionData[]>([]); 
+  const [isChecked, setIsChecked] = useState<boolean>(false);
   const phoneNumber = '1234567890';
 
 
@@ -184,6 +189,7 @@ export default function MyLease() {
                     : null;
 
                   const leaseDetails: LeaseData = {
+                    createdAt: propertyData.createdAt,
                     transactionId,
                     ownerId,
                     ownerImage: profilePicture || require('../../../assets/images/profile.png'),
@@ -203,6 +209,7 @@ export default function MyLease() {
                   };
                   
                   const multipleLease: MultipleLease = {
+                    createdAt: propertyData.createdAt,
                     id: transactionId,
                     propertyName: propertyData.propertyName,
                     propertyMonthlyRent: propertyData.propertyMonthlyRent,
@@ -216,7 +223,8 @@ export default function MyLease() {
                     propertyStatus: propertyData.status,
                     image: firstImageUri || require('../../../assets/images/property1.png'),
                   };
-                  //console.log('MoveInDate', moveInDate);
+                  console.log('MoveInDate', rentalStartDate);
+                  //checkDate(rentalStartDate);
                   // Store lease data in the map and new leases array
                   setLeaseDataMap((prev) => ({ ...prev, [transactionId]: leaseDetails }));
                   newLeases.push(multipleLease);
@@ -379,7 +387,6 @@ export default function MyLease() {
   
             // Sort paymentIds by numeric value to find the latest
             const latestPaymentId = paymentIds.sort((a, b) => parseInt(b) - parseInt(a))[0];
-  
             const paymentRef = await getDoc(doc(db, 'rentTransactions', transactionId));
   
             if (paymentRef.exists()) {
@@ -467,6 +474,7 @@ export default function MyLease() {
                         console.log(`Next payment is due on ${formattedDueDate}`);
                       
                         setRentData({
+                          // createdAt: data.createdAt.toDate(),
                           transactionId,
                           ownerId: data.ownerId,
                           propertyId: data.propertyId,
@@ -503,6 +511,7 @@ export default function MyLease() {
                         console.log(`Next payment is due on ${formattedDueDate} (no previous payment found1).`);
                         console.log('Status: ', data.status);
                         setRentData({
+                          // createdAt: data.createdAt.toDate(),
                           transactionId,
                           ownerId: data.ownerId,
                           propertyId: data.propertyId,
@@ -530,6 +539,7 @@ export default function MyLease() {
                     const firstRentAmount = parseInt(data.propertyAdvancePaymentAmount) + parseInt(data.propertySecurityDepositAmount);
                 
                     setRentData({
+                      // createdAt: data.createdAt.toDate(),
                       transactionId,
                       ownerId: data.ownerId,
                       propertyId: data.propertyId,
@@ -556,8 +566,8 @@ export default function MyLease() {
                     
                     console.log(`Next payment is due on ${formattedDueDate} (no previous payment found).`);
                     const firstRentAmount = parseInt(data.propertyAdvancePaymentAmount) + parseInt(data.propertySecurityDepositAmount);
-                    
                     setRentData({
+                      // createdAt: data.createdAt,
                       transactionId,
                       ownerId: data.ownerId,
                       propertyId: data.propertyId,
@@ -577,8 +587,17 @@ export default function MyLease() {
                 }
               }
             }
-
+            // console.log("CREATED AT",rentData?.createdAt);
+            console.log(rentData?.nextDueDate);
+            //checkDate(rentData ? rentData.nextDueDate : '');
             console.log('Latest paymentId:', latestPaymentId, rentData?.propertyStatus);
+            const check = await SecureStore.getItemAsync('isNotificationSent');
+            if(check == 'true'){
+              setIsChecked(true);
+            }else{
+              setIsChecked(false);
+            }
+            
           } else {
             console.log('No payments found for this transaction.');
           }
@@ -595,6 +614,9 @@ export default function MyLease() {
   const formatDate = (dateString: string) => {
     //console.log('Date String: ', dateString);
     const [month, day, year] = dateString.split('/').map(Number);
+    if(isChecked == false){
+      checkDate(dateString);
+    }
     
     // Validate if the date is correct
     if (!month || !day || !year) {
@@ -614,6 +636,47 @@ export default function MyLease() {
       day: "numeric",
     });
   };
+
+  const checkDate = async (dateString: string) => {
+    await SecureStore.setItemAsync('isNotificationSent', 'true');
+    const uid = await SecureStore.getItemAsync('uid');
+    // Convert the date string (Month dd, YYYY) into a Date object
+    console.log(dateString);
+    const targetDate = new Date(dateString);
+  
+    // Get today's date (without time part)
+    const today = new Date();
+    today.setHours(0, 0, 0, 0); // Reset time to midnight
+  
+    // Get the date 3 days before the target date
+    const threeDaysBefore = new Date(targetDate);
+    threeDaysBefore.setDate(threeDaysBefore.getDate() - 3);
+  
+    // Check the conditions
+    if (today.getTime() === threeDaysBefore.getTime() && uid) {
+      sendNotification(uid, 'approval', 
+        `Rent Due on ${dateString}`, `Reminder: Your rent is due on ${dateString}. Please ensure timely payment to avoid any issues.`, 'Urgent', 'Unread')
+      console.log('Today is 3 days before the target date.');
+    } else if (today.getTime() === targetDate.getTime() && uid) {
+      sendNotification(uid, 'approval', 
+        `Rent Due on ${dateString}`, `Reminder: Your rent is due today. Please complete your payment to avoid any issues.`, 'Urgent', 'Unread')
+      console.log('Today is the target date.');
+    } else if (today.getTime() > targetDate.getTime() && uid) {
+      sendNotification(uid, 'approval', 
+        `Rent Due on ${dateString}`, `Your rent payment was due yesterday and has not been received. Please complete the payment as soon as possible to avoid late fees.`, 'Urgent', 'Unread')
+      console.log('Today exceeds the target date.');
+    } else if (today.getTime() < threeDaysBefore.getTime() && uid) {
+      sendNotification(uid, 'approval', 
+        `Rent Due on ${dateString}`, `Reminder: Your rent was due on ${dateString}, and payment has not been received. Please make your payment immediately to avoid further action.`, 'Urgent', 'Unread')
+      console.log('Error: Today is more than 3 days before the target date.');
+    } else {
+      console.log('Today is either more or less than the target date.');
+      console.log(uid, dateString);
+      // sendNotification(rentData ? rentData.tenantId : '', 'approval', 
+      //   `Rent Due on ${dateString}`, `Reminder: Your rent is due on ${dateString}. Please ensure timely payment to avoid any issues.`, 'Urgent', 'Unread')
+    }
+  };
+  
   
   const handleBackToLeaseListing = () => {
     setSelectedLeaseId(null); // Reset selected lease
@@ -669,10 +732,33 @@ export default function MyLease() {
     setRefreshing(false);
   };
   
-  const newMessage = 1;
-  const newNotification = 1;
+  const formattedDate = (input: { seconds: number; nanoseconds: number } | Date) => {
+    // Convert Firestore Timestamp to JavaScript Date if necessary
+    const date =
+      input instanceof Date
+        ? input
+        : new Date(input.seconds * 1000 + input.nanoseconds / 1e6);
   
-  const leasePropertyStatus = "Pending"
+    // Get the current time
+    const currentTime = new Date();
+  
+    // Calculate the hour difference between the given date and the current time
+    const hourDifference = Math.round((date.getTime() - currentTime.getTime()) / (1000 * 60 * 60) + 24);
+  
+    // Format the date for additional context
+    const formatted = date.toLocaleString('en-US', {
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+    });
+  
+    return {
+      formatted,
+      hourDifference,
+    };
+  };
+  
+  
   return (
     <View className="px-8 bg-[#F6F6F6] h-screen">
 
@@ -746,7 +832,7 @@ export default function MyLease() {
                     </View>
                     {(multipleLease.propertyStatus === 'Rented') ?  (
                             <View className='border-t border-gray-400 py-1.5 mt-2'>
-                              <Text className='text-[10px]'><Text className='text-[#0FA958] font-bold'>Congratulations!</Text> Your application is approved. Please sign the contract and complete the downpayment and advance payment within <Text className='text-[#EF5A6F] font-bold'>24 hours</Text> to secure your lease</Text>
+                              <Text className='text-[10px]'><Text className='text-[#0FA958] font-bold'>Congratulations!</Text> Your application is approved. Please sign the contract and complete the downpayment and advance payment within <Text className='text-[#EF5A6F] font-bold'>{formattedDate(multipleLease.createdAt).hourDifference} hours</Text> to secure your lease</Text>
                             </View>
                         ) : multipleLease.propertyStatus === 'Renewal' ? (
                             <View className='border-t border-gray-400 py-1.5 mt-2'>

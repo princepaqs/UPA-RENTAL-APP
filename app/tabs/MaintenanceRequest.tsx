@@ -8,7 +8,7 @@ import * as SecureStore from 'expo-secure-store';
 
 export default function TrackMaintenance() {
   const router = useRouter();
-  const { maintenanceRequest } = useAuth();
+  const { maintenanceRequest, sendNotification } = useAuth();
 
   // State for the form
   const [fullName, setFullName] = useState('');
@@ -72,6 +72,7 @@ export default function TrackMaintenance() {
       return;
     }else{
       maintenanceRequest(uid, ownerId, propertyId, fullName, preferredTime, issueType, JSON.stringify(images), description);
+      sendNotification(uid, 'maintenance-request', 'Maintenance Request Sent', 'Your maintenance request has been successfully sent. The property owner will review and respond shortly.', 'Success', 'Unread');
     }
     router.replace('../tabs/Profile/TrackMaintenance/trackMaintenance')
   };

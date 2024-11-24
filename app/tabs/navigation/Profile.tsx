@@ -31,9 +31,10 @@ export default function Profile() {
 
   const confirmLogout = () => {
     setIsLoading(true);
-    setTimeout(() => {
+    setTimeout(async () => {
       setIsLoading(false);
       setModalVisible(false);
+      await SecureStore.deleteItemAsync('isNotificationSent');
       logout(); // Replace this with your actual logout function
     }, 2000); // Simulate a delay; replace with actual logout process
   };

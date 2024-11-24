@@ -7,12 +7,14 @@ import { getAmount } from '../sharedData'; // Adjust the path accordingly
 import * as SecureStore from 'expo-secure-store';
 import { doc, getDoc } from 'firebase/firestore';
 import { db } from '@/_dbconfig/dbconfig';
+import { useAuth } from '@/context/authContext';
 
 const fees = 15.00; // Set your fees
 
 export default function ReviewTransaction() {
     const router = useRouter();
     const amount = getAmount(); // Get the amount from the shared data
+    const { sendNotification } = useAuth()
     const [loading, setLoading] = useState(false);
     const [tenantId, setTenantId] = useState<string>(''); 
     const [name, setName] = useState<string>(''); 
@@ -87,7 +89,11 @@ export default function ReviewTransaction() {
                 setLoading(false); // Reset loading state after saving data
                 router.replace('../walletPin');
             }else{
-            Alert.alert('Error', 'Wallet transaction failed.')
+                Alert.alert('Error', 'Wallet transaction failed.')
+                const tenantId = await SecureStore.getItemAsync('uid');
+                if(tenantId){
+                    sendNotification(tenantId, 'wallet-topup-failed', 'Top-Up Unsuccessful', `Your wallet top-up attempt of ₱${transactionData.total.toString()} was unsuccessful. Please check your payment details and try again.`, 'Rejected', 'Unread');
+                }
             }
         } catch (error) {
             Alert.alert('Error', 'Wallet transaction failed.')

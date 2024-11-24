@@ -1,6 +1,6 @@
 [
     {
-      "id": 1,
+      "id": "1",
       "notifStatus": "Unread",
       "date": "11/28/2024",
       "title": "Contract Renewal Rejected",
@@ -9,7 +9,7 @@
       "status": "Rejected"
     },
     {
-      "id": 2,
+      "id": "2",
       "notifStatus": "Unread",
       "date": "11/28/2024",
       "title": "Contract Renewal Approved!",
@@ -18,7 +18,7 @@
       "status": "Approved"
     },
     {
-      "id": 3,
+      "id": "3",
       "notifStatus": "Unread",
       "date": "11/28/2024",
       "title": "Account Successfully Approved",
@@ -27,7 +27,7 @@
       "status": "Approved"
     },
     {
-      "id": 4,
+      "id": "4",
       "notifStatus": "Unread",
       "date": "11/28/2024",
       "title": "Account Registration Rejected",
@@ -36,7 +36,7 @@
       "status": "Rejected"
     },
     {
-      "id": 5,
+      "id": "5",
       "notifStatus": "Unread",
       "date": "11/28/2024",
       "title": "Lease Expiring Soon – Would You Like to Extend?",
@@ -45,7 +45,7 @@
       "status": "Urgent"
     },
     {
-      "id": 6,
+      "id": "6",
       "notifStatus": "Unread",
       "date": "11/28/2024",
       "title": "Lease Expiring Soon – Would You Like to Extend?",
@@ -54,7 +54,7 @@
       "status": "Urgent"
     },
     {
-      "id": 1,
+      "id": "7",
       "notifStatus": "Read",
       "date": "11/28/2024",
       "title": "Application Approved",
@@ -63,7 +63,7 @@
       "status": "Success"
     },
     {
-      "id": 2,
+      "id": "8",
       "notifStatus": "Read",
       "date": "11/28/2024",
       "title": "Application Approved",
@@ -72,7 +72,16 @@
       "status": "Success"
     },
     {
-      "id": 3,
+      "id": "9",
+      "notifStatus": "Read",
+      "date": "11/28/2024",
+      "title": "Application Rejected",
+      "message": "I'm sorry, your application has been rejected.",
+      "type": "rejection",
+      "status": "Rejected"
+    },
+    {
+      "id": "10", 
       "notifStatus": "Read",
       "date": "11/28/2024",
       "title": "Application Approved",
@@ -81,7 +90,7 @@
       "status": "Success"
     },
     {
-      "id": 4,
+      "id": "11",
       "notifStatus": "Read",
       "date": "11/28/2024",
       "title": "Application Approved",
@@ -90,7 +99,7 @@
       "status": "Success"
     },
     {
-      "id": 5,
+      "id": "12",
       "notifStatus": "Read",
       "date": "11/28/2024",
       "title": "Application Approved",
@@ -99,7 +108,7 @@
       "status": "Success"
     },
     {
-      "id": 6,
+      "id": "13",
       "notifStatus": "Read",
       "date": "11/28/2024",
       "title": "Application Approved",
@@ -108,7 +117,7 @@
       "status": "Success"
     },
     {
-      "id": 7,
+      "id": "14",
       "notifStatus": "Read",
       "date": "11/28/2024",
       "title": "Application Approved",
@@ -117,7 +126,7 @@
       "status": "Success"
     },
     {
-      "id": 8,
+      "id": "15",
       "notifStatus": "Read",
       "date": "11/28/2024",
       "title": "Application Approved",
@@ -126,16 +135,7 @@
       "status": "Success"
     },
     {
-      "id": 9,
-      "notifStatus": "Read",
-      "date": "11/28/2024",
-      "title": "Application Approved",
-      "message": "Congratulations! Your application has been approved.",
-      "type": "approval",
-      "status": "Success"
-    },
-    {
-      "id": 10,
+      "id": "16",
       "notifStatus": "Read",
       "date": "11/28/2024",
       "title": "Application Approved",
