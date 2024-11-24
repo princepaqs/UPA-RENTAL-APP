@@ -1363,6 +1363,7 @@ export const AuthContextProvider = ({ children }: { children: ReactNode }) => {
 
     const reportIssue = async (fullName: string, accountId: string, issue: string, issueId: string, description: string) => {
         try {
+            const uid = await SecureStore.getItemAsync('uid')
             const reportIssueData = {
                 fullName,
                 accountId,
@@ -1371,7 +1372,7 @@ export const AuthContextProvider = ({ children }: { children: ReactNode }) => {
                 description
             }
 
-            if(reportIssueData){
+            if(reportIssueData && uid){
                 await setDoc(doc(db, 'issueReports', accountId), reportIssueData)
                 console.log('Report issue successful');
                 sendNotification(uid, 'report-issue', 'Issue Report Submitted', 'Your issue report has been successfully received. Our team will review it and get back to you shortly.', 'Success', 'Unread')
