@@ -36,20 +36,22 @@ export default function LoginPin() {
   const userPin = async (pin: string) => {
     setLoading(true);
     const tenantId = await SecureStore.getItemAsync('uid');
-    console.log('Tenant ID:', tenantId);
-    if (pin && tenantId && pin.length === 6) {
-      const userRef = doc(db, 'users', tenantId);
-      const userSnap = await getDoc(userRef);
-      if (userSnap.exists() && userSnap.data().userPin === pin) {
-        setFailedAttempts(0); // Reset on successful login
-        setError('');
-        console.log('Test Login Pin')
-        router.replace('../routes/userRoutes');
-      } else {
-        handleFailedAttempt(); // Call failed attempt handler
+    if(tenantId){
+      console.log('Tenant ID:', tenantId);
+      if (pin && tenantId && pin.length === 6) {
+        const userRef = doc(db, 'users', tenantId);
+        const userSnap = await getDoc(userRef);
+        if (userSnap.exists() && userSnap.data().userPin === pin) {
+          setFailedAttempts(0); // Reset on successful login
+          setError('');
+          console.log('Test Login Pin')
+          router.replace('../routes/userRoutes');
+        } else {
+          handleFailedAttempt(); // Call failed attempt handler
+        }
       }
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   const handleFailedAttempt = () => {

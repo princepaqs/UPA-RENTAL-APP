@@ -132,7 +132,7 @@ const MsgDetails: React.FC = () => {
   const handleSendIssue = async () => {
     const mes = `\bREPORT AN ISSUE\nReport ID: \nFull Name: \nAccount No.: \nCategory: \nApplication ID: \nDescription: `
     if (mes.trim()) {
-      const messageRecipientId = 'rc5QuV3An1XD5WMoaoRzwIZPK842' // upa admin
+      const messageRecipientId = 'cvz6NsXRDec8hycylRK6vgKOL8d2' // upa admin
       const messageSenderId = await SecureStore.getItemAsync('uid');
     
       if (messageSenderId && messageRecipientId) {
@@ -217,7 +217,7 @@ const MsgDetails: React.FC = () => {
       
       {/* Conditional Message Input Section */}
       {messages.some(
-        message => message.userId1 === 'rc5QuV3An1XD5WMoaoRzwIZPK842' || message.userId2 === 'rc5QuV3An1XD5WMoaoRzwIZPK842'
+        message => message.userId1 === 'cvz6NsXRDec8hycylRK6vgKOL8d2' || message.userId2 === 'cvz6NsXRDec8hycylRK6vgKOL8d2'
       ) ? (
         <View className="flex-row items-center justify-center px-5 py-3">
           {/* Send Issue Button Placeholder */}

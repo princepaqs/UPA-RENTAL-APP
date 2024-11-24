@@ -310,7 +310,7 @@ export const AuthContextProvider = ({ children }: { children: ReactNode }) => {
         //console.log('Registration successful');
 
         // Navigate to user routes after successful registration
-        //router.replace('/success');
+        // router.replace('/sucess');
         }
     } catch (error) {
         const firebaseError = error as { code: string; message: string };
@@ -328,7 +328,7 @@ export const AuthContextProvider = ({ children }: { children: ReactNode }) => {
             });
             
             console.log('No Pin');
-            sendMessage('rc5QuV3An1XD5WMoaoRzwIZPK842', user.uid, 'Hello Juan! Welcome to UPA Support. How can we assist you today? We`re here to help with any questions or issues you may have!');
+            sendMessage('cvz6NsXRDec8hycylRK6vgKOL8d2', user.uid, 'Hello Juan! Welcome to UPA Support. How can we assist you today? We`re here to help with any questions or issues you may have!');
         
             console.log(`Pin has been set.`);
         } else {

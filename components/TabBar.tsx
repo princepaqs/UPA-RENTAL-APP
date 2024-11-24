@@ -4,10 +4,10 @@ import { View, TouchableOpacity, Dimensions, Pressable, Text } from 'react-nativ
 import { BottomTabBarProps } from "@react-navigation/bottom-tabs";
 import { AntDesign, Ionicons, MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
 import Animated, { useSharedValue, useAnimatedStyle, withTiming } from 'react-native-reanimated';
-// import { collection, getDocs, doc, getDoc, query, where } from 'firebase/firestore';
-// import { db, storage } from '../_dbconfig/dbconfig';
-// import { getDownloadURL, ref } from "firebase/storage";
-// import * as SecureStore from 'expo-secure-store';
+import { collection, getDocs, doc, getDoc, query, where } from 'firebase/firestore';
+import { db, storage } from '../_dbconfig/dbconfig';
+import { getDownloadURL, ref } from "firebase/storage";
+import * as SecureStore from 'expo-secure-store';
 
 type IconNames = 'Explore' | 'Favorite' | 'Find_Property' | 'My_Least' | 'Profile';
 
@@ -35,35 +35,35 @@ export function MyTabBar({ state, descriptors, navigation }: BottomTabBarProps) 
 
      // Modify as per the actual status
 
-    // useEffect(() => {
-    //     const fetchAccountStatus = async () => {
-    //         const uid = await SecureStore.getItemAsync('uid');
-    //         if(uid){
-    //             const userRef = await getDoc(doc(db, 'users', uid))
-    //             if(userRef.exists()){
-    //                 const data = userRef.data()
-    //                 if(data){
-    //                     const accountStatus = data?.accountStatus || '';
-    //                     setAccountStatus(accountStatus);
-    //                 }
-    //             }
-    //         }
-    //     }
+    useEffect(() => {
+        const fetchAccountStatus = async () => {
+            const uid = await SecureStore.getItemAsync('uid');
+            if(uid){
+                const userRef = await getDoc(doc(db, 'users', uid))
+                if(userRef.exists()){
+                    const data = userRef.data()
+                    if(data){
+                        const accountStatus = data?.accountStatus || '';
+                        setAccountStatus(accountStatus);
+                    }
+                }
+            }
+        }
 
-    //     fetchAccountStatus();
-    // }, [])
+        fetchAccountStatus();
+    }, [])
 
     return (
         <View>
             {/* Show the review message only when the Explore tab is active and account status is not Approved */}
-            {/* {state.routes[state.index].name === "Explore" && accountStatus === "Under-review" && (
+            {state.routes[state.index].name === "Explore" && accountStatus === "Under-review" && (
                 <View className='flex-row space-x-2 items-center justify-center abosulte bottom-24 mx-6 bg-[#EF5A6F] shadow-md px-6 py-2.5 rounded-2xl '>
                     <MaterialCommunityIcons name="timer-sand-empty" size={35} color="white" />
                    <View className=''>
                      <Text className='text-white text-xs'>Your account is currently <Text className='text-xs font-bold'>under review</Text>. You’ll receive a notification once it's approved.</Text>
                    </View>
                 </View>
-            )} */}
+            )}
 
             <View className="absolute bottom-2 left-5 right-5 flex-row justify-between items-center bg-[#B33939] rounded-full px-2 py-4">
                 <Animated.View style={[{ position: 'absolute', width: tabWidth - 5, height: 55, borderRadius: 100, backgroundColor: 'white' }, animatedStyle]} />

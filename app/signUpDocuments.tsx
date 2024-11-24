@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, Pressable, Alert, Image, ScrollView, Modal, TouchableOpacity, ActivityIndicator } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { useRouter } from 'expo-router';
-// import * as SecureStore from 'expo-secure-store';
+import * as SecureStore from 'expo-secure-store';
 import { useAuth } from '../context/authContext';
 import { Entypo } from '@expo/vector-icons';
 
@@ -82,12 +82,12 @@ const handleSignup = async () => {
   setLoading(true);
 
   try {
-    // const email = (await SecureStore.getItemAsync('email')) || '';
-    // const password = (await SecureStore.getItemAsync('password')) || '';
-    // const firstName = (await SecureStore.getItemAsync('firstName')) || '';
-    // const middleName = (await SecureStore.getItemAsync('middleName')) || '';
-    // const lastName = (await SecureStore.getItemAsync('lastName')) || '';
-    // const fullName = `${firstName} ${middleName} ${lastName}`.trim();
+    const email = (await SecureStore.getItemAsync('email')) || '';
+    const password = (await SecureStore.getItemAsync('password')) || '';
+    const firstName = (await SecureStore.getItemAsync('firstName')) || '';
+    const middleName = (await SecureStore.getItemAsync('middleName')) || '';
+    const lastName = (await SecureStore.getItemAsync('lastName')) || '';
+    const fullName = `${firstName} ${middleName} ${lastName}`.trim();
 
     if (!isChecked) {
       Alert.alert('Register', 'You must agree to the terms and conditions to sign up.');
@@ -107,13 +107,15 @@ const handleSignup = async () => {
       return;
     }
 
-    // await SecureStore.setItemAsync('profilePictureURL', profilePicture.uri || '');
-    // await SecureStore.setItemAsync('barangayClearanceURL', barangayClearance.uri || '');
-    // await SecureStore.setItemAsync('nbiClearanceURL', nbiClearance.uri || '');
-    // await SecureStore.setItemAsync('govtIDURL', govtID.uri || '');
-    // await SecureStore.setItemAsync('proofOfIncomeURL', proofOfIncome.uri || '');
+    await SecureStore.setItemAsync('profilePictureURL', profilePicture.uri || '');
+    await SecureStore.setItemAsync('barangayClearanceURL', barangayClearance.uri || '');
+    await SecureStore.setItemAsync('nbiClearanceURL', nbiClearance.uri || '');
+    await SecureStore.setItemAsync('govtIDURL', govtID.uri || '');
+    await SecureStore.setItemAsync('proofOfIncomeURL', proofOfIncome.uri || '');
 
-    // await register(email, password, fullName);
+    await register(email, password, fullName);
+
+    router.replace('./LoginEmailVerify');
 
   } catch (error) {
     Alert.alert('Register', 'An error occurred during sign up. Please try again.');

@@ -150,7 +150,7 @@ export default function MessageDashboard() {
       message.text.toLowerCase().includes(search.toLowerCase())
     )
     .sort((a, b) => {
-      const priorityId = "rc5QuV3An1XD5WMoaoRzwIZPK842"; // The specific user ID you're prioritizing
+      const priorityId = "cvz6NsXRDec8hycylRK6vgKOL8d2"; // The specific user ID you're prioritizing
 
       // Check if one of the messages belongs to the priority ID
       const isPriorityA = [a.userId1, a.userId2].includes(priorityId);
