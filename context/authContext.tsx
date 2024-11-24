@@ -344,6 +344,7 @@ export const AuthContextProvider = ({ children }: { children: ReactNode }) => {
             const setWalletData = {
                 walletId: tenantId, 
                 balance: 0,
+                revenueBalance: 0,
             };
 
             await setDoc(doc(db, 'wallets', tenantId), setWalletData);
@@ -387,6 +388,27 @@ export const AuthContextProvider = ({ children }: { children: ReactNode }) => {
             } catch (error) {
                 console.error('Error topping up wallet:', error);
             }
+        }
+    }
+
+    const addRevenue = async (uid: string, type: string, value: string, transactionId: string) => {
+        if(!uid || ! value){
+            return Alert.alert('Error', 'Error revenue payment');
+        }
+
+        const revenueData = {
+            id: generateTransactionID(),
+            transactionId,
+            uid,
+            type,
+            value,
+            createdAt: new Date()
+        }
+
+        console.log(revenueData);
+
+        if(revenueData){
+            await setDoc(doc(db, 'revenues', uid, 'revenueId', revenueData.id), revenueData);
         }
     }
 
@@ -1080,7 +1102,7 @@ export const AuthContextProvider = ({ children }: { children: ReactNode }) => {
             const ownerData = ownerWalletRef.data();
             if(tenantData && ownerData && transactionId){
                 const newTenantBalance = tenantData.balance - parseInt(payment);
-                const newOwnerBalance = ownerData.balance + parseInt(payment);
+                const newOwnerBalance = ownerData.revenueBalance + parseInt(payment);
                 if(tenantId && payment){
                     const rentRef = await getDoc(doc(db, 'rentTransactions', transactionId));
                     if(rentRef.exists()){
@@ -1095,9 +1117,10 @@ export const AuthContextProvider = ({ children }: { children: ReactNode }) => {
                         balance: newTenantBalance,
                     };
                     const setOwnerWalletData = {
-                        balance: newOwnerBalance,
+                        revenueBalance: newOwnerBalance,
                     };
                     await updateDoc(doc(db, 'wallets', tenantId), setTenantWalletData);
+                    addRevenue(ownerId, 'Payment' , payment, transactionId);
                     await updateDoc(doc(db, 'wallets', ownerId), setOwnerWalletData);
                     // sendNotification(uid, 'report-issue', 'Issue Report Submitted', 'Your issue report has been successfully received. Our team will review it and get back to you shortly.', 'Success', 'Unread')
             
