@@ -14,7 +14,7 @@ const numberPadKeys = [
 
 export default function LoginSetPin() {
   const router = useRouter();
-  const { setPin, sendMessageUPA } = useAuth();
+  const { setPin } = useAuth();
   const [pin, setPinNumber] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false); // Loading state
@@ -29,10 +29,9 @@ export default function LoginSetPin() {
         setLoading(false); // Stop loading
         setError(''); // Clear any previous error
         const messageSenderId = await SecureStore.getItemAsync('uid');
-      if(messageSenderId){
-        sendMessageUPA(messageSenderId, 'Welcome!');
-        console.log('Message UPA sent')
-      }
+        if(messageSenderId){
+          console.log('Message UPA sent')
+        }
         router.replace('/loginPin');
       }, 2000); // Simulating 2 seconds delay
     } else {

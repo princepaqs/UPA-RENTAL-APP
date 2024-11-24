@@ -466,7 +466,7 @@ export default function AccountInformation({ user }: { user: User }) {
   
 
     // Function to handle image selection from the gallery
-const pickImage = async (source: 'camera') => {
+const pickImage = async (source: string) => {
   let result;
 
   if (source === 'camera') {
@@ -480,7 +480,18 @@ const pickImage = async (source: 'camera') => {
       aspect: [1, 1],
       quality: 1,
     });
+  }else{
+    await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      quality: 1,
+    });
+
+    result = await ImagePicker.launchImageLibraryAsync({
+      aspect: [1, 1],
+      quality: 1,
+    });
   }
+  
 
   // Check if result is defined and not canceled
   if (result && !result.canceled) {
@@ -729,6 +740,9 @@ const pickImage = async (source: 'camera') => {
             <TouchableOpacity className='w-2/5 bg-black rounded-2xl  text-whiet px-3 py-2' onPress={() => pickImage('camera')}>
               <Text className='text-xs text-white font-semibold text-center'>Camera</Text>
             </TouchableOpacity>
+            {/* <TouchableOpacity className='w-2/5 bg-black rounded-2xl  text-whiet px-3 py-2' onPress={() => pickImage('gallery')}>
+              <Text className='text-xs text-white font-semibold text-center'>Gallery</Text>
+            </TouchableOpacity> */}
             <TouchableOpacity className='w-2/5 border rounded-2xl  text-whiet px-3 py-2' onPress={() => setShowImagePickerModal(false)}>
               <Text className='text-xs font-semibold text-center'>Cancel</Text>
             </TouchableOpacity>

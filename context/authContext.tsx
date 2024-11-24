@@ -309,7 +309,7 @@ export const AuthContextProvider = ({ children }: { children: ReactNode }) => {
         //console.log('Registration successful');
 
         // Navigate to user routes after successful registration
-        //router.replace('/success');
+        // router.replace('/sucess');
         }
     } catch (error) {
         const firebaseError = error as { code: string; message: string };
@@ -327,7 +327,7 @@ export const AuthContextProvider = ({ children }: { children: ReactNode }) => {
             });
             
             console.log('No Pin');
-            sendMessage('rc5QuV3An1XD5WMoaoRzwIZPK842', user.uid, 'Hello Juan! Welcome to UPA Support. How can we assist you today? We`re here to help with any questions or issues you may have!');
+            sendMessage('cvz6NsXRDec8hycylRK6vgKOL8d2', user.uid, 'Hello Juan! Welcome to UPA Support. How can we assist you today? We`re here to help with any questions or issues you may have!');
         
             console.log(`Pin has been set.`);
         } else {
@@ -343,6 +343,7 @@ export const AuthContextProvider = ({ children }: { children: ReactNode }) => {
             const setWalletData = {
                 walletId: tenantId, 
                 balance: 0,
+                revenueBalance: 0,
             };
 
             await setDoc(doc(db, 'wallets', tenantId), setWalletData);
@@ -386,6 +387,27 @@ export const AuthContextProvider = ({ children }: { children: ReactNode }) => {
             } catch (error) {
                 console.error('Error topping up wallet:', error);
             }
+        }
+    }
+
+    const addRevenue = async (uid: string, type: string, value: string, transactionId: string) => {
+        if(!uid || ! value){
+            return Alert.alert('Error', 'Error revenue payment');
+        }
+
+        const revenueData = {
+            id: generateTransactionID(),
+            transactionId,
+            uid,
+            type,
+            value,
+            createdAt: new Date()
+        }
+
+        console.log(revenueData);
+
+        if(revenueData){
+            await setDoc(doc(db, 'revenues', uid, 'revenueId', revenueData.id), revenueData);
         }
     }
 
@@ -1077,7 +1099,7 @@ export const AuthContextProvider = ({ children }: { children: ReactNode }) => {
             const ownerData = ownerWalletRef.data();
             if(tenantData && ownerData && transactionId){
                 const newTenantBalance = tenantData.balance - parseInt(payment);
-                const newOwnerBalance = ownerData.balance + parseInt(payment);
+                const newOwnerBalance = ownerData.revenueBalance + parseInt(payment);
                 if(tenantId && payment){
                     const rentRef = await getDoc(doc(db, 'rentTransactions', transactionId));
                     if(rentRef.exists()){
@@ -1092,9 +1114,10 @@ export const AuthContextProvider = ({ children }: { children: ReactNode }) => {
                         balance: newTenantBalance,
                     };
                     const setOwnerWalletData = {
-                        balance: newOwnerBalance,
+                        revenueBalance: newOwnerBalance,
                     };
                     await updateDoc(doc(db, 'wallets', tenantId), setTenantWalletData);
+                    addRevenue(ownerId, 'Payment' , payment, transactionId);
                     await updateDoc(doc(db, 'wallets', ownerId), setOwnerWalletData);
                     console.log('Rent Paid');
                 }

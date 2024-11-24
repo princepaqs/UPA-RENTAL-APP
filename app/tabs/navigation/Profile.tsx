@@ -184,7 +184,8 @@ export default function Profile() {
           ) : (
             <TouchableOpacity
             className='px-8' 
-            onPress={() => handleNavigate('../tabs/UpgradeToPropertyOwner/upgradeToOwner')}
+            onPress={() => handleNavigate('../tabs/UpgradeToPropertyOwner/upgradeToOwner')} // not clickable if accountStatus !== 'Under-review'
+            disabled={accountStatus === 'Under-review'}
           >
             <View className='py-4'>
               <View className='p-3 flex flex-row items-center rounded-2xl bg-[#333333] shadow-md'>

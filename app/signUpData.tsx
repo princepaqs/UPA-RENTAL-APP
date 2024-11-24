@@ -2,7 +2,7 @@ import { View, Text, TextInput, Pressable, Alert, TouchableOpacity, Platform, Sc
 import React, { useRef, useState } from 'react';
 import { useRouter } from 'expo-router';
 import { Entypo, Ionicons } from '@expo/vector-icons';
-// import * as SecureStore from 'expo-secure-store';
+import * as SecureStore from 'expo-secure-store';
 import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
 
 const GENDER_OPTIONS = ['Male', 'Female'];
@@ -51,14 +51,14 @@ export default function SignUp() {
     }
 
     try {
-      // await SecureStore.setItemAsync('firstName', firstNameRef.current);
-      // await SecureStore.setItemAsync('middleName', middleNameRef.current);
-      // await SecureStore.setItemAsync('lastName', lastNameRef.current);
-      // await SecureStore.setItemAsync('birthday', birthdayRef.current);
-      // await SecureStore.setItemAsync('age', age.toString());
-      // await SecureStore.setItemAsync('gender', genderRef.current);
-      // await SecureStore.setItemAsync('education', educationRef.current);
-      // await SecureStore.setItemAsync('civilStatus', civilStatusRef.current);
+      await SecureStore.setItemAsync('firstName', firstNameRef.current);
+      await SecureStore.setItemAsync('middleName', middleNameRef.current);
+      await SecureStore.setItemAsync('lastName', lastNameRef.current);
+      await SecureStore.setItemAsync('birthday', birthdayRef.current);
+      await SecureStore.setItemAsync('age', age.toString());
+      await SecureStore.setItemAsync('gender', genderRef.current);
+      await SecureStore.setItemAsync('education', educationRef.current);
+      await SecureStore.setItemAsync('civilStatus', civilStatusRef.current);
       router.push('/signUpData2');
     } catch (error) {
       console.error('Error saving data', error);

@@ -3,9 +3,9 @@ import React, { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'expo-router';
 import Loading from '@/components/Loading';
 import { Entypo, Feather, Ionicons } from '@expo/vector-icons';
-// import * as SecureStore from 'expo-secure-store';
-// import { getDocs, collection, query, where } from 'firebase/firestore'; // For saving data in Firestore (optional)
-// import { db } from '../_dbconfig/dbconfig'; // Import Firestore instance
+import * as SecureStore from 'expo-secure-store';
+import { getDocs, collection, query, where } from 'firebase/firestore'; // For saving data in Firestore (optional)
+import { db } from '../_dbconfig/dbconfig'; // Import Firestore instance
 
 interface Location {
   code: string;
@@ -143,26 +143,26 @@ const isPasswordValid = (password: string) => {
     }
 
     // Save the data using SecureStore
-    // await SecureStore.setItemAsync('homeAddress', houseNoRef.current);
-    // await SecureStore.setItemAsync('location', region);
-    // await SecureStore.setItemAsync('city', city);
-    // await SecureStore.setItemAsync('barangay', brgy);
-    // await SecureStore.setItemAsync('phoneNo', phoneRef.current);
-    // await SecureStore.setItemAsync('profession', professionRef.current);
-    // await SecureStore.setItemAsync('salary', salaryRef.current);
-    // await SecureStore.setItemAsync('email', email);
-    // await SecureStore.setItemAsync('password', password);
-    // await SecureStore.setItemAsync('salary', selectedSalary);
+    await SecureStore.setItemAsync('homeAddress', houseNoRef.current);
+    await SecureStore.setItemAsync('location', region);
+    await SecureStore.setItemAsync('city', city);
+    await SecureStore.setItemAsync('barangay', brgy);
+    await SecureStore.setItemAsync('phoneNo', phoneRef.current);
+    await SecureStore.setItemAsync('profession', professionRef.current);
+    await SecureStore.setItemAsync('salary', salaryRef.current);
+    await SecureStore.setItemAsync('email', email);
+    await SecureStore.setItemAsync('password', password);
+    await SecureStore.setItemAsync('salary', selectedSalary);
 
     // Check if the email is already registered
-    // const usersCollection = collection(db, 'users');
-    // const querySnapshot = await getDocs(query(usersCollection, where("email", "==", email)));
+    const usersCollection = collection(db, 'users');
+    const querySnapshot = await getDocs(query(usersCollection, where("email", "==", email)));
 
-    // if (!querySnapshot.empty) {
-    //   Alert.alert('Email already exists');
-    //   setLoading(false);
-    //   return;
-    // }
+    if (!querySnapshot.empty) {
+      Alert.alert('Email already exists');
+      setLoading(false);
+      return;
+    }
 
     setLoading(false);
     router.push('/signUpDocuments');
@@ -182,7 +182,7 @@ const isPasswordValid = (password: string) => {
   const filteredBarangays = barangays.filter(barangay =>
     barangay.name.toLowerCase().includes(searchBarangay.toLowerCase())
   );
-  const [phoneNumber, setPhoneNumber] = useState('');
+  const [phoneNumber, setPhoneNumber] = useState('09');
   return (
     <View className='flex-1 bg-[#B33939]'>
       <View className="flex items-start px-12 pb-10 pt-20 justify-center bg-[#B33939]">
