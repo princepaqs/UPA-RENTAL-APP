@@ -20,6 +20,7 @@ interface Rent {
   propertyRentAmount: string;
   //propertyRentDueDay: string;
   propertySecurityDepositAmount: string;
+  propertySecurityDepositStatus: string
   //propertySecurityDepositRefundPeriod: string;
   //propertyAdvancePaymentAmount: string;
   //propertyHouseRules: string;
@@ -126,6 +127,7 @@ export default function TenantDetails() {
                         propertyLeaseDuration: rentData.propertyLeaseDuration,
                         propertyRentAmount: rentData.propertyRentAmount,
                         propertySecurityDepositAmount: rentData.propertySecurityDepositAmount,
+                        propertySecurityDepositStatus: rentData.propertySecurityDepositStatus,
                         propertyImage: propertyImage ? { uri: propertyImage } : require('../../../../assets/images/property1.png'),
                         status: propertyData.status,
                         tenantId: rentData.tenantId,
@@ -303,7 +305,7 @@ export default function TenantDetails() {
                   <View key={detail.label} className='flex-row items-center space-y-1 justify-between'>
                     <View className='flex-row items-center space-x-2'>
                       <Text className='text-xs text-gray-500'>{detail.label}</Text>
-                      {detail.label === 'Security Deposit' ? ( <Text className='text-xs text-gray-500 bg-[#D9D9D9] px-3 py-0.5 rounded-lg'>Held</Text> ) : ( '' )}
+                      {detail.label === 'Security Deposit' ? ( <Text className='text-xs text-gray-500 bg-[#D9D9D9] px-3 py-0.5 rounded-lg'>{rentData?.propertySecurityDepositStatus}</Text> ) : ( '' )}
                     </View>
                     <Text className='text-xs text-gray-500'>{detail.value}</Text>
                   </View>

@@ -53,7 +53,7 @@ interface RequestHistoryItem {
 
 export default function ViewPropertyDetails() {
   const router = useRouter();
-  const { updateMaintenance } = useAuth();
+  const { updateMaintenance, sendNotification } = useAuth();
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isApproveModalVisible, setApproveModalVisible] = useState(false);
   const [isRejectModalVisible, setRejectModalVisible] = useState(false);
@@ -67,7 +67,8 @@ export default function ViewPropertyDetails() {
     console.log(new Date());
     if(maintenance){
         await SecureStore.setItemAsync('prefTime', plannedMoveInDate.toString());
-        updateMaintenance(maintenance?.tenantId, maintenance?.id, 'approvedAt', new Date(), 'Approved')   
+        updateMaintenance(maintenance?.tenantId, maintenance?.id, 'approvedAt', new Date(), 'Approved');
+        sendNotification(maintenance?.tenantId, 'maintenance-approve', 'Maintenance Request Approved', `The maintenance request for ${maintenance.propertyName} has been approved. The maintenance personnel will arrive on ${plannedMoveInDate.toString()} to perform the necessary work.`, 'Success', 'Unread');
     }
     setApproveModalVisible(false);
   };
@@ -79,13 +80,16 @@ export default function ViewPropertyDetails() {
 
   const handleStartWork = async () => {
     if(maintenance){
-        updateMaintenance(maintenance?.tenantId, maintenance?.id, 'progressAt', new Date(), 'In Progress')   
+        updateMaintenance(maintenance?.tenantId, maintenance?.id, 'progressAt', new Date(), 'In Progress')
+        sendNotification(maintenance?.tenantId, 'maintenance-startwork', 'Maintenance Scheduled Today', 'Your scheduled maintenance is today. The maintenance personnel will arrive as planned. Please ensure the property is accessible.', 'Success', 'Unread');
+        sendNotification(maintenance?.tenantId, 'maintenance-inprogress', 'Maintenance In-Progress', 'The maintenance personnel have arrived and started working on your request. ', 'Success', 'Unread');
     }
   }
 
   const handleComplete = async () => {
     if(maintenance){
-        updateMaintenance(maintenance?.tenantId, maintenance?.id, 'completedAt', new Date(), 'Completed')   
+        updateMaintenance(maintenance?.tenantId, maintenance?.id, 'completedAt', new Date(), 'Completed')
+        sendNotification(maintenance?.tenantId, 'maintenance-completed', 'Maintenance Completed', `Your maintenance request has been successfully completed. Please send again if something doesn't seem to work right. Thank you.`, 'Success', 'Unread');
     }
   }
 
