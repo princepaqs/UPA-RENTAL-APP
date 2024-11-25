@@ -28,6 +28,7 @@ export default function Profile() {
   const [modalVisible, setModalVisible] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [accountStatus, setAccountStatus] = useState('');
+  const [roleStatus, setRoleStatus] = useState('');
 
   const confirmLogout = () => {
     setIsLoading(true);
@@ -62,6 +63,7 @@ export default function Profile() {
           const data = userRef.data();
           if(data){
             setRole(data.role);
+            setRoleStatus(data.roleStatus)
           }
         }
         const profilePictureFileName = `${uid}-profilepictures`;
@@ -147,7 +149,7 @@ export default function Profile() {
           </TouchableOpacity>
 
           {/* My Lease Section */}
-          {(role === 'Owner' && accountStatus !== 'Under-review') ? (
+          {(role === 'Owner' && accountStatus === 'Approved') ? (
             <TouchableOpacity
             className='px-8' 
             onPress={() => handleNavigate('../tabs/LeaseProperty/PropertyDashboard')}
@@ -164,7 +166,7 @@ export default function Profile() {
               </View>
             </View>
           </TouchableOpacity>
-          ) : (role === 'Pending' && accountStatus !== 'Under-review') ? (
+          ) : (role === 'Tenant' && roleStatus === 'Under-review') ? (
             <TouchableOpacity
             className='px-8' 
             onPress={() => handleNavigate('../tabs/LeaseProperty/PropertyDashboard')}

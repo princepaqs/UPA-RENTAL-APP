@@ -12,7 +12,7 @@ export default function SignIn() {
   const logoOpacity = useRef(new Animated.Value(0)).current; // Animation for logo opacity
   const textOpacity = useRef(new Animated.Value(0)).current; // Animation for text opacity
   const [isVisible, setIsVisible] = useState(true);  // State to track visibility
-  const { login } = useAuth();
+  const { login, logout } = useAuth();
 
   useEffect(() => {
     fadeIn();
@@ -68,6 +68,7 @@ export default function SignIn() {
         }
         else {
           setTimeout(() => {
+            logout();
             router.replace('/signIn');
           }, 1500);
         }

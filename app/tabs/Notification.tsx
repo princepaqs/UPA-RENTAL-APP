@@ -39,6 +39,7 @@ export default function Notification() {
   const [showAllRead, setShowAllRead] = useState(false);
   const [uid, setUID] = useState<string>('');
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
+  const [roleStatus, setRoleStatus] = useState('');
 
   const propertyAddress = 'Caloocan City';
   const navigation = useNavigation<NavigationProp>();
@@ -51,6 +52,13 @@ export default function Notification() {
           setUID(uid);
           // Create a reference to the notifications collection for the user
           const notifQuery = collection(db, 'notifications', uid, 'notificationId');
+          const userRef = await getDoc(doc(db, 'users', uid))
+          if(userRef.exists()){
+            const userData = userRef.data();
+            if(userData){
+              setRoleStatus(userData.roleStatus);
+            }
+          }
           
           // Set up a real-time listener using onSnapshot
           const unsubscribe = onSnapshot(notifQuery, (snapshot) => {
@@ -68,6 +76,13 @@ export default function Notification() {
               });
             });
   
+            // Sort notifications by date in descending order
+            fetchedNotifications.sort((a, b) => {
+              const dateA = new Date(a.date);
+              const dateB = new Date(b.date);
+              return dateB.getTime() - dateA.getTime(); // descending order
+            });
+  
             console.log(fetchedNotifications);
             // Update the notifications state with the real-time data
             setNotifications(fetchedNotifications);
@@ -83,6 +98,7 @@ export default function Notification() {
   
     fetchNotifications();
   }, []);
+  
 
   const formatDate = (date: Date): string => {
     return date.toLocaleDateString('en-US', {
@@ -129,23 +145,43 @@ export default function Notification() {
         navigation.navigate('Dashboard', { screen: 'My_Least' });
 
     } 
-      else if (notification.type === 'account-registration' && notification.status === 'Rejected') {
-        setModalVisible(true);
-        setModalTitle('Request Re-Submission Form');
-        setModalMessage(`Do you want to request re-submit your documents?`);  
+    else if ((notification.type === 'account-registration' || notification.type === 'account-registration-owner') && notification.status === 'Rejected') {
+      setModalVisible(true); // Show the modal
+      
+      // Check the roleStatus condition and set the modal details accordingly
+      if (roleStatus === 'Under-review') {
+        // If roleStatus is 'Under-review', show resubmission message
+        setModalTitle('Submission Form Resubmitted');
+        setModalMessage('Your documents have been resubmitted.');
         setModalActions([
-            
-            { 
-                label: 'Yes', 
-                onPress: () => {
-                    handleCloseModal();
-                    router.push('./ReSubmissionForm');
-                }, 
-                color: '#EF5A6F',
-            },
-            { label: 'No', onPress: handleCloseModal, color: '#333333' },
+          { 
+            label: 'Ok', 
+            onPress: handleCloseModal, 
+            color: '#38A169',
+          },
         ]);
-    }  
+      } else {
+        // If roleStatus is not 'Under-review', show re-submission request message
+        setModalTitle('Request Re-Submission Form');
+        setModalMessage('Do you want to request to re-submit your documents?');
+        setModalActions([
+          { 
+            label: 'Yes', 
+            onPress: () => {
+              handleCloseModal();
+              router.push('./ReSubmissionForm');
+            }, 
+            color: '#EF5A6F',
+          },
+          { 
+            label: 'No', 
+            onPress: handleCloseModal, 
+            color: '#333333' 
+          },
+        ]);
+      }
+    }
+     
      else {
       setModalVisible(true);
       setModalTitle(notification.title);

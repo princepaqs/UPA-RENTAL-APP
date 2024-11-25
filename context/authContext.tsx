@@ -118,7 +118,7 @@ export const AuthContextProvider = ({ children }: { children: ReactNode }) => {
                     await SecureStore.setItemAsync('fullName', fullname);
                     await SecureStore.setItemAsync('accountId', userData.accountId);
 
-                    await updateDoc(doc(db, 'users', user.uid), {userLoginTime: Date.now()});
+                    await updateDoc(doc(db, 'users', user.uid), {userLoginTime: Date.now(), onlineStatus: 'Online'});
                     if(usePassword === 'true'){
                         router.replace('../tabs/Dashboard');
                         await SecureStore.deleteItemAsync('usePassword');
@@ -156,6 +156,12 @@ export const AuthContextProvider = ({ children }: { children: ReactNode }) => {
 
     const logout = async () => {
         try {
+            const uid = await SecureStore.getItemAsync('uid');
+            if(!uid){
+                return Alert.alert('Error', 'Error logging out');
+            }
+
+            await updateDoc(doc(db, 'users', uid), {onlineStatus: 'Offline'});
             // logout logic
             await SecureStore.deleteItemAsync('password');
             await SecureStore.deleteItemAsync('token');
@@ -278,7 +284,7 @@ export const AuthContextProvider = ({ children }: { children: ReactNode }) => {
             userPin,
             userLoginTime,
             role: 'Tenant',
-            roleStatus: 'Under-review',
+            roleStatus: '',
             rating: '0',
             latitude: '0',
             longitude: '0',
@@ -475,7 +481,7 @@ export const AuthContextProvider = ({ children }: { children: ReactNode }) => {
             const ownerPermit = await uploadImageToStorage(permit, 'ownerpermits', tenantId)
 
             if(ownerPermit){
-                await updateDoc(doc(db, 'users', tenantId), {ownerPermit} );
+                await updateDoc(doc(db, 'users', tenantId), {ownerPermit, ownerPermitStatus: 'Pending', roleStatus: 'Under-review'} );
             }else{
                 console.log('Error uploading ownerPermit')
             }
@@ -776,6 +782,7 @@ export const AuthContextProvider = ({ children }: { children: ReactNode }) => {
                 propertyLeaseDuration,
                 propertySecurityDepositMonth,
                 propertySecurityDepositAmount,
+                propertySecurityDepositStatus: '',
                 propertyAdvancePaymentAmount,
                 //propertyWaterFee,
                 //propertyElectricFee,
@@ -1160,7 +1167,7 @@ export const AuthContextProvider = ({ children }: { children: ReactNode }) => {
         try {
           // Approve the transaction by updating its status in 'propertyTransactions'
           if (transactionId) {
-            await updateDoc(doc(db, 'propertyTransactions', transactionId), { rentalStartDate: propertyLeaseStart, rentalEndDate: propertyLeaseEnd, status: 'Waiting Signature & Payment' });
+            await updateDoc(doc(db, 'propertyTransactions', transactionId), { rentalStartDate: propertyLeaseStart, rentalEndDate: propertyLeaseEnd, status: 'Waiting Signature & Payment', propertyTerminatePerion: '' });
             await updateDoc(doc(db, 'properties', ownerId, 'propertyId', propertyId), { status: 'Rented' });
       
             // Add the contract details into a new collection named 'contracts' with the transactionId as the document ID
@@ -1208,8 +1215,10 @@ export const AuthContextProvider = ({ children }: { children: ReactNode }) => {
                     propertyRentDueDay,
                     propertySecurityDepositAmount,
                     propertySecurityDepositRefundPeriod,
+                    propertySecurityDepositStatus: 'Held',
                     propertyAdvancePaymentAmount,
                     paymentDuration: paymentDuration,
+                    propertyTerminateContractStatus: '',
                     status: 'Rented'
                 });
             } else{
@@ -1226,8 +1235,10 @@ export const AuthContextProvider = ({ children }: { children: ReactNode }) => {
                     propertyRentDueDay,
                     propertySecurityDepositAmount,
                     propertySecurityDepositRefundPeriod,
+                    propertySecurityDepositStatus: 'Held',
                     propertyAdvancePaymentAmount,
                     paymentDuration: paymentDuration,
+                    propertyTerminateContractStatus: '',
                     status: 'Rented'
                 });
             }
