@@ -49,6 +49,7 @@ interface AuthContextType {
     withdrawMaintenance: (uid: string, maintenanceId: string) => Promise<void>;
     updateMaintenance: (uid: string, maintenanceId: string, timeType: string, time: Date, status: string) => Promise<void>;
     sendMessage: (userId1: string, userId2: string, text: string) => Promise<void>;
+    sendNotification: (uid: string, type: string, title: string, message: string, status: string, notifStatus: string) => Promise<void>;
     completeOnboarding: () => void; // Function to mark onboarding as completed
     
 }
@@ -1067,6 +1068,8 @@ export const AuthContextProvider = ({ children }: { children: ReactNode }) => {
                 });
     
                 console.log('Transaction created successfully.');
+
+                sendNotification(tenantId, 'approval', 'Rent Application', `Your application has been successfully submitted. The property owner will review your application and notify you of their decision soon.`, 'Success', 'Unread');
             } catch (error) {
                 console.error('Error creating transaction:', error);
             }
@@ -1360,6 +1363,7 @@ export const AuthContextProvider = ({ children }: { children: ReactNode }) => {
 
     const reportIssue = async (fullName: string, accountId: string, issue: string, issueId: string, description: string) => {
         try {
+            const uid = await SecureStore.getItemAsync('uid')
             const reportIssueData = {
                 fullName,
                 accountId,
@@ -1368,9 +1372,10 @@ export const AuthContextProvider = ({ children }: { children: ReactNode }) => {
                 description
             }
 
-            if(reportIssueData){
+            if(reportIssueData && uid){
                 await setDoc(doc(db, 'issueReports', accountId), reportIssueData)
                 console.log('Report issue successful');
+                sendNotification(uid, 'report-issue', 'Issue Report Submitted', 'Your issue report has been successfully received. Our team will review it and get back to you shortly.', 'Success', 'Unread')
             }
         } catch (error) {
             console.log('Report issue failed');
@@ -1538,6 +1543,47 @@ export const AuthContextProvider = ({ children }: { children: ReactNode }) => {
     //     await setDoc(doc(db, 'messages', messageFromUser.messageId), messageFromUser)
     //     console.log('Message sent')
     // }
+
+    const sendNotification = async (
+        uid: string,
+        type: string,
+        title: string,
+        message: string,
+        status: string,
+        notifStatus: string
+    ) => {
+        const notificationId = generateTransactionID();
+    
+        // Validate required fields
+        if (!notificationId || !uid || !type || !title || !message || !status || !notifStatus) {
+            Alert.alert('Error', 'Sending notification failed. Missing required fields.');
+            return; // Prevent further execution
+        }
+    
+        // Construct notification data
+        const notificationData = {
+            id: notificationId,
+            uid, // recipientId
+            type,
+            title,
+            message,
+            status,
+            notifStatus, // Read/Unread
+            createdAt: new Date(), // Firestore automatically converts JS Date to Timestamp
+        };
+    
+        try {
+            // Save notification to Firestore
+            await setDoc(
+                doc(db, 'notifications', uid, 'notificationId', notificationId), // Adjust collection path as needed
+                notificationData
+            );
+            console.log('Notification sent successfully:', notificationData);
+        } catch (error) {
+            Alert.alert('Error', `Failed to send notification`);
+            console.error('Error sending notification:', error);
+        }
+    };
     
 
     // Function to mark onboarding as completed
@@ -1550,7 +1596,7 @@ export const AuthContextProvider = ({ children }: { children: ReactNode }) => {
             withdrawWallet, topUpWallet, addWalletTransaction, upgradeRole, resetPassword, addProperty, editProperty, deleteProperty, 
             completeOnboarding, rentProperty, withdrawRent, payRent, approveTenant, rejectTenant, addFavorite, removeFavorite, 
             reportProperty, reportProfile, reportIssue, maintenanceRequest, withdrawMaintenance, updateMaintenance, 
-            sendMessage }}>
+            sendMessage, sendNotification }}>
             {children}
             <ErrorModal visible={modalVisible} message={modalMessage} onClose={closeModal} />
         </AuthContext.Provider>

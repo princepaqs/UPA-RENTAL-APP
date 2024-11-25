@@ -1,21 +1,93 @@
 import { View, Text, TouchableOpacity, ActivityIndicator, ImageBackground, Pressable } from 'react-native';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import paymentData from './paymentData.json'; // Import the property data
 import { Image } from 'react-native';
 import { captureScreen } from 'react-native-view-shot';
 import * as MediaLibrary from 'expo-media-library';
+import * as SecureStore from 'expo-secure-store';
+import { getDownloadURL, ref } from 'firebase/storage'; 
+import { db, storage } from '../../../../../_dbconfig/dbconfig'; 
+import { collection, getDocs, query, where, doc, getDoc, setDoc } from 'firebase/firestore';
+
+interface Receipt {
+  referenceNo: string;
+  transactionId: string;
+  dateTime: string;
+  ownerName: string;
+  ownerEmail: string;
+  propertyId: string;
+  propertyAddress: string;
+  paymentPurpose: string;
+  paymentAmount: string;
+  billingPeriod: string;
+  fee: string;
+  total: string;
+}
 
 export default function paymentReceipt() {
     const router = useRouter();
     const [loading, setLoading] = useState(false);
+    const [receiptData, setReceiptData] = useState<Receipt | null>(null);
 
     // For now, we'll use the first property as an example
     const selectedPayment = paymentData[0];
 
+    const generateTransactionID = () => {
+      const now = new Date();
+      const date = now.toISOString().slice(0, 10).replace(/-/g, ''); // Format YYYYMMDD
+      const randomNumbers = Math.floor(1000 + Math.random() * 9000); // Generate 4 random digits
+      return `${date}${randomNumbers}`; // Format: YYYYMMDDXXXX
+  };
 
-    const hanndleDownload = async () => {
+    useEffect(() => {
+      const fetchPaymentReceipt = async () => {
+        const transactionPaymentId = await SecureStore.getItemAsync('transactionPaymentId');
+        if(transactionPaymentId){
+          const rentRef = await getDoc(doc(db, 'rentTransactions', transactionPaymentId));
+          if(rentRef.exists()){
+            const rentData = rentRef.data();
+            if(rentData){
+              const tenantId = rentData.tenantId;
+              const ownerId = rentData.ownerId;
+              const propertyId = rentData.propertyId;
+              if(tenantId && ownerId && propertyId){
+                const userRef = await getDoc(doc(db, 'users', ownerId));
+                const propertyRef = await getDoc(doc(db, 'properties', ownerId, 'propertyId', propertyId));
+                if(userRef && propertyRef){
+                  const userData = userRef.data();
+                  const propertyData = propertyRef.data();
+                  if(userData && propertyData){
+                    const referenceNumber = generateTransactionID();
+                    const total = parseInt('100') + parseInt(propertyData.propertyRentAmount);
+                    setReceiptData({
+                      referenceNo: referenceNumber,
+                      transactionId: transactionPaymentId,
+                      dateTime: '',
+                      ownerName: `${userData.firstName} ${userData.middleName} ${userData.lastName}`,
+                      ownerEmail: userData.email,
+                      propertyId: propertyId,
+                      propertyAddress: `${propertyData.homeAddress}, ${propertyData.barangay}, ${propertyData.city}, ${propertyData.region}`,
+                      paymentPurpose: 'Rent',
+                      paymentAmount: propertyData.propertyRentAmount,
+                      billingPeriod: '',
+                      fee: '100',
+                      total: total.toString(),
+                    })
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+
+      fetchPaymentReceipt();
+    }, [])
+
+
+    const handleDownload = async () => {
       try {
           setLoading(true);
 
@@ -84,9 +156,9 @@ export default function paymentReceipt() {
                         <Text className='text-xs text-[#6C6C6C] font-bold'>Date Time</Text>
                       </View>
                       <View className='flex-col w-1/2'>
-                        <Text className='text-xs text-[#6C6C6C]'>{referenceNo}</Text>
-                        <Text className='text-xs text-[#6C6C6C]'>{selectedPayment.transactionId}</Text>
-                        <Text className='text-xs text-[#6C6C6C]'>{selectedPayment.dateTime}</Text>
+                        <Text className='text-xs text-[#6C6C6C]'>{receiptData?.referenceNo}</Text>
+                        <Text className='text-xs text-[#6C6C6C]'>{receiptData?.transactionId}</Text>
+                        <Text className='text-xs text-[#6C6C6C]'>{receiptData?.dateTime}</Text>
                       </View>
                     </View>
                     
@@ -98,10 +170,10 @@ export default function paymentReceipt() {
                         <Text className='text-xs text-[#6C6C6C] font-bold'>Address </Text>
                       </View>
                       <View className='flex-col space-y-1 w-1/2'>
-                        <Text className='text-xs text-[#6C6C6C]'>{selectedPayment.landlord}</Text>
-                        <Text className='text-xs text-[#6C6C6C]'>{selectedPayment.email}</Text>
-                        <Text className='text-xs text-[#6C6C6C]'>{selectedPayment.propertyType}</Text>
-                        <Text className='text-xs text-[#6C6C6C]'>{address}</Text>
+                        <Text className='text-xs text-[#6C6C6C]'>{receiptData?.ownerName}</Text>
+                        <Text className='text-xs text-[#6C6C6C]'>{receiptData?.ownerEmail}</Text>
+                        <Text className='text-xs text-[#6C6C6C]'>{receiptData?.propertyId}</Text>
+                        <Text className='text-xs text-[#6C6C6C]'>{receiptData?.propertyAddress}</Text>
                       </View>
                     </View>
 
@@ -113,10 +185,10 @@ export default function paymentReceipt() {
                         <Text className='text-xs text-[#6C6C6C] font-bold'>Fee</Text>
                       </View>
                       <View className='flex-col space-y-1 w-1/2'>
-                        <Text className='text-xs text-[#6C6C6C]'>{selectedPayment.purpose}</Text>
-                        <Text className='text-xs text-[#6C6C6C]'>{selectedPayment.amount}</Text>
-                        <Text className='text-xs text-[#6C6C6C]'>{selectedPayment.billingPeriod}</Text>
-                        <Text className='text-xs text-[#6C6C6C]'> {selectedPayment.fee}</Text>
+                        <Text className='text-xs text-[#6C6C6C]'>{receiptData?.paymentPurpose}</Text>
+                        <Text className='text-xs text-[#6C6C6C]'>{receiptData?.paymentAmount}</Text>
+                        <Text className='text-xs text-[#6C6C6C]'>{receiptData?.billingPeriod}</Text>
+                        <Text className='text-xs text-[#6C6C6C]'> {receiptData?.fee}</Text>
                       </View>
                     </View>
 
@@ -125,7 +197,7 @@ export default function paymentReceipt() {
                         <Text className='text-xs text-[#6C6C6C] font-bold'>TOTAL</Text>
                       </View>
                       <View className='flex-col w-1/2'>
-                        <Text className='text-xs text-[#6C6C6C]'>{selectedPayment.total}</Text>
+                        <Text className='text-xs text-[#6C6C6C]'>{receiptData?.total}</Text>
                       </View>
                     </View>
                 </View>
@@ -136,7 +208,7 @@ export default function paymentReceipt() {
                                 <Text className='text-xs text-center text-[#6C6C6C]'>Your payment has been successfully processed. Thank you for choosing us!</Text>
                             </View>
                             <Pressable className='mb-4'
-                            onPress={hanndleDownload}>
+                            onPress={handleDownload}>
                                 <Text className='text-xs text-[#EF5A6F]'>Download Receipt</Text>
                             </Pressable>
                             {loading ? ( // Show loading indicator when loading is true
