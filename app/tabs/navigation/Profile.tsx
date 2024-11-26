@@ -170,6 +170,7 @@ export default function Profile() {
             <TouchableOpacity
             className='px-8' 
             onPress={() => handleNavigate('../tabs/LeaseProperty/PropertyDashboard')}
+            disabled={roleStatus === 'Under-review'}
           >
             <View className='py-4'>
               <View className='p-3 flex flex-row items-center rounded-2xl bg-[#133E87] shadow-md'>
