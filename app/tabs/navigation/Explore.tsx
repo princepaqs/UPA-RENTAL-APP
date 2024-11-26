@@ -410,16 +410,17 @@ console.log(filteredProperties);
 
       <View>
         <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-          <View className='flex flex-row gap-5 px-8 pb-3 pt-2'>
+          <View className='flex flex-row gap-4 px-8 pb-3 pt-2'>
             {[
               { label: 'Condo', icon: <FontAwesome5 name="building" size={20} color="black" /> },
               { label: 'Apartment', icon: <FontAwesome name="building-o" size={20} color="black" /> },
               { label: 'Studio Unit', icon: <FontAwesome6 name="building" size={20} color="black" /> },
               { label: 'House', icon: <AntDesign name="home" size={20} color="black" /> },
             ].map(({ label, icon }) => (
-              <TouchableOpacity
+              <View className={` shadow-md pb-1 ${selectedFilters.includes(label) ? 'border-b-2 rounded-b border-[#EF5A6F]' : ''}`}>
+                <TouchableOpacity
                 key={label}
-                className={`flex flex-row items-center py-1 space-x-1 ${selectedFilters.includes(label) ? 'bg-[#FFFFFF]' : 'bg-[#FFFFFF]/80'} p-1.5 rounded-lg ${selectedFilters.includes(label) ? 'border-b-2 border-[#EF5A6F]' : ''}`}
+                className={`flex flex-row items-center w-[100px] px-2 py-1 space-x-2 ${selectedFilters.includes(label) ? 'bg-white' : 'bg-white/90'} rounded-lg`}
                 onPress={() => handleFilterPress(label)}
                 style={{ opacity: selectedFilters.includes(label) ? 1 : 0.85 }}
               >
@@ -428,6 +429,7 @@ console.log(filteredProperties);
                   {label}
                 </Text>
               </TouchableOpacity>
+              </View>
             ))}
           </View>
         </ScrollView>

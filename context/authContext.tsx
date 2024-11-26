@@ -124,7 +124,7 @@ export const AuthContextProvider = ({ children }: { children: ReactNode }) => {
                         await SecureStore.deleteItemAsync('usePassword');
                     } else{
                         await SecureStore.deleteItemAsync('usePassword');
-                        router.replace('../loginPin');
+                        router.replace('../tabs/Feedback/PropertyFeedback/propertyFeedback');
                         const token = await user.getIdToken(true);
                         await SecureStore.setItemAsync('token', token);
                         //setIsAuthenticated(true); // this is where auto logged begins

@@ -153,7 +153,7 @@ export default function LoginPin() {
               {row.map((key, index) => (
                 <Pressable
                   key={index}
-                  className='w-20 h-20 lg:w-24 lg:h-24 bg-[#D9534F] rounded-full flex justify-center items-center m-2.5'
+                  className='w-[70px] h-[70px] lg:w-20 lg:h-20 bg-[#D9534F] rounded-full flex justify-center items-center m-2.5'
                   onPress={() => handleChange(key)}
                 >
                   <Text className='text-2xl text-white font-normal'>{key}</Text>
