@@ -78,7 +78,7 @@ export default function Tenants() {
   const [rentConfirmationModalVisible, setRentConfirmationModalVisible] = useState(false);
   const [plannedMoveInDate, setPlannedMoveInDate] = useState(new Date()); // Change to Date object
   const [showDatePicker, setShowDatePicker] = useState(false); // State to show/hide DatePicker
-  const { rentProperty, addFavorite, removeFavorite } = useAuth();
+  const { rentProperty, addFavorite, removeFavorite, sendNotification } = useAuth();
   const [modalVisible, setModalVisible] = useState(false);
   
   const phoneNumber = '1234567890';
@@ -101,6 +101,9 @@ const handlePhoneCall = () => {
     await SecureStore.setItemAsync('moveInDate', plannedMoveInDate.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }));
     console.log(plannedMoveInDate.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }));
     rentProperty();
+    if(ownerData?.id){
+      sendNotification(ownerData?.id, 'property-application', 'New Application for Your Property', `You have received a new application for your property, ${propertyData?.propertyName}. Please review the application and take action accordingly.`, 'Success', 'Unread');
+    }
     router.replace('/tabs/Profile/TrackApplication/TrackApplication');
     setRentConfirmationModalVisible(false);
   };

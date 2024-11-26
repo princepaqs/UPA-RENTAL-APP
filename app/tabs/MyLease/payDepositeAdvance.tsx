@@ -31,6 +31,7 @@ interface Payment {
   ownerId: string;
   propertyId: string;
   tenantId: string;
+  tenantFullName: string;
   transactionDate: string;
   propertyName: string;
   ownerFullName: string;
@@ -82,6 +83,7 @@ export default function payDepositeAdvance() {
             if(paymentData && rentData){
               payRent(paymentData?.transactionId, paymentData?.ownerId, paymentData?.tenantId, rentData?.propertyRentAmount, rentData.propertyLeaseStart, rentData.propertyLeaseEnd);
               sendNotification(paymentData?.tenantId, 'approval', 'Payment Successful', `Your advance and downpayment have been successfully processed. Your lease is now secured, and the next steps will be provided shortly.`, 'Success', 'Unread')
+              sendNotification(paymentData.ownerId, 'approval', 'Deposit and Advance Payment Received', `You have successfully received the deposit and advance payment from ${paymentData.tenantFullName} for ${paymentData.propertyName}.`, 'Success', 'Unread');
               addWalletTransaction(paymentData?.tenantId, 'Payment', paymentData?.transactionId, formatDate(new Date()), rentData?.propertyRentAmount, 'PAY_ONTIME');
               await updateDoc(doc(db, 'propertyTransactions', paymentData.transactionId), {status: 'Approved'});
               await updateDoc(doc(db, 'properties', paymentData?.ownerId, 'propertyId', paymentData?.propertyId), {status: "Occupied"})
@@ -160,12 +162,14 @@ export default function payDepositeAdvance() {
         const propertyRef = await getDoc(doc(db, 'properties', rentData?.ownerId, 'propertyId', rentData?.propertyId));
         const rentRef = await getDoc(doc(db, 'rentTransactions', rentData?.transactionId));
         const userRef = await getDoc(doc(db, 'users', rentData?.ownerId));
-        if(propertyRef.exists() && rentRef.exists() && userRef.exists()){
+        const tenantRef = await getDoc(doc(db, 'users', rentData?.tenantId));
+        if(propertyRef.exists() && rentRef.exists() && userRef.exists() && tenantRef.exists()){
           const propertyRefData = propertyRef.data();
           const rentRefData = rentRef.data();
           const userRefData = userRef.data();
+          const tenantData = tenantRef.data();
           const rent = await SecureStore.getItemAsync('rent');
-          if(propertyRefData && rentRefData && userRefData && rent){
+          if(propertyRefData && rentRefData && userRefData && rent && tenantData){
             const paymentAmount = parseInt(rent);
             const paymentFee = 100;
             setPaymentData({
@@ -173,6 +177,7 @@ export default function payDepositeAdvance() {
               ownerId: rentData.ownerId,
               propertyId: rentData.propertyId,
               tenantId: rentData.tenantId,
+              tenantFullName: `${tenantData.firstName} ${tenantData.middleName} ${tenantData.lastName}`,
               transactionDate: new Date().toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' }),
               propertyName: propertyRefData.propertyName,
               ownerFullName: `${userRefData.firstName} ${userRefData.middleName} ${userRefData.lastName}`,
