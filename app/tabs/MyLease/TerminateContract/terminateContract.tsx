@@ -70,16 +70,22 @@ export default function TerminateContract() {
 
     const handleConfirmSubmit = async () => {
         setSubmitModalVisible(false); // Hide the modal
-        if (userStatus === 'Owner') {
+        const uid = await SecureStore.getItemAsync('uid');
+        const tenantId = await SecureStore.getItemAsync('contractTenantId');
+        if (tenantId) {
             //for owner function
             console.log("Termination owner request submitted.");
-            const uid = await SecureStore.getItemAsync('uid');
+            
             if(uid){
-                sendNotification(uid, 'termination-contract', 'Termination Request Submitted' ,'Your termination request has been successfully sent to the property owner. Please await their approval or response.', 'Urgent', 'Unread');
+                sendNotification(uid, 'termination-contract', 'Termination Notice Sent to Tenant' ,'You have successfully sent a termination notice to the tenant. Please follow up with them if needed.', 'Urgent', 'Unread');
+                await SecureStore.deleteItemAsync('contractTenantId');
             }
         } else {
             //for tenant function
             console.log("Termination tenant request submitted.");
+            if(uid){
+                sendNotification(uid, 'termination-contract', 'Termination Request Submitted' ,'Your termination request has been successfully sent to the property owner. Please await their approval or response.', 'Urgent', 'Unread');
+            }
         }
         
         router.replace('../../../tabs/Dashboard')

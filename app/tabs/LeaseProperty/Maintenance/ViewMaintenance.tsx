@@ -69,6 +69,7 @@ export default function ViewPropertyDetails() {
         await SecureStore.setItemAsync('prefTime', plannedMoveInDate.toString());
         updateMaintenance(maintenance?.tenantId, maintenance?.id, 'approvedAt', new Date(), 'Approved');
         sendNotification(maintenance?.tenantId, 'maintenance-approve', 'Maintenance Request Approved', `The maintenance request for ${maintenance.propertyName} has been approved. The maintenance personnel will arrive on ${plannedMoveInDate.toString()} to perform the necessary work.`, 'Success', 'Unread');
+        sendNotification(maintenance?.ownerId, 'maintenance-approve', 'Maintenance Request Approved', `You have approved the maintenance request for ${maintenance.propertyName} at ${maintenance.propertyFullAddress}. The maintenance personnel is scheduled to arrive on ${plannedMoveInDate.toString()} to perform the work.`, 'Success', 'Unread');
     }
     setApproveModalVisible(false);
   };
@@ -81,8 +82,8 @@ export default function ViewPropertyDetails() {
   const handleStartWork = async () => {
     if(maintenance){
         updateMaintenance(maintenance?.tenantId, maintenance?.id, 'progressAt', new Date(), 'In Progress')
-        sendNotification(maintenance?.tenantId, 'maintenance-startwork', 'Maintenance Scheduled Today', 'Your scheduled maintenance is today. The maintenance personnel will arrive as planned. Please ensure the property is accessible.', 'Success', 'Unread');
         sendNotification(maintenance?.tenantId, 'maintenance-inprogress', 'Maintenance In-Progress', 'The maintenance personnel have arrived and started working on your request. ', 'Success', 'Unread');
+        sendNotification(maintenance?.ownerId, 'maintenance-inprogress', 'Maintenance In-Progress', `The maintenance for your property, ${maintenance.propertyName} at ${maintenance.propertyFullAddress} started today. Please ensure that everything is in order and continue monitoring the progress.`, 'Success', 'Unread');
     }
   }
 
@@ -90,6 +91,7 @@ export default function ViewPropertyDetails() {
     if(maintenance){
         updateMaintenance(maintenance?.tenantId, maintenance?.id, 'completedAt', new Date(), 'Completed')
         sendNotification(maintenance?.tenantId, 'maintenance-completed', 'Maintenance Completed', `Your maintenance request has been successfully completed. Please send again if something doesn't seem to work right. Thank you.`, 'Success', 'Unread');
+        sendNotification(maintenance?.tenantId, 'maintenance-completed', 'Maintenance Completed', `You have successfully completed the maintenance for ${maintenance.propertyName} at ${maintenance.propertyFullAddress}.`, 'Success', 'Unread');
     }
   }
 
@@ -210,87 +212,127 @@ export default function ViewPropertyDetails() {
 
   useEffect(() => {
     const fetchMaintenance = async () => {
-        const id = await SecureStore.getItemAsync('maintenanceId');
-        const tenantId = await SecureStore.getItemAsync('maintenanceTenantId');
-        const propertyId = await SecureStore.getItemAsync('maintenancePropertyId');
-        const ownerId = await SecureStore.getItemAsync('maintenanceOwnerId');
-        if (id && tenantId && propertyId && ownerId) {
-            // Set up a real-time listener for the 'maintenances' document
-            const maintenanceRef = doc(db, 'maintenances', tenantId, 'maintenanceId', id);
-            const unsubscribeMaintenance = onSnapshot(maintenanceRef, async (maintenanceDoc) => {
-                if (maintenanceDoc.exists()) {
+        try {
+            const id = await SecureStore.getItemAsync('maintenanceId');
+            const tenantId = await SecureStore.getItemAsync('maintenanceTenantId');
+            const propertyId = await SecureStore.getItemAsync('maintenancePropertyId');
+            const ownerId = await SecureStore.getItemAsync('maintenanceOwnerId');
+
+            if (id && tenantId && propertyId && ownerId) {
+                const maintenanceRef = doc(db, 'maintenances', tenantId, 'maintenanceId', id);
+
+                const unsubscribeMaintenance = onSnapshot(maintenanceRef, async (maintenanceDoc) => {
+                    if (!maintenanceDoc.exists()) return;
+
                     const maintenanceData = maintenanceDoc.data();
-                    if (maintenanceData) {
-                        // Real-time listener for 'users' document
-                        const userRef = doc(db, 'users', tenantId);
-                        const unsubscribeUser = onSnapshot(userRef, async (userDoc) => {
-                            if (userDoc.exists()) {
-                                const userData = userDoc.data();
-                                if (userData) {
-                                    // Real-time listener for 'properties' document
-                                    const propertyRef = doc(db, 'properties', ownerId, 'propertyId', propertyId);
-                                    const unsubscribeProperty = onSnapshot(propertyRef, async (propertyDoc) => {
-                                        if (propertyDoc.exists()) {
-                                            const propertyData = propertyDoc.data();
-                                            if (propertyData) {
-                                                const ownerImage = userData.profilePicture ? await getUserImageUrl(tenantId) : require('../../../../assets/images/property1.png');
-                                                const propertyImage = propertyData.images?.[0] ? await getImageUrl(propertyId, propertyData.images[0]) : require('../../../../assets/images/property1.png');
-                                                const imageUrls = maintenanceData.images && maintenanceData.images.length > 0
-                                                    ? await getAllImageUrls(tenantId, maintenanceData.images)
-                                                    : [];
 
-                                                setMaintenance({
-                                                    id: id,
-                                                    date: formatDate(maintenanceData.submittedAt), // Format timestamp to 'Month dd, YYYY'
-                                                    time: formatTime(maintenanceData.submittedAt), // Format timestamp to 'hh:mm AM/PM'
-                                                    tenantId: tenantId,
-                                                    ownerId: ownerId,
-                                                    ownerFullName: `${userData.firstName} ${userData.middleName} ${userData.lastName}`,
-                                                    ownerContact: userData.phoneNo,
-                                                    ownerImage: ownerImage,
-                                                    propertyId: propertyId,
-                                                    propertyName: propertyData.propertyName,
-                                                    propertyType: propertyData.propertyType,
-                                                    propertyFullAddress: `${propertyData.propertyCity}, ${propertyData.propertyRegion}`,
-                                                    preferredTime: new Date(maintenanceData.preferredTime).toLocaleString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }),
-                                                    issueType: maintenanceData.issueType,
-                                                    description: maintenanceData.description,
-                                                    propertyImage: propertyImage,
-                                                    maintenanceImages: imageUrls.length > 0 ? imageUrls.map((url) => ({ uri: url })) : [],
-                                                    submittedAtDate: formatDate(maintenanceData.submittedAt),
-                                                    submittedAt: formatTime(maintenanceData.submittedAt),
-                                                    approvedAtDate: formatDate(maintenanceData.approvedAt),
-                                                    approvedAt: formatTime(maintenanceData.approvedAt),
-                                                    progressAtDate: formatDate(maintenanceData.progressAt),
-                                                    progressAt: formatTime(maintenanceData.progressAt),
-                                                    completedAtDate: formatDate(maintenanceData.completedAt),
-                                                    completedAt: formatTime(maintenanceData.completedAt),
-                                                    maintenanceStatus: maintenanceData.status,
-                                                    accountStatus: 'Active',
-                                                });
-                                            }
-                                        }
-                                    });
+                    const userRef = doc(db, 'users', tenantId);
+                    const propertyRef = doc(db, 'properties', ownerId, 'propertyId', propertyId);
 
-                                    // Clean up property listener on unmount
-                                    return () => unsubscribeProperty();
-                                }
-                            }
-                        });
+                    const [userDoc, propertyDoc] = await Promise.all([
+                        getDoc(userRef),
+                        getDoc(propertyRef),
+                    ]);
 
-                        // Clean up user listener on unmount
-                        return () => unsubscribeUser();
+                    if (!userDoc.exists() || !propertyDoc.exists()) return;
+
+                    const userData = userDoc.data();
+                    const propertyData = propertyDoc.data();
+
+                    const ownerImage = userData.profilePicture
+                        ? await getUserImageUrl(tenantId)
+                        : require('../../../../assets/images/property1.png');
+                    const propertyImage = propertyData.images?.[0]
+                        ? await getImageUrl(propertyId, propertyData.images[0])
+                        : require('../../../../assets/images/property1.png');
+                    const imageUrls = maintenanceData.images?.length
+                        ? await getAllImageUrls(tenantId, maintenanceData.images)
+                        : [];
+
+                    const preferredDate = new Date(maintenanceData.preferredTime);
+                    const today = new Date();
+                    const tomorrow = new Date(today);
+                    tomorrow.setDate(today.getDate() + 1);
+
+                    setMaintenance({
+                        id,
+                        date: formatDate(maintenanceData.submittedAt),
+                        time: formatTime(maintenanceData.submittedAt),
+                        tenantId,
+                        ownerId,
+                        ownerFullName: `${userData.firstName} ${userData.middleName} ${userData.lastName}`,
+                        ownerContact: userData.phoneNo,
+                        ownerImage,
+                        propertyId,
+                        propertyName: propertyData.propertyName,
+                        propertyType: propertyData.propertyType,
+                        propertyFullAddress: `${propertyData.propertyCity}, ${propertyData.propertyRegion}`,
+                        preferredTime: preferredDate.toLocaleString('en-US', {
+                            year: 'numeric',
+                            month: 'long',
+                            day: 'numeric',
+                        }),
+                        issueType: maintenanceData.issueType,
+                        description: maintenanceData.description,
+                        propertyImage,
+                        maintenanceImages: imageUrls.length
+                            ? imageUrls.map((url) => ({ uri: url }))
+                            : [],
+                        submittedAtDate: formatDate(maintenanceData.submittedAt),
+                        submittedAt: formatTime(maintenanceData.submittedAt),
+                        approvedAtDate: formatDate(maintenanceData.approvedAt),
+                        approvedAt: formatTime(maintenanceData.approvedAt),
+                        progressAtDate: formatDate(maintenanceData.progressAt),
+                        progressAt: formatTime(maintenanceData.progressAt),
+                        completedAtDate: formatDate(maintenanceData.completedAt),
+                        completedAt: formatTime(maintenanceData.completedAt),
+                        maintenanceStatus: maintenanceData.status,
+                        accountStatus: 'Active',
+                    });
+
+                    if (
+                        preferredDate.toDateString() === today.toDateString()
+                    ) {
+                        sendNotification(
+                            tenantId, 
+                            'maintenance-startwork', 
+                            'Maintenance Scheduled Today', 
+                            'Your scheduled maintenance is today. The maintenance personnel will arrive as planned. Please ensure the property is accessible.', 
+                            'Success', 
+                            'Unread');
+                        sendNotification(
+                            ownerId,
+                            'maintenance-today',
+                            'Maintenance Scheduled - Today',
+                            `Today is the scheduled maintenance day for your property, ${propertyData.propertyName} at ${propertyData.propertyFullAddress}. Please ensure you go to the property to complete the necessary maintenance tasks.`,
+                            'Success',
+                            'Unread'
+                        );
+                    } else if (
+                        preferredDate.toDateString() === tomorrow.toDateString()
+                    ) {
+                        sendNotification(
+                            ownerId,
+                            'maintenance-tomorrow',
+                            'Maintenance Scheduled - Tomorrow',
+                            `Reminder: The scheduled maintenance for your property, ${propertyData.propertyName} at ${propertyData.propertyFullAddress}, is tomorrow. Please ensure you have taken the necessary actions and provided access for the maintenance team.`,
+                            'Success',
+                            'Unread'
+                        );
                     }
-                }
-            });
+                });
 
-            // Clean up maintenance listener on unmount
-            return () => unsubscribeMaintenance();
+                // Clean up maintenance listener on unmount
+                return () => unsubscribeMaintenance();
+            }
+        } catch (error) {
+            console.error('Error fetching maintenance data:', error);
         }
     };
 
     fetchMaintenance();
 }, []);
+
 
   return (
     <View className='bg-[#B33939]'>

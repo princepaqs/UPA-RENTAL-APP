@@ -290,6 +290,7 @@ export default function ViewPropertyDetails() {
                     router.push('../../MyLease/ViewContract')
                     if(contractData){
                         await SecureStore.setItemAsync('contractId', contractData.transactionId);
+                        await SecureStore.setItemAsync('contractTenantId', contractData.tenantId);
                     }}}
                 disabled={hasContract}
                 >

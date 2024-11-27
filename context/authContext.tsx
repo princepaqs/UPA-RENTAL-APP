@@ -683,13 +683,13 @@ export const AuthContextProvider = ({ children }: { children: ReactNode }) => {
     };
 
     const addProperty = async () => {
+        // Retrieve property details from SecureStore
+        const uid = await SecureStore.getItemAsync('uid');
+        if (!uid) {
+            Alert.alert("Error", "User ID is missing!");
+            return;
+        }
         try {
-            // Retrieve property details from SecureStore
-            const uid = await SecureStore.getItemAsync('uid');
-            if (!uid) {
-                Alert.alert("Error", "User ID is missing!");
-                return;
-            }
             //upgradeRole(uid); // change it once there is a modal in lease my property
     
             // Count the number of properties in the database
@@ -800,7 +800,8 @@ export const AuthContextProvider = ({ children }: { children: ReactNode }) => {
             }*/
     
             // Save property document to Firestore under the user's UID
-            await setDoc(doc(db, 'properties', uid, 'propertyId', propertyId), propertyDocument);
+            await setDoc(doc(db, 'properties', uid, 'propertyId', propertyId), propertyDocument)
+            sendNotification(uid, 'property-add', 'Property Added Successfully', `Your property ${propertyName} has been successfully added to the listings.`, 'Success', 'Unread');
 
             // Save status of property
             //await setDoc(doc(db, 'transaction', propertyId, 'status', ownerId), propertyStatuses);
@@ -839,6 +840,8 @@ export const AuthContextProvider = ({ children }: { children: ReactNode }) => {
 
         } catch (error) {
             console.error("Error adding property:", error);
+            sendNotification(uid, 'property-add', 'Property Listing Unsuccessful', `There was an issue adding your property. Please check the details and try again.`, 'Rejected', 'Unread');
+
         }
     };
     
@@ -890,8 +893,10 @@ export const AuthContextProvider = ({ children }: { children: ReactNode }) => {
                         propertyHouseRules 
                     });
                     Alert.alert('Success', 'Successfully updated property.');
+                    sendNotification(ownerId, 'property-edit', 'Property Details Updated', `The details for ${propertyName} have been successfully updated.`, 'Success', 'Unread');
                 } else {
                     Alert.alert('Error', 'Error updating property.');
+                    sendNotification(ownerId, 'property-edit', 'Property Update Failed', `The details for ${propertyName} could not be updated. Please try again.`, 'Rejected', 'Unread');
                 }
 
             } else {
@@ -949,8 +954,10 @@ export const AuthContextProvider = ({ children }: { children: ReactNode }) => {
                         propertyHouseRules
                     });
                     Alert.alert('Success', 'Successfully updated property with all details.');
+                    sendNotification(ownerId, 'property-edit', 'Property Details Updated', `The details for ${propertyName} have been successfully updated.`, 'Success', 'Unread');
                 } else {
                     Alert.alert('Error', 'Error updating property.');
+                    sendNotification(ownerId, 'property-edit', 'Property Update Failed', `The details for ${propertyName} could not be updated. Please try again.`, 'Rejected', 'Unread');
                 }
             }
 
@@ -990,11 +997,13 @@ export const AuthContextProvider = ({ children }: { children: ReactNode }) => {
         try {
             if(!propertyId || !ownerId) {
                 Alert.alert('Error', 'Error deleting property.');
+                sendNotification(ownerId, 'property-delete', 'Property Successfully Deleted', `The property has been successfully deleted from your listings.`, 'Success', 'Unread');
             }
 
             await deleteDoc(doc(db, 'properties', ownerId, 'propertyId', propertyId));
         } catch (error) {
             Alert.alert('Error', `${error}`);
+            sendNotification(ownerId, 'property-delete', 'Property Deletion Failed', `The property could not be deleted due to an ongoing contract or transaction. Please resolve the active agreements before attempting to delete the property.`, 'Rejected', 'Unread');
         }
     }
 

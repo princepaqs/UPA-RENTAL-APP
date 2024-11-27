@@ -57,7 +57,8 @@ export default function ReceivedContract() {
       return;
     }else{
       router.replace('./payDepositeAdvance')
-      sendNotification(contractData?.tenantId, 'approval', 'Application Rejected', `Your lease contract has been successfully signed. Your lease is now secured, and you can now view and review the contract details.`, 'Success', 'Unread')
+      sendNotification(contractData?.tenantId, 'approval', 'Contract Successfully Signed', `Your lease contract has been successfully signed. Your lease is now secured, and you can now view and review the contract details.`, 'Success', 'Unread')
+      sendNotification(contractData?.ownerId, 'approval', 'Lease Contract Signed', `The lease contract for ${contractData.propertyName} has been successfully signed by ${contractData.tenantFullName}. The lease is now secured.`, 'Success', 'Unread')
     }
   }
 
