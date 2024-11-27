@@ -88,6 +88,13 @@ export default function _layout() {
       />
       
       <Stack.Screen
+        name='Feedback/ThankYouFeedback/thankyouFeedback'
+        options={{
+          header: ()=> <HomeHeader/>
+        }}
+      />
+
+      <Stack.Screen
         name='SearchFilter'
         options={{
           header: ()=> <HomeHeader/>

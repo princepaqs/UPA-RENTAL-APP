@@ -35,24 +35,21 @@ export default function upaFeedback() {
         };
 
         console.log("Feedback Submitted:", feedbackData);
-        Alert.alert("Feedback Submitted", "Thank you for your feedback!");
-        router.back();
+        router.replace('../ThankYouFeedback/thankyouFeedback');
     };
 
     return (
-        <View className="h-screen py-4 px-6">
+        <>
+        <View className="h-screen pt-4 pb-8 px-6">
             <View className="flex-row items-center justify-between mt-10 pb-5 px-4 border-b border-gray-300">
-                <TouchableOpacity onPress={() => router.back()}>
+                <TouchableOpacity onPress={() => router.replace('../Notification')}>
                     <Ionicons name="chevron-back-circle-outline" size={25} color="black" />
                 </TouchableOpacity>
-                <Text className="flex-1 text-xs font-bold text-center">End of Contract - Review</Text>
+                <Text className="flex-1 text-sm font-bold text-center">End of Contract - Review</Text>
             </View>
 
             <ScrollView
-                contentContainerStyle={{ flexGrow: 1 }}
                 showsVerticalScrollIndicator={false}
-                showsHorizontalScrollIndicator={false}
-                className="mb-20"
             >
                 <View className="flex-col mt-5 space-y-2">
                     <Text className="text-lg font-bold">Feedback on Your Experience with UPA</Text>
@@ -81,7 +78,7 @@ export default function upaFeedback() {
                     </View>
                 ))}
 
-                <View className="mt-5">
+                <View className="mt-5 mb-10">
                     <Text className="text-xs">
                         <Text className="font-bold">Overall Comment</Text> (Do you have any additional comments or suggestions about your experience with the application?)
                     </Text>
@@ -95,22 +92,24 @@ export default function upaFeedback() {
                 </View>
             </ScrollView>
 
-            <View className="absolute bottom-0 w-screen py-4 px-12 border-t border-gray-300">
-                <View className="flex-row space-x-4">
-                    <TouchableOpacity
-                        className="flex-1 items-center border border-gray-400 rounded-xl"
-                        onPress={() => router.back()}
-                    >
-                        <Text className="py-3 text-xs font-bold">Back</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                        className="flex-1 items-center bg-[#D9534F] rounded-xl"
-                        onPress={onSubmit}
-                    >
-                        <Text className="py-3 text-white text-xs font-bold">Submit</Text>
-                    </TouchableOpacity>
-                </View>
-            </View>
+            
         </View>
+        <View className="absolute bg-[#F6F6F6] bottom-0 w-screen py-3 px-8 border-t border-gray-300">
+        <View className="flex-row space-x-4">
+            <TouchableOpacity
+                className="flex-1 items-center border border-gray-400 rounded-xl"
+                onPress={() => router.back()}
+            >
+                <Text className="py-3 text-xs font-bold">Back</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+                className="flex-1 items-center bg-[#D9534F] rounded-xl"
+                onPress={onSubmit}
+            >
+                <Text className="py-3 text-white text-xs font-bold">Submit</Text>
+            </TouchableOpacity>
+        </View>
+    </View>
+        </>
     );
 }

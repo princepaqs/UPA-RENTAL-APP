@@ -162,30 +162,35 @@ export default function Notification() {
       ])
     }
 
-    else if (notification.type === 'feedback-property-owner'){
-      const roles = "Tenant";
+    else if (notification.type === 'feedback-property-owner') {
       setModalVisible(true);
       setModalTitle('Feedback!');
-      setModalMessage('Do you want to give Feedback on Your Experience in the Property and the Owner?')
+      setModalMessage(
+          role === 'Tenant'
+              ? 'Do you want to give Feedback on Your Experience in the Property and the Owner?'
+              : 'Do you want to give Feedback on Your Experience with the Tenant?'
+      );
       setModalActions([
-        {
-          label: 'Yes', onPress: () => {
-            handleCloseModal()
-            {roles === 'Tenant'
-              ? router.push('./Feedback/PropertyFeedback/propertyFeedback')
-                : router.push('./Feedback/TenantFeedback/tenantFeedback')
-            }
+          {
+              label: 'Yes',
+              onPress: () => {
+                  handleCloseModal();
+                  role === 'Tenant'
+                      ? router.push('./Feedback/PropertyFeedback/propertyFeedback')
+                      : router.push('./Feedback/TenantFeedback/tenantFeedback');
+              },
+              color: '#38A169',
           },
-          color: '#38A169'
-        },
-        {
-          label: 'No', onPress: () => {
-            handleCloseModal()
+          {
+              label: 'No',
+              onPress: () => {
+                  handleCloseModal();
+              },
+              color: '#EF5A6F',
           },
-          color: '#EF5A6F'
-        },
-      ])
-    }
+      ]);
+  }
+  
 
       else if (notification.type === 'lease-extension' && notification.status === 'Approved') {
         navigation.navigate('Dashboard', { screen: 'My_Least' });

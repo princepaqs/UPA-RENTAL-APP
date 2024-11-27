@@ -16,11 +16,11 @@ export default function tenantFeedback() {
     };
 
     const questions = [
-        "How would you rate your overall experience living in the property?",
-        "Was the property in good condition upon move-in?",
-        "How satisfied were you with the maintenance services provided?",
-        "How would you rate your experience in the neighborhood?",
-        "How would you rate your overall experience with the property?"
+        "How would you rate the tenant’s responsibility in taking care of the property?",
+        "Did the tenant consistently pay their rent on time?",
+        "How effective was the communication between you and the tenant?",
+        "Did the tenant follow the agreed-upon rules and terms of the lease?",
+        "Would you be willing to rent your property to this tenant again in the future?"
     ];
 
     const onSubmit = () => {
@@ -35,8 +35,7 @@ export default function tenantFeedback() {
         };
 
         console.log("Feedback Submitted:", feedbackData);
-        Alert.alert("Feedback Submitted", "Thank you for your feedback!");
-        router.back();
+        router.replace('../ThankYouFeedback/thankyouFeedback');
     };
 
     return (
@@ -50,11 +49,11 @@ export default function tenantFeedback() {
             </View>
 
             <ScrollView
-                showsHorizontalScrollIndicator={false}
+                showsVerticalScrollIndicator={false}
             >
                 <View className="flex-col mt-5 space-y-2">
-                    <Text className="text-lg font-bold">Property</Text>
-                    <Text className="text-xs">Please provide your feedback on your experience living in the property.</Text>
+                    <Text className="text-lg font-bold">Tenants</Text>
+                    <Text className="text-xs">Please answer the following questions to evaluate your tenant's behavior, compliance, and overall experience during their stay.</Text>
                 </View>
 
                 {questions.map((question, questionIndex) => (
@@ -81,7 +80,7 @@ export default function tenantFeedback() {
 
                 <View className="mt-5 mb-10">
                     <Text className="text-xs">
-                        <Text className="font-bold">Overall Comment</Text> (Do you have any additional comments or suggestions about your experience with the application?)
+                        <Text className="font-bold">Overall Comment</Text> (Do you have any additional comments or feedback about your experience with this tenant?)
                     </Text>
                     <TextInput
                         className="mt-2 p-2 border border-gray-300 rounded-lg text-xs"
@@ -95,7 +94,7 @@ export default function tenantFeedback() {
 
             
         </View>
-        <View className="absolute bottom-0 w-screen py-3 px-8 border-t border-gray-300">
+        <View className="absolute bg-[#F6F6F6] bottom-0 w-screen py-3 px-8 border-t border-gray-300">
         <View className="flex-row space-x-4">
             <TouchableOpacity
                 className="flex-1 items-center border border-gray-400 rounded-xl"

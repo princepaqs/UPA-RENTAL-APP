@@ -35,8 +35,7 @@ export default function propertyFeedback() {
         };
 
         console.log("Feedback Submitted:", feedbackData);
-        Alert.alert("Feedback Submitted", "Thank you for your feedback!");
-        router.back();
+        router.replace('../OwnerFeedback/ownerFeedback');
     };
 
     return (
@@ -50,7 +49,7 @@ export default function propertyFeedback() {
             </View>
 
             <ScrollView
-                showsHorizontalScrollIndicator={false}
+                showsVerticalScrollIndicator={false}
             >
                 <View className="flex-col mt-5 space-y-2">
                     <Text className="text-lg font-bold">Property</Text>
@@ -81,7 +80,7 @@ export default function propertyFeedback() {
 
                 <View className="mt-5 mb-10">
                     <Text className="text-xs">
-                        <Text className="font-bold">Overall Comment</Text> (Do you have any additional comments or suggestions about your experience with the application?)
+                        <Text className="font-bold">Overall Comment</Text> (Please share any additional thoughts or feedback regarding your experience in the property)
                     </Text>
                     <TextInput
                         className="mt-2 p-2 border border-gray-300 rounded-lg text-xs"
@@ -95,7 +94,7 @@ export default function propertyFeedback() {
 
             
         </View>
-        <View className="absolute bottom-0 w-screen py-3 px-8 border-t border-gray-300">
+        <View className="absolute bg-[#F6F6F6] bottom-0 w-screen py-3 px-8 border-t border-gray-300">
         <View className="flex-row space-x-4">
             <TouchableOpacity
                 className="flex-1 items-center border border-gray-400 rounded-xl"

@@ -6,7 +6,7 @@ import { useRouter } from 'expo-router';
 export default function ownerFeedback() {
     const router = useRouter();
 
-    const [ratings, setRatings] = useState<Array<number>>(Array(5).fill(0)); 
+    const [ratings, setRatings] = useState<Array<number>>(Array(6).fill(0)); 
     const [comment, setComment] = useState<string>("");
 
     const handleRating = (questionIndex: number, rating: number) => {
@@ -16,11 +16,12 @@ export default function ownerFeedback() {
     };
 
     const questions = [
-        "How would you rate your overall experience living in the property?",
-        "Was the property in good condition upon move-in?",
-        "How satisfied were you with the maintenance services provided?",
-        "How would you rate your experience in the neighborhood?",
-        "How would you rate your overall experience with the property?"
+        "How would you rate your overall communication with the property owner?",
+        "How responsive was the property owner to your inquiries and concerns?",
+        "Did you feel that the property owner was fair and transparent in their dealings with you?",
+        "How would you describe the professionalism of the property owner?",
+        "Did you feel supported by the property owner during your tenancy?",
+        "How would you describe your overall experience with the property owner?"
     ];
 
     const onSubmit = () => {
@@ -35,26 +36,25 @@ export default function ownerFeedback() {
         };
 
         console.log("Feedback Submitted:", feedbackData);
-        Alert.alert("Feedback Submitted", "Thank you for your feedback!");
-        router.back();
+        router.replace('../ThankYouFeedback/thankyouFeedback');
     };
 
     return (
         <>
         <View className="h-screen pt-4 pb-8 px-6">
             <View className="flex-row items-center justify-between mt-10 pb-5 px-4 border-b border-gray-300">
-                <TouchableOpacity onPress={() => router.back()}>
+                <TouchableOpacity onPress={() => router.replace('../Notification')}>
                     <Ionicons name="chevron-back-circle-outline" size={25} color="black" />
                 </TouchableOpacity>
                 <Text className="flex-1 text-sm font-bold text-center">End of Contract - Review</Text>
             </View>
 
             <ScrollView
-                showsHorizontalScrollIndicator={false}
+                showsVerticalScrollIndicator={false}
             >
                 <View className="flex-col mt-5 space-y-2">
-                    <Text className="text-lg font-bold">Property</Text>
-                    <Text className="text-xs">Please provide your feedback on your experience living in the property.</Text>
+                    <Text className="text-lg font-bold">Owner Property</Text>
+                    <Text className="text-xs">Please provide your feedback on your experience with the property owner during your tenancy.</Text>
                 </View>
 
                 {questions.map((question, questionIndex) => (
@@ -81,7 +81,7 @@ export default function ownerFeedback() {
 
                 <View className="mt-5 mb-10">
                     <Text className="text-xs">
-                        <Text className="font-bold">Overall Comment</Text> (Do you have any additional comments or suggestions about your experience with the application?)
+                        <Text className="font-bold">Overall Comment</Text> (Please share any additional thoughts or feedback regarding your experience with the property owner)
                     </Text>
                     <TextInput
                         className="mt-2 p-2 border border-gray-300 rounded-lg text-xs"
@@ -95,11 +95,11 @@ export default function ownerFeedback() {
 
             
         </View>
-        <View className="absolute bottom-0 w-screen py-3 px-8 border-t border-gray-300">
+        <View className="absolute bg-[#F6F6F6] bottom-0 w-screen py-3 px-8 border-t border-gray-300">
         <View className="flex-row space-x-4">
             <TouchableOpacity
                 className="flex-1 items-center border border-gray-400 rounded-xl"
-                onPress={() => router.back()}
+                onPress={() => router.replace('../PropertyFeedback/propertyFeedback')}
             >
                 <Text className="py-3 text-xs font-bold">Back</Text>
             </TouchableOpacity>
