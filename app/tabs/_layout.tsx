@@ -58,7 +58,42 @@ export default function _layout() {
           header: ()=> <HomeHeader/>
         }}
       />
+
+      <Stack.Screen
+        name='Feedback/UPAFeedback/upaFeedback'
+        options={{
+          header: ()=> <HomeHeader/>
+        }}
+      />
       
+      <Stack.Screen
+        name='Feedback/OwnerFeedback/ownerFeedback'
+        options={{
+          header: ()=> <HomeHeader/>
+        }}
+      />
+
+      <Stack.Screen
+        name='Feedback/PropertyFeedback/propertyFeedback'
+        options={{
+          header: ()=> <HomeHeader/>
+        }}
+      />
+
+      <Stack.Screen
+        name='Feedback/TenantFeedback/tenantFeedback'
+        options={{
+          header: ()=> <HomeHeader/>
+        }}
+      />
+      
+      <Stack.Screen
+        name='Feedback/ThankYouFeedback/thankyouFeedback'
+        options={{
+          header: ()=> <HomeHeader/>
+        }}
+      />
+
       <Stack.Screen
         name='SearchFilter'
         options={{

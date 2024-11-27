@@ -115,13 +115,13 @@ export default function MessageHeader() {
   };
 
   return (
-    <View className="w-full bg-[#333333]">
-      <View className="bg-[#F6F6F6] flex flex-row items-center justify-between gap-2 mt-8 px-6 py-2 shadow-lg">
+    <View className="w-full bg-[#F6F6F6]">
+      <View className="bg-[#F6F6F6] flex flex-row items-center justify-between gap-2 mt-8 px-6  shadow-lg">
         <Image className="w-10 h-10" source={require('../assets/images/logo1.png')} />
         <View className='flex-row items-center space-x-3 mr-2 '>
         <View className="">
           <NotificationIcon
-            icon={<AntDesign name="message1" size={25} color='#333333' />}
+            icon={<AntDesign name="message1" size={23} color='#333333' />}
             badgeCount={newMessages}
             onPress={() => router.push('../tabs/Message/MessageDashboard')}
           />
@@ -129,7 +129,7 @@ export default function MessageHeader() {
         </View>
         <View>
           <NotificationIcon
-              icon={<Feather name="bell" size={25} color='#333333' />}
+              icon={<Feather name="bell" size={23} color='#333333' />}
               badgeCount={newNotifications}
               onPress={() => router.push('../tabs/Notification')}
             />

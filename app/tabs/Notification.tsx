@@ -40,7 +40,7 @@ export default function Notification() {
   const [uid, setUID] = useState<string>('');
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
   const [roleStatus, setRoleStatus] = useState('');
-
+  const [role, setRole] = useState('');
   const propertyAddress = 'Caloocan City';
   const navigation = useNavigation<NavigationProp>();
 
@@ -57,6 +57,7 @@ export default function Notification() {
             const userData = userRef.data();
             if(userData){
               setRoleStatus(userData.roleStatus);
+              setRole(userData.role);
             }
           }
           
@@ -140,7 +141,57 @@ export default function Notification() {
               router.replace('./OwnerLeaseExtend/rentalDetails'); 
             }, color: '#38A169' },
       ]);
-    } 
+    } else if (notification.type === 'feedback-upa'){
+      setModalVisible(true);
+      setModalTitle('Feedback!');
+      setModalMessage('Do you want to give Feedback on Your Experience with UPA?')
+      setModalActions([
+        {
+          label: 'Yes', onPress: () => {
+            handleCloseModal()
+            router.push('./Feedback/UPAFeedback/upaFeedback')
+          },
+          color: '#38A169'
+        },
+        {
+          label: 'No', onPress: () => {
+            handleCloseModal()
+          },
+          color: '#EF5A6F'
+        },
+      ])
+    }
+
+    else if (notification.type === 'feedback-property-owner') {
+      setModalVisible(true);
+      setModalTitle('Feedback!');
+      setModalMessage(
+          role === 'Tenant'
+              ? 'Do you want to give Feedback on Your Experience in the Property and the Owner?'
+              : 'Do you want to give Feedback on Your Experience with the Tenant?'
+      );
+      setModalActions([
+          {
+              label: 'Yes',
+              onPress: () => {
+                  handleCloseModal();
+                  role === 'Tenant'
+                      ? router.push('./Feedback/PropertyFeedback/propertyFeedback')
+                      : router.push('./Feedback/TenantFeedback/tenantFeedback');
+              },
+              color: '#38A169',
+          },
+          {
+              label: 'No',
+              onPress: () => {
+                  handleCloseModal();
+              },
+              color: '#EF5A6F',
+          },
+      ]);
+  }
+  
+
       else if (notification.type === 'lease-extension' && notification.status === 'Approved') {
         navigation.navigate('Dashboard', { screen: 'My_Least' });
 
@@ -287,7 +338,9 @@ export default function Notification() {
             )}
           </>
         ) : (
-          <Text>No notifications</Text>
+          <View className='flex-1 items-center justify-center'>
+            <Text className='text-xs font-bold'>No notifications</Text>
+          </View>
         )}
       </ScrollView>
 
