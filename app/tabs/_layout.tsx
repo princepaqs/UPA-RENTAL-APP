@@ -137,6 +137,13 @@ export default function _layout() {
       />
 
       <Stack.Screen
+        name='Reports/FollowUpReports/followUpReports'
+        options={{
+          header: ()=> <HomeHeader/>
+        }}
+      />
+
+      <Stack.Screen
         name='Reports/ReportProfile/submittedReportProfile'
         options={{
           header: ()=> <HomeHeader/>
