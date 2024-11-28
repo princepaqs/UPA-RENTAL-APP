@@ -274,7 +274,7 @@ const MsgDetails: React.FC = () => {
       ) ? (
         <View className="w-screen absolute bottom-0 flex-row items-center justify-center py-8 space-x-4">
           {hasReport > 0 ? (
-            <TouchableOpacity onPress={followUp} className='p-2 bg-white w-1/3 items-center shadow-lg border border-gray-300 rounded-xl'>
+            <TouchableOpacity onPress={handleFollowup} className='p-2 bg-white w-1/3 items-center shadow-lg border border-gray-300 rounded-xl'>
               <Text className='text-xs font-semibold'>Follow up Report</Text>
             </TouchableOpacity>
           ) : null} 
