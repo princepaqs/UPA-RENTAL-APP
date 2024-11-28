@@ -4,7 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import * as ImagePicker from 'expo-image-picker';
 import { collection, getDocs, query, where, doc, getDoc, updateDoc } from 'firebase/firestore';
-import { db, storage } from '../../../_dbconfig/dbconfig';
+import { db, storage } from '../../../../_dbconfig/dbconfig';
 import { getDownloadURL, ref } from "firebase/storage";
 import * as SecureStore from 'expo-secure-store';
 import { useAuth } from '@/context/authContext';
@@ -20,26 +20,15 @@ export default function ReportIssue() {
   const router = useRouter();
   const { reportIssue } = useAuth();
 
-  // State for the form
-  const [fullName, setFullName] = useState('');
-  const [accountID, setAccountID] = useState('');
-  const [issueType, setIssueType] = useState('');
   const [description, setDescription] = useState('');
   const [transactionID, setTransactionID] = useState('');
-  const [idType, setIdType] = useState(''); // State for ID type
+
   const [user, setUser] = useState<Users | null>(null);
 
-  // Modal states for dropdowns
-  const [timeModalVisible, setTimeModalVisible] = useState(false);
-  const [issueModalVisible, setIssueModalVisible] = useState(false);
   
   // Modal state for confirmation
   const [confirmationModalVisible, setConfirmationModalVisible] = useState(false);
 
-  // Options for the dropdowns
-  const issueOptions = ["Payment Issue", "Maintenance Request", "Lease Agreement Issue"];
-
-  // Function to handle form submission
   const handleSubmit = () => {
     // Open the confirmation modal
     setConfirmationModalVisible(true);
@@ -48,33 +37,20 @@ export default function ReportIssue() {
   // Function to confirm submission
   const confirmSubmission = () => {
     setConfirmationModalVisible(false);
-    if(!user || !issueType || !transactionID || !description){
+    if(!user || !transactionID || !description){
       Alert.alert("Report Issue", "Please fill all fields.")
       return
     }
 
     if(user){
-      console.log(user?.userFullName, user?.userAccountId, issueType, transactionID, description);
-      reportIssue(user.userFullName, user.userAccountId, issueType, transactionID, description);
+      console.log(user?.userFullName, user?.userAccountId, transactionID, description);
+
       router.back();
     }
     Alert.alert("Report Issue", "Your report is submitted")
   };
 
-  // Function to handle the selection of the issue type
-  const handleIssueSelection = (option: string) => {
-    setIssueType(option);
-    setIssueModalVisible(false);
-    
-    // Set the ID type based on the selected issue
-    if (option === "Payment Issue") {
-      setIdType("Transaction ID");
-    } else if (option === "Maintenance Request") {
-      setIdType("Maintenance ID");
-    } else if (option === "Lease Agreement Issue") {
-      setIdType("Application ID");
-    }
-  };
+
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -108,7 +84,7 @@ export default function ReportIssue() {
           </TouchableOpacity>
 
           <View className="flex-1 items-center justify-center pr-5">
-            <Text className='text-sm font-bold text-center'>Report an issue</Text>
+            <Text className='text-sm font-bold text-center'>Follow up report</Text>
           </View>
         </View>
 
@@ -137,54 +113,17 @@ export default function ReportIssue() {
               />
             </View>
 
-            {/* Issue Category Dropdown */}
-            <View className='p-2'>
-              <Text className='px-3 py-1 text-sm font-semibold'>Issue Category</Text>
-              <TouchableOpacity onPress={() => setIssueModalVisible(true)}>
-                <View className='px-5 py-2.5 bg-gray-200 rounded-2xl'>
-                  <Text className='text-gray-500'>
-                    {issueType || 'Select Issue Category'}
-                  </Text>
-                </View>
-              </TouchableOpacity>
-
-              {/* Modal for Issue Category */}
-              <Modal visible={issueModalVisible} transparent={true} animationType="slide">
-                <View className="flex-1 justify-center items-center bg-black/50">
-                  <View className="bg-white p-5 rounded-lg w-2/3">
-                    <Text className='text-sm font-bold mb-2'>Issue Category</Text>
-                    <ScrollView>
-                      {issueOptions.map((option, index) => (
-                        <TouchableOpacity
-                          key={index}
-                          className="py-2 border-b border-gray-100"
-                          onPress={() => handleIssueSelection(option)} // Update to use new function
-                        >
-                          <Text className="text-sm px-2">{option}</Text>
-                        </TouchableOpacity>
-                      ))}
-                    </ScrollView>
-                    <TouchableOpacity className='items-center justify-center mt-3' onPress={() => setIssueModalVisible(false)}>
-                      <Text className='px-2 py-1.5 text-xs font-semibold bg-black rounded-xl text-white'>Close</Text>
-                    </TouchableOpacity>
-                  </View>
-                </View>
-              </Modal>
-            </View>
-
-            {/* Conditional ID Input */}
-            {idType && (
               <View className='p-2'>
-                <Text className='px-3 py-1 text-sm font-semibold'>{idType}</Text>
+                <Text className='px-3 py-1 text-sm font-semibold'>Report ID</Text>
                 <TextInput
                   className='px-5 py-1.5 bg-gray-200 rounded-2xl'
-                  placeholder={`Enter your ${idType}`}
+                  placeholder={`Enter the Report ID`}
                   value={transactionID}
                   keyboardType='numeric'
                   onChangeText={setTransactionID}
                 />
               </View>
-            )}
+
 
             {/* Detailed Descriptions */}
             <View className='p-2'>
