@@ -171,7 +171,7 @@ export default function MyLease() {
           const newLeases: MultipleLease[] = []; // Collect lease data in a new array
 
           const fetchLease = async (transactionDoc: any) => {
-            const { transactionId, ownerId, propertyId, moveInDate, rentalStartDate, rentalEndDate, paymentStatus } = transactionDoc.data();
+            const { transactionId, ownerId, propertyId, moveInDate, rentalStartDate, rentalEndDate, paymentStatus, createdAt } = transactionDoc.data();
             //console.log(paymentStatus);
             if (ownerId && propertyId && rentalStartDate) {
               const userRef = await getDoc(doc(db, 'users', ownerId));
@@ -189,7 +189,7 @@ export default function MyLease() {
                     : null;
 
                   const leaseDetails: LeaseData = {
-                    createdAt: propertyData.createdAt,
+                    createdAt: createdAt,
                     transactionId,
                     ownerId,
                     ownerImage: profilePicture || require('../../../assets/images/profile.png'),
@@ -209,7 +209,7 @@ export default function MyLease() {
                   };
                   
                   const multipleLease: MultipleLease = {
-                    createdAt: propertyData.createdAt,
+                    createdAt: createdAt,
                     id: transactionId,
                     propertyName: propertyData.propertyName,
                     propertyMonthlyRent: propertyData.propertyMonthlyRent,
@@ -742,36 +742,38 @@ export default function MyLease() {
       return { remainingHours: 0 };
     }
   
-    // Timestamp directly in milliseconds
+    // Convert Firestore timestamp to milliseconds
     const timestampMs = input.seconds * 1000 + input.nanoseconds / 1e6;
-  
-    console.log("Timestamp in milliseconds:", timestampMs);
-    console.log("Contract ID:", id);
+    console.log("Original Timestamp in ms:", timestampMs);
+    console.log("Readable Timestamp:", new Date(timestampMs).toString());
   
     // Add 1 day (24 hours) to the timestamp
     const timestampPlusOneDayMs = timestampMs + 24 * 60 * 60 * 1000;
-  
-    console.log("Timestamp + 1 day (ms):", timestampPlusOneDayMs);
+    console.log("Timestamp + 1 day in ms:", timestampPlusOneDayMs);
+    console.log("Readable +1 Day:", new Date(timestampPlusOneDayMs).toString());
   
     // Get the current time in milliseconds
     const currentTimeMs = Date.now();
+    console.log("Current Time in ms:", currentTimeMs);
+    console.log("Readable Current Time:", new Date(currentTimeMs).toString());
   
-    let remainingHours = 0;
-  
+    // Compare the times
     if (currentTimeMs > timestampPlusOneDayMs) {
       console.log("The timestamp + 1 day has already passed.");
       // Call removeContract if the time has passed
       removeContract(id);
     } else {
       // Calculate remaining hours
-      remainingHours = Math.round(
+      const remainingHours = Math.round(
         (timestampPlusOneDayMs - currentTimeMs) / (1000 * 60 * 60)
       );
       console.log(`Remaining hours until timestamp + 1 day: ${remainingHours}`);
+      return { remainingHours };
     }
   
-    return { remainingHours };
+    return { remainingHours: 0 };
   };
+  
   
 
   const removeContract = async (id: string) => {
@@ -793,28 +795,28 @@ export default function MyLease() {
       console.log("Tenant ID:", tenantId);
   
       // Update the property status to 'Available'
-      // const propertyRef = doc(db, "properties", ownerId, "propertyId", propertyId);
-      // await updateDoc(propertyRef, { status: "Available" });
+      const propertyRef = doc(db, "properties", ownerId, "propertyId", propertyId);
+      await updateDoc(propertyRef, { status: "Available" });
   
-      // console.log(`Property ${propertyId} status updated to 'Available'.`);
+      console.log(`Property ${propertyId} status updated to 'Available'.`);
   
-      // // Delete the rent transaction
-      // const rentTransactionRef = doc(db, "rentTransactions", id);
-      // await deleteDoc(rentTransactionRef);
+      // Delete the rent transaction
+      const rentTransactionRef = doc(db, "rentTransactions", id);
+      await deleteDoc(rentTransactionRef);
   
-      // console.log(`Rent transaction ${id} deleted.`);
+      console.log(`Rent transaction ${id} deleted.`);
   
-      // // Delete the property transaction
-      // const propertyTransactionRef = doc(db, "propertyTransactions", id);
-      // await deleteDoc(propertyTransactionRef);
+      // Delete the property transaction
+      const propertyTransactionRef = doc(db, "propertyTransactions", id);
+      await deleteDoc(propertyTransactionRef);
   
-      // console.log(`Property transaction ${id} deleted.`);
+      console.log(`Property transaction ${id} deleted.`);
   
-      // // Delete the contract
-      // const contractRef = doc(db, "contracts", id);
-      // await deleteDoc(contractRef);
+      // Delete the contract
+      const contractRef = doc(db, "contracts", id);
+      await deleteDoc(contractRef);
   
-      // console.log(`Contract ${id} deleted.`);
+      console.log(`Contract ${id} deleted.`);
     } catch (error) {
       console.error("Error removing contract:", error);
     }
