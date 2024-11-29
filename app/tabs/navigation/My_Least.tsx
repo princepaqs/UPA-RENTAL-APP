@@ -739,24 +739,22 @@ export default function MyLease() {
         ? input
         : new Date(input.seconds * 1000 + input.nanoseconds / 1e6);
   
-    // Get the current time
+    // Get the current time and subtract 24 hours
     const currentTime = new Date();
+    const deadlineTime = new Date(currentTime.getTime() - 24 * 60 * 60 * 1000);
   
-    // Calculate the hour difference between the given date and the current time
-    const hourDifference = Math.round((date.getTime() - currentTime.getTime()) / (1000 * 60 * 60) + 24);
+    // Calculate the hour difference between the given date and the deadline
+    const hourDifference = Math.round((date.getTime() - deadlineTime.getTime()) / (1000 * 60 * 60));
   
     // Format the date for additional context
-    const formatted = date.toLocaleString('en-US', {
-      hour: '2-digit',
-      minute: '2-digit',
-      second: '2-digit',
-    });
+    const formatted = date.getHours();
   
     return {
       formatted,
-      hourDifference,
+      hourDifference, // Remaining hours before the deadline
     };
   };
+  
   
   
   return (
@@ -832,7 +830,7 @@ export default function MyLease() {
                     </View>
                     {(multipleLease.propertyStatus === 'Rented') ?  (
                             <View className='border-t border-gray-400 py-1.5 mt-2'>
-                              <Text className='text-[10px]'><Text className='text-[#0FA958] font-bold'>Congratulations!</Text> Your application is approved. Please sign the contract and complete the downpayment and advance payment within <Text className='text-[#EF5A6F] font-bold'>{formattedDate(multipleLease.createdAt).hourDifference} hours</Text> to secure your lease</Text>
+                              <Text className='text-[10px]'><Text className='text-[#0FA958] font-bold'>Congratulations!</Text> Your application is approved. Please sign the contract and complete the downpayment and advance payment within <Text className='text-[#EF5A6F] font-bold'>{formattedDate(multipleLease.createdAt).formatted} hours</Text> to secure your lease</Text>
                             </View>
                         ) : multipleLease.propertyStatus === 'Renewal' ? (
                             <View className='border-t border-gray-400 py-1.5 mt-2'>
