@@ -3,9 +3,42 @@ import React, { useState } from 'react'
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import transferData from './transferData.json';
+import { captureScreen } from 'react-native-view-shot';
+import * as MediaLibrary from 'expo-media-library';
+
 export default function transferReciept() {
     const router = useRouter();
     const [loading, setLoading] = useState(false);
+
+    const handleDownload = async () => {
+        try {
+            setLoading(true);
+  
+            // Capture the screen as an image
+            const screenshotUri = await captureScreen({
+                format: 'jpg',
+                quality: 0.8,
+            });
+  
+            // Request permission to access media library
+            const { status } = await MediaLibrary.requestPermissionsAsync();
+            if (status === 'granted') {
+                // Save the screenshot to the photo album
+                const asset = await MediaLibrary.createAssetAsync(screenshotUri);
+                await MediaLibrary.createAlbumAsync('ScreenShots', asset, false); // Creates a 'ScreenShots' album if it doesn't exist
+  
+                // Optionally, show a success message
+                alert('Receipt downloaded successfully!');
+            } else {
+                alert('Permission to access media library is required to save the screenshot.');
+            }
+        } catch (error) {
+            console.error('Error downloading receipt:', error);
+            alert('Failed to download receipt.');
+        } finally {
+            setLoading(false);
+        }
+    };
 
   return (
     <View className="bg-[#B33939] flex-1">
@@ -113,17 +146,13 @@ export default function transferReciept() {
                                 </View>
                             </View> 
                         </View>
-
-
-
-        </View>
-        <View className='w-full items-center mt-10 absolute bottom-8'>
-
-<TouchableOpacity className='mb-4'>
-    <Text className='text-xs text-[#EF5A6F]'>Download Receipt</Text>
-</TouchableOpacity>
-
-</View>
+                    </View>
+                    <View className='w-full items-center mt-10 absolute bottom-8'>
+                        <TouchableOpacity className='mb-4'
+                        onPress={handleDownload}>
+                            <Text className='text-xs text-[#EF5A6F]'>Download Receipt</Text>
+                        </TouchableOpacity>
+                    </View>
         </View>
     </View>
   )
