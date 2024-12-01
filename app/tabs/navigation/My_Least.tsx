@@ -835,95 +835,80 @@ export default function MyLease() {
           {/* Lease Listing */}
           <View className=" flex-col items-center ">
           <ScrollView
-            showsVerticalScrollIndicator={false}
-            refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
-            className="h-5/6"
-            contentContainerStyle={{ flexGrow: 1 }}
-          >
-            <View className="flex flex-col mb-20 flex-wrap space-y-4">
+              showsVerticalScrollIndicator={false}
+              refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
+              className="h-5/6"
+              contentContainerStyle={{ flexGrow: 1 }}
+            >
+              <View className='flex flex-col mb-20 flex-wrap space-y-4'>
               {loading ? (
                 <View className="flex-1 w-full h-full justify-center items-center">
                   <ActivityIndicator size="large" color="gray" />
                 </View>
               ) : isLeaseVisible && multipleLeases.length > 0 ? (
-                // First filter leases, then map them
-                multipleLeases
-                  .filter((multipleLease) => {
-                    const remainingHours = formattedDate(multipleLease.createdAt, multipleLease.id)?.remainingHours;
-                    return remainingHours !== 0;
-                  })
-                  .map((multipleLease) => (
-                    <TouchableOpacity
-                      className="py-1.5 px-2 flex w-full items-center justify-center bg-white rounded-xl shadow-xl border border-gray-200"
-                      key={multipleLease.id}
-                      onPress={() => onLeaseClick(multipleLease.id)}
-                    >
-                      <View className="w-full p-1 flex-row items-center">
-                        <Image
-                          className="w-[100px] h-[100px] object-cover rounded-2xl"
-                          source={
-                            multipleLease
-                              ? { uri: multipleLease.image }
-                              : require('../../../assets/images/property1.png')
-                          }
-                        />
-                        <View className="flex flex-col flex-1 gap-1 px-2">
-                          <Text numberOfLines={1} ellipsizeMode="tail" className="text-xs text-[#6C6C6C]">
-                            {multipleLease.propertyName}
-                          </Text>
-                          <Text numberOfLines={1} ellipsizeMode="tail" className="text-xs text-[#6C6C6C]">
-                            {multipleLease.city}, {multipleLease.region}
-                          </Text>
-                          <Text numberOfLines={1} ellipsizeMode="tail" className="text-xs text-[#6C6C6C]">
-                            ₱{parseInt(multipleLease.propertyMonthlyRent).toLocaleString()}/monthly
-                          </Text>
-                          {multipleLease.propertyStatus === 'Rented' ? (
-                            <View className="flex-row items-center space-x-1">
-                              <Text numberOfLines={1} ellipsizeMode="tail" className="text-xs text-[#6C6C6C]">
-                                Application Status:
-                              </Text>
-                              <Text className="w-2.5 h-2.5 rounded-full bg-[#0FA958]"></Text>
-                              <Text numberOfLines={1} ellipsizeMode="tail" className="text-xs font-bold text-[#0FA958]">
-                                Approved
-                              </Text>
-                            </View>
-                          ) : (
-                            <View>
-                              <Text numberOfLines={1} ellipsizeMode="tail" className="text-xs text-[#6C6C6C]">
-                                Lease Start: {formatDate(multipleLease.date)}
-                              </Text>
-                              <Text numberOfLines={1} ellipsizeMode="tail" className="text-xs text-[#6C6C6C]">
-                                Lease End: {multipleLease.endDate === 'no date' ? 'Invalid Date' : formatDate(multipleLease.endDate)}
-                              </Text>
-                            </View>
-                          )}
-                        </View>
+                multipleLeases.map((multipleLease) => (
+                  <TouchableOpacity
+                    className="py-1.5 px-2 flex w-full items-center justify-center bg-white rounded-xl shadow-xl border border-gray-200"
+                    key={multipleLease.id}
+                    onPress={() => onLeaseClick(multipleLease.id)}
+                  >
+                    <View className="w-full p-1 flex-row items-center">
+                      <Image
+                        className="w-[100px] h-[100px] object-cover rounded-2xl"
+                        source={
+                          multipleLease
+                            ? { uri: multipleLease.image }
+                            : require('../../../assets/images/property1.png')
+                        }
+                      />
+                      <View className="flex flex-col flex-1 gap-1 px-2">
+                        <Text numberOfLines={1} ellipsizeMode="tail" className="text-xs text-[#6C6C6C]">
+                          {multipleLease.propertyName}
+                        </Text>
+                        <Text numberOfLines={1} ellipsizeMode="tail" className="text-xs text-[#6C6C6C]">
+                          {multipleLease.city}, {multipleLease.region}
+                        </Text>
+                        <Text numberOfLines={1} ellipsizeMode="tail" className="text-xs text-[#6C6C6C]">
+                          ₱{parseInt(multipleLease.propertyMonthlyRent).toLocaleString()}/monthly
+                        </Text>
+                        {multipleLease.propertyStatus === 'Rented' ? (
+                          <View className='flex-row items-center space-x-1'>
+                            <Text numberOfLines={1} ellipsizeMode="tail" className="text-xs text-[#6C6C6C]">
+                            {multipleLease.propertyStatus === 'Rented' ? "Application Status:" : "Renewal Status:"} 
+                            </Text>
+                            <Text
+                            className="w-2.5 h-2.5 rounded-full bg-[#0FA958]"
+                            ></Text>
+                            <Text numberOfLines={1} ellipsizeMode="tail" className="text-xs font-bold text-[#0FA958]">
+                              Approved
+                            </Text>
+                          </View>
+                        ) : (
+                          <View>
+                            <Text numberOfLines={1} ellipsizeMode="tail" className="text-xs text-[#6C6C6C]">
+                              Lease Start: {formatDate(multipleLease.date)}
+                            </Text>
+                            <Text numberOfLines={1} ellipsizeMode="tail" className="text-xs text-[#6C6C6C]">
+                              Lease End: {multipleLease.endDate === 'no date' ? 'Invalid Date' : formatDate(multipleLease.endDate)}
+                            </Text>
+                          </View>
+                        )}
                       </View>
-                      {multipleLease.propertyStatus === 'Rented' ? (
-                        <View className="border-t border-gray-400 py-1.5 mt-2">
-                          <Text className="text-[10px]">
-                            <Text className="text-[#0FA958] font-bold">Congratulations!</Text> Your application is approved. Please
-                            sign the contract and complete the downpayment and advance payment within{' '}
-                            <Text className="text-[#EF5A6F] font-bold">
-                              {formattedDate(multipleLease.createdAt, multipleLease.id)?.remainingHours} hours
-                            </Text>{' '}
-                            to secure your lease
-                          </Text>
-                        </View>
-                      ) : multipleLease.propertyStatus === 'Renewal' ? (
-                        <View className="border-t border-gray-400 py-1.5 mt-2">
-                          <Text className="text-[10px]">
-                            <Text className="text-[#0FA958] font-bold">Congratulations!</Text> Your application is approved. Please
-                            sign the contract and complete the downpayment and advance payment within{' '}
-                            <Text className="text-[#EF5A6F] font-bold">7 days</Text> to secure your lease
-                          </Text>
-                        </View>
-                      ) : null}
-                    </TouchableOpacity>
-                  ))
+                    </View>
+                    {(multipleLease.propertyStatus === 'Rented') ?  (
+                            <View className='border-t border-gray-400 py-1.5 mt-2'>
+                              <Text className='text-[10px]'><Text className='text-[#0FA958] font-bold'>Congratulations!</Text> Your application is approved. Please sign the contract and complete the downpayment and advance payment within <Text className='text-[#EF5A6F] font-bold'>{formattedDate(multipleLease.createdAt, multipleLease.id).remainingHours} hours</Text> to secure your lease</Text>
+                            </View>
+                        ) : multipleLease.propertyStatus === 'Renewal' ? (
+                            <View className='border-t border-gray-400 py-1.5 mt-2'>
+                              <Text className='text-[10px]'><Text className='text-[#0FA958] font-bold'>Congratulations!</Text> Your application is approved. Please sign the contract and complete the downpayment and advance payment within <Text className='text-[#EF5A6F] font-bold'>7 days</Text> to secure your lease</Text>
+                            </View>
+                        ) : null }
+                  </TouchableOpacity>
+                ))
               ) : null}
-            </View>
-          </ScrollView>
+              </View>
+            </ScrollView>
   
             {selectedLeaseId && !isLeaseVisible && (
               <>
