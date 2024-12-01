@@ -2,7 +2,7 @@ import { View, Text, Image, ScrollView, TouchableOpacity, Linking, ActivityIndic
 import React, { useEffect, useState } from 'react';
 import { AntDesign, Feather, FontAwesome6, Ionicons, MaterialIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import { collection, getDocs, query, where, doc, getDoc, orderBy, limit } from 'firebase/firestore';
+import { collection, getDocs, query, where, doc, getDoc, orderBy, limit, deleteDoc, updateDoc, Timestamp } from 'firebase/firestore';
 import { db, storage } from '../../../_dbconfig/dbconfig';
 import { getDownloadURL, ref } from "firebase/storage";
 import * as SecureStore from 'expo-secure-store';
@@ -69,7 +69,7 @@ interface LeaseData {
 }
 
 interface MultipleLease {
-  createdAt: Date;
+  createdAt: Timestamp;
   id: string;
   propertyName: string;
   propertyMonthlyRent: string;
@@ -171,7 +171,7 @@ export default function MyLease() {
           const newLeases: MultipleLease[] = []; // Collect lease data in a new array
 
           const fetchLease = async (transactionDoc: any) => {
-            const { transactionId, ownerId, propertyId, moveInDate, rentalStartDate, rentalEndDate, paymentStatus } = transactionDoc.data();
+            const { transactionId, ownerId, propertyId, moveInDate, rentalStartDate, rentalEndDate, paymentStatus, createdAt } = transactionDoc.data();
             //console.log(paymentStatus);
             if (ownerId && propertyId && rentalStartDate) {
               const userRef = await getDoc(doc(db, 'users', ownerId));
@@ -189,7 +189,7 @@ export default function MyLease() {
                     : null;
 
                   const leaseDetails: LeaseData = {
-                    createdAt: propertyData.createdAt,
+                    createdAt: createdAt,
                     transactionId,
                     ownerId,
                     ownerImage: profilePicture || require('../../../assets/images/profile.png'),
@@ -209,7 +209,7 @@ export default function MyLease() {
                   };
                   
                   const multipleLease: MultipleLease = {
-                    createdAt: propertyData.createdAt,
+                    createdAt: createdAt,
                     id: transactionId,
                     propertyName: propertyData.propertyName,
                     propertyMonthlyRent: propertyData.propertyMonthlyRent,
@@ -224,6 +224,7 @@ export default function MyLease() {
                     image: firstImageUri || require('../../../assets/images/property1.png'),
                   };
                   console.log('MoveInDate', rentalStartDate);
+                  console.log('CreatedAt', multipleLease.createdAt);
                   //checkDate(rentalStartDate);
                   // Store lease data in the map and new leases array
                   setLeaseDataMap((prev) => ({ ...prev, [transactionId]: leaseDetails }));
@@ -732,31 +733,95 @@ export default function MyLease() {
     setRefreshing(false);
   };
   
-  const formattedDate = (input: { seconds: number; nanoseconds: number } | Date) => {
-    // Convert Firestore Timestamp to JavaScript Date if necessary
-    const date =
-      input instanceof Date
-        ? input
-        : new Date(input.seconds * 1000 + input.nanoseconds / 1e6);
+  const formattedDate = (
+    input: { seconds: number; nanoseconds: number },
+    id: string
+  ) => {
+    if (!input) {
+      console.error("Invalid input provided.");
+      return { remainingHours: 0 };
+    }
   
-    // Get the current time
-    const currentTime = new Date();
+    // Convert Firestore timestamp to milliseconds
+    const timestampMs = input.seconds * 1000 + input.nanoseconds / 1e6;
+    console.log("Original Timestamp in ms:", timestampMs);
+    console.log("Readable Timestamp:", new Date(timestampMs).toString());
   
-    // Calculate the hour difference between the given date and the current time
-    const hourDifference = Math.round((date.getTime() - currentTime.getTime()) / (1000 * 60 * 60) + 24);
+    // Add 1 day (24 hours) to the timestamp
+    const timestampPlusOneDayMs = timestampMs + 24 * 60 * 60 * 1000;
+    console.log("Timestamp + 1 day in ms:", timestampPlusOneDayMs);
+    console.log("Readable +1 Day:", new Date(timestampPlusOneDayMs).toString());
   
-    // Format the date for additional context
-    const formatted = date.toLocaleString('en-US', {
-      hour: '2-digit',
-      minute: '2-digit',
-      second: '2-digit',
-    });
+    // Get the current time in milliseconds
+    const currentTimeMs = Date.now();
+    console.log("Current Time in ms:", currentTimeMs);
+    console.log("Readable Current Time:", new Date(currentTimeMs).toString());
   
-    return {
-      formatted,
-      hourDifference,
-    };
+    // Compare the times
+    if (currentTimeMs > timestampPlusOneDayMs) {
+      console.log("The timestamp + 1 day has already passed.");
+      // Call removeContract if the time has passed
+      removeContract(id);
+    } else {
+      // Calculate remaining hours
+      const remainingHours = Math.round(
+        (timestampPlusOneDayMs - currentTimeMs) / (1000 * 60 * 60)
+      );
+      console.log(`Remaining hours until timestamp + 1 day: ${remainingHours}`);
+      return { remainingHours };
+    }
+  
+    return { remainingHours: 0 };
   };
+  
+  
+
+  const removeContract = async (id: string) => {
+    if (!id) {
+      console.error("Invalid contract ID");
+      return;
+    }
+  
+    try {
+      // Split the ID into parts: ownerId, propertyId, tenantId
+      const [ownerId, propertyId, tenantId] = id.split("-");
+      if (!ownerId || !propertyId || !tenantId) {
+        console.error("Invalid contract ID structure");
+        return;
+      }
+  
+      console.log("Owner ID:", ownerId);
+      console.log("Property ID:", propertyId);
+      console.log("Tenant ID:", tenantId);
+  
+      // Update the property status to 'Available'
+      const propertyRef = doc(db, "properties", ownerId, "propertyId", propertyId);
+      await updateDoc(propertyRef, { status: "Available" });
+  
+      console.log(`Property ${propertyId} status updated to 'Available'.`);
+  
+      // Delete the rent transaction
+      const rentTransactionRef = doc(db, "rentTransactions", id);
+      await deleteDoc(rentTransactionRef);
+  
+      console.log(`Rent transaction ${id} deleted.`);
+  
+      // Delete the property transaction
+      const propertyTransactionRef = doc(db, "propertyTransactions", id);
+      await deleteDoc(propertyTransactionRef);
+  
+      console.log(`Property transaction ${id} deleted.`);
+  
+      // Delete the contract
+      const contractRef = doc(db, "contracts", id);
+      await deleteDoc(contractRef);
+  
+      console.log(`Contract ${id} deleted.`);
+    } catch (error) {
+      console.error("Error removing contract:", error);
+    }
+  };
+  
   
   
   return (
@@ -769,7 +834,7 @@ export default function MyLease() {
   
           {/* Lease Listing */}
           <View className=" flex-col items-center ">
-            <ScrollView
+          <ScrollView
               showsVerticalScrollIndicator={false}
               refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
               className="h-5/6"
@@ -832,7 +897,7 @@ export default function MyLease() {
                     </View>
                     {(multipleLease.propertyStatus === 'Rented') ?  (
                             <View className='border-t border-gray-400 py-1.5 mt-2'>
-                              <Text className='text-[10px]'><Text className='text-[#0FA958] font-bold'>Congratulations!</Text> Your application is approved. Please sign the contract and complete the downpayment and advance payment within <Text className='text-[#EF5A6F] font-bold'>{formattedDate(multipleLease.createdAt).hourDifference} hours</Text> to secure your lease</Text>
+                              <Text className='text-[10px]'><Text className='text-[#0FA958] font-bold'>Congratulations!</Text> Your application is approved. Please sign the contract and complete the downpayment and advance payment within <Text className='text-[#EF5A6F] font-bold'>{formattedDate(multipleLease.createdAt, multipleLease.id).remainingHours} hours</Text> to secure your lease</Text>
                             </View>
                         ) : multipleLease.propertyStatus === 'Renewal' ? (
                             <View className='border-t border-gray-400 py-1.5 mt-2'>
