@@ -98,17 +98,28 @@ export default function TerminateContract() {
     useEffect(() => {
         const fetchContract = async () => {
             const contractId = await SecureStore.getItemAsync('contractId');
+            const tenantId = await SecureStore.getItemAsync('uid');
+            console.log(tenantId);
             if(contractId){
                 const contractRef = await getDoc(doc(db, 'contracts', contractId))
                 if(contractRef.exists()){
                     const data = contractRef.data();
                     if(data){
-                        setContractData({
-                            contractId,
-                            contractFullName: data.ownerFullName,
-                            contractPropertyAddress: data.propertyAddress,
-                            contractTerminationPeriod: data.propertyTerminationPeriod,
-                        })
+                        if(tenantId != data.ownerId){
+                            setContractData({
+                                contractId,
+                                contractFullName: data.tenantFullName,
+                                contractPropertyAddress: data.propertyAddress,
+                                contractTerminationPeriod: data.propertyTerminationPeriod,
+                            })
+                        }else{
+                            setContractData({
+                                contractId,
+                                contractFullName: data.ownerFullName,
+                                contractPropertyAddress: data.propertyAddress,
+                                contractTerminationPeriod: data.propertyTerminationPeriod,
+                            })
+                        }
                         const terminationDays = parseInt(data.propertyTerminationPeriod, 10) || 0;
                         setMinimumDate(calculateMoveInDate(terminationDays));
                         setPlannedMoveInDate(calculateMoveInDate(terminationDays));
