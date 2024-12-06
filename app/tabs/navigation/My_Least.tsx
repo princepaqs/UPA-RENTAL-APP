@@ -1230,6 +1230,12 @@ export default function MyLease() {
           </View>
         </View>
       ) : (
+        <ScrollView
+              showsVerticalScrollIndicator={false}
+              refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
+              className="h-5/6"
+              contentContainerStyle={{ flexGrow: 1 }}
+            >
         <View className="px-2 ">
           <View className="flex-row w-full items-center justify-between my-5">
             <Text className="text-2xl font-bold">My Lease</Text>
@@ -1238,6 +1244,7 @@ export default function MyLease() {
             It looks like you haven't rented any property. Browse available listings and find your new place!
           </Text>
         </View>
+        </ScrollView>
       )}
     </View>
   );

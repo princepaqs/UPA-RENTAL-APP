@@ -14,7 +14,7 @@ type IconNames = 'Explore' | 'Favorite' | 'Find_Property' | 'My_Least' | 'Profil
 const icon: Record<IconNames, (props: { color: string; style?: any }) => JSX.Element> = {
     Explore: (props) => <AntDesign name="find" size={20} color={props.color} style={props.style} />,
     Favorite: (props) => <AntDesign size={20} name='hearto' color={props.color} style={props.style} />,
-    Find_Property: (props) => <MaterialIcons size={20} name='camera' color={props.color} style={props.style} />,
+    Find_Property: (props) => <AntDesign size={20} name='find' color={props.color} style={props.style} />,
     My_Least: (props) => <Ionicons name="home-outline" size={20} color={props.color} style={props.style} />,
     Profile: (props) => <Ionicons name='person-circle-outline' size={20} color={props.color} style={props.style} />
 };
