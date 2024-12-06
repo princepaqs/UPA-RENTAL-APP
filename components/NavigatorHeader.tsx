@@ -116,7 +116,7 @@ export default function MessageHeader() {
 
   return (
     <View className="w-full bg-[#F6F6F6]">
-      <View className="bg-[#F6F6F6] flex flex-row items-center justify-between gap-2 mt-8 px-6  shadow-lg">
+      <View className="bg-[#F6F6F6] flex flex-row items-center justify-between gap-2 mt-8 pb-4 px-6  shadow-lg">
         <Image className="w-10 h-10" source={require('../assets/images/logo1.png')} />
         <View className='flex-row items-center space-x-3 mr-2 '>
         <View className="">

@@ -1,7 +1,7 @@
 import { AuthContextProvider, useAuth } from '../context/authContext';
 import { Slot, useRouter, useSegments } from 'expo-router';
 import React, { useEffect } from 'react';
-import {  View, Text } from 'react-native';
+
 
 const MainLayout = () => {  
   const { isAuthenticated } = useAuth();

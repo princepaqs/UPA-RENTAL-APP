@@ -13,9 +13,16 @@ export default function _layout() {
       <Stack.Screen
         name='Dashboard'
         options={{
-          header: ()=> <NavigatorHeader/>
+          header: ()=> <HomeHeader/>
         }}
       />
+
+      <Stack.Screen
+          name="navigation/Find_Property"
+          options={{
+            header: undefined, // Disable custom header for Find_Property
+          }}
+        />
 
       <Stack.Screen
         name='Notification'
@@ -117,6 +124,13 @@ export default function _layout() {
 
       <Stack.Screen
         name='Property'
+        options={{
+          header: ()=> <HomeHeader/>
+        }}
+      />
+
+      <Stack.Screen
+        name='AugmentReality'
         options={{
           header: ()=> <HomeHeader/>
         }}

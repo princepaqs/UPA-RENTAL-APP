@@ -1,8 +1,8 @@
-import { View, Text, TouchableOpacity, ScrollView, Image, TextInput, Linking, Animated, Modal, Dimensions, Pressable, RefreshControl } from 'react-native';
+import { View, Text, TouchableOpacity, ScrollView, Image, TextInput, Linking, Animated, Modal, Dimensions, Pressable, RefreshControl, Alert } from 'react-native';
 import React, { useState, useRef, useEffect } from 'react';
 import { AntDesign, Entypo, EvilIcons, Feather, FontAwesome5, FontAwesome6, Ionicons, MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import MapView, { Marker } from 'react-native-maps';
+import MapView, { Marker, Polyline } from 'react-native-maps';
 import { AirbnbRating } from 'react-native-ratings';
 import { collection, getDocs, query, where, doc, getDoc } from 'firebase/firestore';
 import { db, storage } from '../../_dbconfig/dbconfig';
@@ -14,6 +14,8 @@ import MoveInDateModal from './Modals/MoveInDateModal';
 import RentConfirmationModal from './Modals/RentConfirmationModal';
 import tenantsData from './Modals/tenantsReviews.json';
 import ImageModal from './Modals/ImageModal'; 
+import * as Location from 'expo-location';
+
 const tenants = tenantsData.map(tenant => ({
   ...tenant
 }));
@@ -63,6 +65,19 @@ interface User {
   role: string;
   accountStatus: string;
 }
+
+interface LocationRegion {
+  latitude: number;
+  longitude: number;
+  latitudeDelta: number;
+  longitudeDelta: number;
+}
+
+interface UserLocation {
+  latitude: number;
+  longitude: number;
+}
+
 
 export default function Tenants() {
   const router = useRouter();
@@ -345,6 +360,73 @@ const handlePhoneCall = () => {
 
   const available = 'yes'
   const date = 'March 01, 2025';
+
+
+  const [region, setRegion] = useState<LocationRegion | null>(null);
+const [userLocation, setUserLocation] = useState<UserLocation | null>(null);
+const [distance, setDistance] = useState<number | null>(null); // Distance in kilometers
+const [time, setTime] = useState<string | null>(null); // Time in minutes/hours
+
+// Haversine formula to calculate distance between two coordinates
+const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: number) => {
+  const R = 6371; // Radius of the Earth in km
+  const dLat = (lat2 - lat1) * (Math.PI / 180);
+  const dLon = (lon2 - lon1) * (Math.PI / 180);
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(lat1 * (Math.PI / 180)) *
+      Math.cos(lat2 * (Math.PI / 180)) *
+      Math.sin(dLon / 2) * Math.sin(dLon / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  const distance = R * c; // Distance in km
+  return distance;
+};
+
+// Midpoint calculation
+const getMidpoint = (lat1: number, lon1: number, lat2: number, lon2: number) => {
+  const midLat = (lat1 + lat2) / 2;
+  const midLon = (lon1 + lon2) / 2;
+  return { latitude: midLat, longitude: midLon };
+};
+
+useEffect(() => {
+  (async () => {
+    let { status } = await Location.requestForegroundPermissionsAsync();
+    if (status !== 'granted') {
+      Alert.alert('Permission to access location was denied');
+      return;
+    }
+
+    let location = await Location.getCurrentPositionAsync({});
+    setRegion({
+      latitude: location.coords.latitude,
+      longitude: location.coords.longitude,
+      latitudeDelta: 0.005,
+      longitudeDelta: 0.005,
+    });
+    setUserLocation({
+      latitude: location.coords.latitude,
+      longitude: location.coords.longitude,
+    });
+
+    // Calculate distance and time
+    if (propertyData?.latitude && propertyData?.longitude) {
+      const distanceInKm = calculateDistance(
+        location.coords.latitude,
+        location.coords.longitude,
+        parseFloat(propertyData.latitude),
+        parseFloat(propertyData.longitude)
+      );
+      setDistance(distanceInKm);
+      const timeInMinutes = (distanceInKm / 5) * 60; // Assuming walking speed of 5 km/h
+      const hours = Math.floor(timeInMinutes / 60);
+      const minutes = Math.round(timeInMinutes % 60);
+      setTime(hours > 0 ? `${hours} hr ${minutes} min` : `${minutes} min`);
+    }
+  })();
+}, [propertyData]);
+
+
   return (
     <View className='h-screen bg-gray-100'>
       <View className=''>
@@ -611,48 +693,87 @@ const handlePhoneCall = () => {
                 houseRules={propertyData?.propertyHouseRules || ''}  // Fallback to an empty string
               />
             </View>
-
+            
             {/* Map Location */}
-<View className="px-1 pt-5">
-  {userData?.accountStatus !== 'Under-review' && (
-    <>
-      <Text className="text-lg font-bold">Where you’ll be</Text>
-      <View className="h-[200px] rounded-lg overflow-hidden mt-2">
-        {propertyData?.latitude && propertyData?.longitude ? (
-          <MapView
-            style={{ flex: 1 }}
-            initialRegion={{
-              latitude: parseFloat(propertyData.latitude),
-              longitude: parseFloat(propertyData.longitude),
-              latitudeDelta: 0.01,
-              longitudeDelta: 0.01,
-            }}
-          >
-            <Marker
-              coordinate={{
-                latitude: parseFloat(propertyData.latitude),
-                longitude: parseFloat(propertyData.longitude),
-              }}
-              title={propertyData.propertyName}
-              description={`${propertyData.homeAddress}, ${propertyData.barangay}, ${propertyData.city}, ${propertyData.region}`}
-            />
-          </MapView>
-        ) : (
-          <Text className="text-center text-gray-500">Location not available.</Text>
-        )}
-      </View>
-      {/* Location Details */}
-      <View className="flex flex-col items-center justify-center mt-2">
-        <Text className="text-sm font-semibold">Location</Text>
-        {propertyData?.homeAddress && (
-          <Text className="text-xs text-center">
-            {`${propertyData.homeAddress}, ${propertyData.barangay}, ${propertyData.city}, ${propertyData.region}`}
-          </Text>
-        )}
-      </View>
-    </>
-  )}
-</View>
+            <View className="px-1 pt-5">
+              {userData?.accountStatus !== 'Under-review' && (
+                <>
+                  <Text className="text-lg font-bold">Where you’ll be</Text>
+                  <View className="h-[200px] rounded-lg overflow-hidden mt-2">
+                    {propertyData?.latitude && propertyData?.longitude ? (
+                      <MapView
+                        style={{ flex: 1 }}
+                        initialRegion={{
+                          latitude: parseFloat(propertyData.latitude),
+                          longitude: parseFloat(propertyData.longitude),
+                          latitudeDelta: 0.01,
+                          longitudeDelta: 0.01,
+                        }}
+                      >
+
+                        <Marker
+                          coordinate={{
+                            latitude: parseFloat(propertyData.latitude),
+                            longitude: parseFloat(propertyData.longitude),
+                          }}
+                          title={propertyData.propertyName}
+                          description={`${propertyData.homeAddress}, ${propertyData.barangay}, ${propertyData.city}, ${propertyData.region}`}
+                          pinColor="red"
+                          >
+                          <Image source={require('../../assets/images/markerUPA.png')} style={{ width: 42, height: 42 }} />
+                        </Marker>
+
+                        {userLocation && (
+                          <Marker
+                            coordinate={userLocation}
+                            title="Your Location"
+                            description="This is your current location"
+                          >
+                            <Image source={require('../../assets/images/profile.png')} style={{ width: 35, height: 35 }} />
+                          </Marker>
+                        )}
+
+      
+                        {userLocation && (
+                          <Polyline
+                            coordinates={[
+                              userLocation,
+                              {
+                                latitude: parseFloat(propertyData.latitude),
+                                longitude: parseFloat(propertyData.longitude),
+                              },
+                            ]}
+                            strokeColor="#1E90FF" // Line color
+                            strokeWidth={3} // Line thickness
+                          />
+                        )}
+
+                        {userLocation && distance && time && (
+                          <Marker coordinate={getMidpoint(userLocation.latitude, userLocation.longitude, parseFloat(propertyData.latitude), parseFloat(propertyData.longitude))}>
+                            <View style={{ backgroundColor: 'white', padding: 5, borderRadius: 5 }}>
+                              <Text style={{ fontSize: 10, fontWeight: 'bold' }}>Distance: {distance.toFixed(2)} km</Text>
+                              <Text style={{ fontSize: 10 }}>Estimated Time: {time}</Text>
+                            </View>
+                          </Marker>
+                        )}
+                      </MapView>
+                    ) : (
+                      <Text className="text-center text-gray-500">Location not available.</Text>
+                    )}
+                  </View>
+
+                  <View className="flex flex-col items-center justify-center mt-2">
+                    <Text className="text-sm font-semibold">Location</Text>
+                    {propertyData?.homeAddress && (
+                      <Text className="text-xs text-center">
+                        {`${propertyData.homeAddress}, ${propertyData.barangay}, ${propertyData.city}, ${propertyData.region}`}
+                      </Text>
+                    )}
+                  </View>
+                </>
+              )}
+            </View>
+
 </View>
 
 
@@ -661,13 +782,13 @@ const handlePhoneCall = () => {
               {/* Display average rating */}
               <View className='flex-1 flex-col px-8 pb-5'>
                 <Text className='text-lg font-bold pb-5'>Review & Rating</Text>
-                <AirbnbRating 
+                {/* <AirbnbRating 
                   count={5} 
                   defaultRating={averageRating} 
                   size={20} 
                   isDisabled 
                   showRating={false}
-                />
+                /> */}
               </View>
 
              {/* Display tenants' reviews */}
@@ -766,7 +887,6 @@ const handlePhoneCall = () => {
           </TouchableOpacity>
         </Animated.View>
         
-        {/* pre palitan mo nalang ng  userData?.accountStatus !== 'Under-review' at available !== 'yes'  pinakita ko lang yan*/}
         {(userData?.uid !== ownerData?.id && userData?.accountStatus !== 'Under-review') && ( 
           <View className={`${available}` !== 'yes' ? 'bottom-[145px]' : 'bottom-10'}>
             {available !== 'yes' ?
