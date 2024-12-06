@@ -101,7 +101,7 @@ export default function App() {
     });
     
     // Filter out properties with a distance greater than 5 meters
-    const filteredProperties = distances.filter(property => property.distance <= 100);
+    const filteredProperties = distances.filter(property => property.distance <= 10);
 
     // If there are no properties within 5 meters, return null
     if (filteredProperties.length === 0) {
