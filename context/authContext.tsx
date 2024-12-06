@@ -1136,7 +1136,7 @@ export const AuthContextProvider = ({ children }: { children: ReactNode }) => {
                         revenueBalance: newOwnerBalance,
                     };
                     await updateDoc(doc(db, 'wallets', tenantId), setTenantWalletData);
-                    addRevenue(ownerId, 'Payment' , payment, transactionId);
+                    //addRevenue(ownerId, 'Payment' , payment, transactionId);
                     await updateDoc(doc(db, 'wallets', ownerId), setOwnerWalletData);
                     console.log('Rent Paid');
                 }
