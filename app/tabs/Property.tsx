@@ -61,6 +61,7 @@ interface Owner {
 interface User {
   uid: string;
   role: string;
+  accountStatus: string;
 }
 
 export default function Tenants() {
@@ -155,7 +156,8 @@ const handlePhoneCall = () => {
           //console.log(uid, role);
           setUserData({
             uid: uid,
-            role: role
+            role: role,
+            accountStatus: userData.accountStatus,
           })
         }
       }
@@ -421,40 +423,50 @@ const handlePhoneCall = () => {
           </View>
 
           {/* Profile */}
-          <View className='px-8'>
-            <View className='py-2 flex flex-row items-center gap-2 border-y border-gray-200'>
-              <TouchableOpacity className='flex flex-row space-x-2' onPress={() => router.push('./LeaseProperty/OwnerProfile')}>
-              <Image
-                className='w-[40px] h-[40px] rounded-full'
-                source={ownerData?.profilePicture || require('../../assets/images/profile.png')}
-              />
-              <View className='flex flex-col flex-1'>
-                <View className='flex flex-row items-center justify-between'>
-                <Text className={`text-sm font-semibold ${ownerData ? '' : 'bg-gray-200 w-2/3 rounded-xl'}`} numberOfLines={1} ellipsizeMode='tail'>
-                    {ownerData?.firstName} {ownerData?.middleName} {ownerData?.lastName}
-                  </Text>
-                  <View className='flex flex-row space-x-2'>
-                    <TouchableOpacity onPress={() => router.push('./Message/msgDetails')}>
-                      <AntDesign name="message1" size={18} color="gray" />
-                    </TouchableOpacity>
-                    <TouchableOpacity onPress={handlePhoneCall}>
-                      <Feather name="phone-call" size={18} color="gray" />
-                    </TouchableOpacity>
-                  </View>
-                </View>
-                {/* Account ID and Copy Icon */}
-                <View className='flex flex-row items-center'>
-                  <Text className='text-gray-500 text-xs'>{ownerData?.role}</Text>
-                </View>
-              </View>
+          {userData?.accountStatus === 'Approved' && (
+  <View className='px-8'>
+    <View className='py-2 flex flex-row items-center gap-2 border-y border-gray-200'>
+      <TouchableOpacity
+        className='flex flex-row space-x-2'
+        onPress={() => router.push('./LeaseProperty/OwnerProfile')}
+      >
+        <Image
+          className='w-[40px] h-[40px] rounded-full'
+          source={ownerData?.profilePicture || require('../../assets/images/profile.png')}
+        />
+        <View className='flex flex-col flex-1'>
+          <View className='flex flex-row items-center justify-between'>
+            <Text
+              className={`text-sm font-semibold ${ownerData ? '' : 'bg-gray-200 w-2/3 rounded-xl'}`}
+              numberOfLines={1}
+              ellipsizeMode='tail'
+            >
+              {ownerData?.firstName} {ownerData?.middleName} {ownerData?.lastName}
+            </Text>
+            <View className='flex flex-row space-x-2'>
+              <TouchableOpacity onPress={() => router.push('./Message/msgDetails')}>
+                <AntDesign name="message1" size={18} color="gray" />
+              </TouchableOpacity>
+              <TouchableOpacity onPress={handlePhoneCall}>
+                <Feather name="phone-call" size={18} color="gray" />
               </TouchableOpacity>
             </View>
           </View>
+          {/* Account ID and Copy Icon */}
+          <View className='flex flex-row items-center'>
+            <Text className='text-gray-500 text-xs'>{ownerData?.role}</Text>
+          </View>
+        </View>
+      </TouchableOpacity>
+    </View>
+  </View>
+)}
+
 
           {/* Property Details */}
           <View className='flex flex-col py-4'>
             <View className='px-8'>
-            <Text className='text-lg font-bold'>Property Details</Text>
+            <Text className='text-lg font-bold'>Property Details1</Text>
 
             <View className='flex flex-row items-center gap-4 py-2'>
               <MaterialIcons name="bed" size={20} color="black" />
@@ -589,7 +601,7 @@ const handlePhoneCall = () => {
             <View className='px-1 pt-5'>
               <Text className='text-lg font-bold'>Where you’ll be</Text>
               <View className='h-[200px] rounded-lg overflow-hidden mt-2'>
-                {propertyData?.latitude && propertyData?.longitude ? (
+                {propertyData?.latitude && propertyData?.longitude && userData?.accountStatus == 'Approved' ? (
                   <MapView
                     style={{ flex: 1 }}
                     initialRegion={{
@@ -611,10 +623,10 @@ const handlePhoneCall = () => {
                 ) : (
                   <Text className='text-center text-gray-500'>Location not available.</Text>
                 )}
-                <View className='flex flex-col items-center justify-center'>
+                {userData?.accountStatus == 'Approved' && (<View className='flex flex-col items-center justify-center'>
                   <Text className='text-sm font-semibold'>Location</Text>
                   <Text className='text-xs text-center'>{`${propertyData?.homeAddress}, ${propertyData?.barangay}, ${propertyData?.city}, ${propertyData?.region}`}</Text>
-                </View>
+                </View>)}
               </View>
             </View>
             </View>
@@ -730,7 +742,7 @@ const handlePhoneCall = () => {
         </Animated.View>
         
         {/* Prices //userData?.role === 'tenant' && */}
-        {userData?.uid !== ownerData?.id && ( 
+        {userData?.uid !== ownerData?.id && userData?.accountStatus == 'Approved' && ( 
         <View className='bg-[#ffffffff] flex-row items-center justify-between border-t border-gray-200 bottom-10 py-4 px-8'>
             <>
               <View className='flex-row items-center space-x-2'>
