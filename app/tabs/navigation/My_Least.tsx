@@ -178,10 +178,13 @@ export default function MyLease() {
         const today = new Date();
         const formattedToday = `${String(today.getMonth() + 1).padStart(2, '0')}/${String(today.getDate()).padStart(2, '0')}/${today.getFullYear()}`;
         console.log(formattedToday);
+        // router.replace('../tabs/Feedback/PropertyFeedback/propertyFeedback') // Go to Reviews
         if (rentalEndDate === formattedToday) {
           console.log(`Skipping property ${propertyId} as rentalEndDate (${rentalEndDate}) is today.`);
           sendNotification(tenantId, 'lease-end', 'Lease Ended - Share Your Feedback', 'Your lease has ended! We’d love to hear about your experience staying at the property, interacting with the landlord, and using the app. Please take a moment to answer a few questions to help us improve our services.', 'Success', 'Unread')
-          router.replace('../tabs/Feedback/UPAFeedback/upaFeedback') // Go to Reviews
+          router.replace('../tabs/Feedback/PropertyFeedback/propertyFeedback') // Go to Reviews
+          await SecureStore.setItemAsync('reviewPropertyId', propertyId);
+          await SecureStore.setItemAsync('reviewOwnerId', ownerId);
           return; // Skip this lease
         }
   

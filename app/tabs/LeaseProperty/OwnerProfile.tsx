@@ -7,6 +7,16 @@ import { collection, getDocs, query, where, doc, getDoc, Timestamp } from 'fireb
 import { getDownloadURL, ref } from 'firebase/storage'; // Firebase Storage import
 import { db, storage } from '../../../_dbconfig/dbconfig'; // Import your Firebase config
 
+interface Reviews {
+  id: string;
+  uid: string;
+  name: string;
+  profilePicture: { uri: string } | number;
+  ratings: number;
+  comment: string;
+  createdAt: string;
+}
+
 export default function Profile() {
   const router = useRouter();
   const [fullName, setFullName] = useState<string | null>(null);
@@ -14,6 +24,7 @@ export default function Profile() {
   const [email, setEmail] = useState<string | null>(null);
   const [accountId, setAccountID] = useState<string | null>(null);
   const [createdAt, setCreatedAt] = useState<string | null>(null);
+  const [review, setReviews] = useState<Reviews[]>([]);
 
   const formatDate = (timestamp: Timestamp): string => {
     const { seconds, nanoseconds } = timestamp;
@@ -23,7 +34,45 @@ export default function Profile() {
         month: 'long',
         //day: 'numeric',
     })
-};
+  };
+
+  const getUserImageUrl = async (ownerId: string) => {
+    try {
+      const storageRef = ref(storage, `profilepictures/${ownerId}-profilepictures`);
+      const url = await getDownloadURL(storageRef);
+      return url;
+    } catch (error) {
+      console.error("Error fetching image URL:", error);
+      return null;
+    }
+  }
+
+  const getRating = async (ratings: number[]) => {
+    if (ratings.length === 0) return 0; // Handle the case where there are no ratings
+
+    const total = ratings.reduce((sum, rating) => sum + rating, 0); // Sum all the ratings
+    console.log('Total', total);
+    const finalRating = total / 4; // Divide the average by 4
+
+    return finalRating;
+  };
+
+  const convertStringDateTime = async (dateTime: Timestamp) => {
+    // Convert Firestore Timestamp to a JavaScript Date object
+    const date = new Date(dateTime.seconds * 1000 + dateTime.nanoseconds / 1000000);
+  
+    // Format the date into MM/DD/YYYY HH:mm
+    const formattedDate = date.toLocaleString('en-US', {
+      month: '2-digit',
+      day: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: true, // Use 24-hour format. Change to true for AM/PM
+    });
+  
+    return formattedDate;
+  };
 
 // Fetch full name from SecureStore
 useEffect(() => {
@@ -58,6 +107,56 @@ useEffect(() => {
 
                         // Set the profile picture URL
                         setProfilePicUrl(downloadURL);
+
+                        const testId = 'l83M6RSGb3gCmBrJk9XWxAmjnm03'
+                        const reviewQuery = query(
+                          collection(db, 'reviews', testId, 'reviewId'),
+                          where('feedbackType', '!=', 'UPA'),
+                        );
+                        const reviewSnapshot = await getDocs(reviewQuery);
+                  
+                        if (!reviewSnapshot.empty) {
+                          const reviewDatas: Reviews[] = (
+                            await Promise.all(
+                              reviewSnapshot.docs.map(async (docu) => {
+                                const data = docu.data();
+                                const userRef = doc(db, 'users', data.uid);
+                                const userDoc = await getDoc(userRef);
+                  
+                                if (userDoc.exists()) {
+                                  const userData = userDoc.data();
+                                  const pfp = require('../../../assets/images/profile.png')
+                                  console.log(userDoc.id);
+                                  const profilePicture = await getUserImageUrl(userDoc.id);
+                                  const starReview = await getRating(data.ratings);
+                                  console.log(data.createdAt);
+                                  const dateString = await convertStringDateTime(data.createdAt);
+                                  console.log(dateString);
+                                  console.log(starReview);
+                  
+                                  return {
+                                    id: docu.id,
+                                    uid: data.uid,  
+                                    name: `${userData.firstName} ${userData.middleName || ''} ${userData.lastName}`,
+                                    profilePicture: profilePicture
+                                      ? { uri: profilePicture }
+                                      : pfp,
+                                    ratings: starReview,
+                                    comment: data.comment || '',
+                                    createdAt: dateString || '',
+                                  };
+                                }
+                                console.log('No data')
+                                return null; // Return null if no user data
+                              })
+                            )
+                          ).filter((review): review is Reviews => review !== null); // Type guard to remove null
+                  
+                          setReviews(reviewDatas); // Assign only valid Reviews objects
+                          console.log(reviewDatas);
+                        }else{
+                          console.log('Empty')
+                        }
                     } catch (error) {
                         console.error('Error fetching profile picture:', error);
                     }
@@ -100,8 +199,8 @@ useEffect(() => {
 
   // Function to calculate the average rating
   const calculateAverageRating = () => {
-    const totalRating = reviews.reduce((sum, review) => sum + review.rating, 0); // Sum of all ratings
-    return (totalRating / reviews.length).toFixed(1); // Calculate average and round to 1 decimal place
+    const totalRating = review.reduce((sum, review) => sum + review.ratings, 0); // Sum of all ratings
+    return (totalRating / review.length).toFixed(1); // Calculate average and round to 1 decimal place
   };
 
   const handleCopyAccountId = (accountId: string | null) => {
@@ -187,16 +286,16 @@ useEffect(() => {
           
           {/* Review Cards - Mapping over dummy reviews */}
           <ScrollView className='px-4 mt-4' contentContainerStyle={{ flexGrow: 1, paddingBottom: 10, paddingTop: 6 }} showsVerticalScrollIndicator={false}>
-            {reviews.length === 0 ? (
+            {review.length === 0 ? (
               <Text className='text-center text-sm text-gray-500 mt-4'>No reviews yet. Be the first to leave a review!</Text>
             ) : (
-              reviews.map((review) => (
+              review.map((review) => (
                 <View key={review.id} className='py-4'>
                   <View className='bg-gray-100 p-4 rounded-lg flex flex-row items-start'>
                     {/* Reviewer Image */}
                     <Image
                       className='w-[30px] h-[30px] mr-4 rounded-full'
-                      source={review.profileImage}
+                      source={review.profilePicture}
                     />
                     
                     {/* Review Text */}
@@ -205,13 +304,13 @@ useEffect(() => {
                         <Text className='font-bold'>{review.name}</Text>
                         <View className='flex flex-row items-center'>
                           {/* Display star ratings based on the review rating */}
-                          {Array.from({ length: review.rating }, (_, index) => (
+                          {Array.from({ length: review.ratings }, (_, index) => (
                             <Ionicons key={index} name="star" size={15} color="gold" />
                           ))}
                         </View>
                       </View>
-                      <Text className='text-xs text-gray-500 py-1'>{review.date}</Text>
-                      <Text className='text-sm text-gray-700'>{review.reviewText}</Text>
+                      <Text className='text-xs text-gray-500 py-1'>{review.createdAt}</Text>
+                      <Text className='text-sm text-gray-700'>{review.comment}</Text>
                     </View>
                   </View>
                 </View>
