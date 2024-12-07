@@ -1276,14 +1276,6 @@ export const AuthContextProvider = ({ children }: { children: ReactNode }) => {
         }
     };
 
-    const acceptContract = async(transactionId: string) => {
-        //update the contract status into active
-    }
-
-    const rejectContract = async(transactionId: string) => {
-        ////update the contract status into rejected
-    }
-
     const addFavorite = async (ownerId: string, propertyId: string) => {
         try {
             //console.log(ownerId, propertyId);

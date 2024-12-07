@@ -86,7 +86,7 @@ export default function payDepositeAdvance() {
               sendNotification(paymentData.ownerId, 'approval', 'Deposit and Advance Payment Received', `You have successfully received the deposit and advance payment from ${paymentData.tenantFullName} for ${paymentData.propertyName}.`, 'Success', 'Unread');
               addWalletTransaction(paymentData?.tenantId, 'Payment', paymentData?.transactionId, formatDate(new Date()), rentData?.propertyRentAmount, 'PAY_ONTIME');
               await updateDoc(doc(db, 'propertyTransactions', paymentData.transactionId), {status: 'Approved'});
-              await updateDoc(doc(db, 'properties', paymentData?.ownerId, 'propertyId', paymentData?.propertyId), {status: "Occupied"})
+              await updateDoc(doc(db, 'properties', paymentData?.ownerId, 'propertyId', paymentData?.propertyId), {status: "Occupied", propertyCurrentRenter: paymentData.tenantId, propertyCurrentLeaseStart: rentData.propertyLeaseStart, propertyCurrentLeaseEnd: rentData.propertyLeaseEnd, propertyCurrentRentAmount: rentData.propertyRentAmount, propertyCurrentRentDeposit: rentData.propertySecurityDepositAmount, propertyCurrentRentPeriod: rentData.propertySecurityDepositRefundPeriod, propertyCurrentDuration: rentData.propertyLeaseDuration})
               await updateDoc(doc(db, 'contracts', paymentData.transactionId), {status: "Active"});
               //await updateDoc(doc(db, 'propertyTransactions', paymentData?.transactionId), {status: "Rented"})
               // router.replace('./paymentReceipt'); // Navigate to the receipt transaction screen

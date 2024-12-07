@@ -466,7 +466,7 @@ const handlePhoneCall = () => {
           {/* Property Details */}
           <View className='flex flex-col py-4'>
             <View className='px-8'>
-            <Text className='text-lg font-bold'>Property Details1</Text>
+            <Text className='text-lg font-bold'>Property Details</Text>
 
             <View className='flex flex-row items-center gap-4 py-2'>
               <MaterialIcons name="bed" size={20} color="black" />

@@ -1,8 +1,8 @@
 {
   "expo": {
     "name": "UPA",
-    "slug": "THESIS",
-    "version": "2.1.0",
+    "slug": "thesis",
+    "version": "2.0.1",
     "orientation": "portrait",
     "icon": "./assets/images/mainlogo.jpg",
     "scheme": "myapp",
@@ -63,7 +63,7 @@
         "origin": false
       },
       "eas": {
-        "projectId": "409ce64a-5179-4688-8cf4-f37ef275710b"
+        "projectId": "f67b71ee-6c1e-4e6a-9571-846d6f7f8c01"
       }
     }
   }
