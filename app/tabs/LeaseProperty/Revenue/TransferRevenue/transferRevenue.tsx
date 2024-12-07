@@ -1,11 +1,12 @@
 import { View, Text, TouchableOpacity, TextInput } from 'react-native';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { AntDesign, Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import walletData from '../walletData.json';
 import { setAmount } from '../sharedData';
 import CustomModal from '../WalletModal'; // Import the CustomModal
 import * as FileSystem from 'expo-file-system';
+import { getItemAsync } from 'expo-secure-store';
 
 const walletDataPath = FileSystem.documentDirectory + './walletData.json';
 
@@ -14,19 +15,28 @@ export default function TopUp() {
     const [amount, setLocalAmount] = useState<string>('');
     const [modalVisible, setModalVisible] = useState(false);
     const [modalMessage, setModalMessage] = useState('');
+    const [balance, setBalance] = useState('');
+
+    useEffect(() => {
+        const fetchRevenueData = async () => {
+            const balance = await getItemAsync('revenueBalance');
+            if(balance) setBalance(balance);
+        }
+
+        fetchRevenueData();
+    },[]);
 
     const handleContinue = () => {
-        const numericAmount = Number(amount);
-        const balance = walletData.balance;
-
-        if (numericAmount > balance) {
+        //const balance = walletData.balance;
+        console.log(parseInt(amount));
+        if (parseInt(amount) > parseInt(balance)) {
             setModalMessage("Insufficient Balance");
             setModalVisible(true);
-        } else if (!amount || isNaN(numericAmount) || numericAmount < 20 || numericAmount > 100000) {
+        } else if (!amount || parseInt(amount) < 20 || parseInt(amount) > 100000) {
             setModalMessage("Please input a valid amount value (between Php 20 and Php 100,000)");
             setModalVisible(true);
         } else {
-            setAmount(numericAmount);
+            setAmount(parseInt(amount));
             router.replace('./reviewTransaction');
         }
     };
@@ -59,7 +69,7 @@ export default function TopUp() {
                         />
                         <View className='p-3 flex-row space-x-2'>
                             <AntDesign name="wallet" size={15} color="gray" />
-                            <Text className='text-xs text-gray-500'>Available Balance  : {`Php ${walletData.balance.toLocaleString()}.00`}</Text>
+                            <Text className='text-xs text-gray-500'>Available Balance  : {`Php ${parseInt(balance).toLocaleString()}.00`}</Text>
                         </View>
                     </View>
 

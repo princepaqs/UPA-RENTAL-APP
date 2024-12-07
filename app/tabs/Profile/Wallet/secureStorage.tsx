@@ -4,6 +4,7 @@ import * as SecureStore from 'expo-secure-store';
 
 export interface TransactionData {
   transactionID: string;
+  uid: string;
   name: string;
   email: string;
   type: string;

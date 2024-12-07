@@ -48,6 +48,7 @@ export default function ReviewTransaction() {
     // Create the transaction data object
     const transactionData = {
         transactionID: generateTransactionID(),
+        uid: tenantId,
         name,
         email,
         dateTime: getCurrentDateTime(),

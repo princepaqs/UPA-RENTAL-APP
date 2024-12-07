@@ -21,7 +21,7 @@ export default function thankyouFeedback() {
         <TouchableOpacity className='bg-[#D9534F] mx-10 w-1/2 py-3 rounded-xl items-center'
             onPress={() => router.back()}
         >
-            <Text className='font-bold text-white'>Return Dashbaord</Text>
+            <Text className='font-bold text-white'>Return Dashboard</Text>
         </TouchableOpacity>
         
     </View>

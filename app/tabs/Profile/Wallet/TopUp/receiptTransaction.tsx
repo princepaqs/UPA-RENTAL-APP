@@ -86,7 +86,7 @@ export default function ReceiptTransaction() {
         }
     };
 
-    const { transactionID, name, email, dateTime, amount, total } = transactionData ?? {}; // Default to empty object if null
+    const { transactionID, name, email, dateTime, amount, total, uid } = transactionData ?? {}; // Default to empty object if null
 
     // Ensure amounts are valid numbers
     const formattedAmount = (amount ?? 0).toFixed(2); // Ensure toFixed is called on numbers
@@ -104,11 +104,14 @@ export default function ReceiptTransaction() {
     const receiptData = {
         referenceNo: generateTransactionID(),
         transactionId: transactionID,
+        uid,
         name: name,
         email: email,
         dateTime: dateTime,
         amount: formattedAmount,
         total: formattedTotal,
+        createdAt: new Date(),
+        _type: 'Topup',
     }
 
     const handleContinue = async () => {
@@ -123,8 +126,8 @@ export default function ReceiptTransaction() {
 
             // Write the updated walletData back to the file
             await FileSystem.writeAsStringAsync(walletDataPath, JSON.stringify(updatedWalletData));
-            if(receiptData.transactionId){
-                await setDoc(doc(db, 'receipts', receiptData.transactionId, 'receiptId', receiptData.referenceNo), receiptData)
+            if(receiptData.uid && receiptData.transactionId){
+                await setDoc(doc(db, 'receipts', receiptData.uid, 'receiptId', receiptData.transactionId), receiptData)
             }
 
             // Simulate a loading period (1 second)

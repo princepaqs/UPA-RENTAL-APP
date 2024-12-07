@@ -4,7 +4,7 @@ import { AntDesign, Feather, FontAwesome5, FontAwesome6, Fontisto, Ionicons, Mat
 import { useRouter } from 'expo-router';
 import { Timestamp } from 'firebase/firestore';
 import * as SecureStore from 'expo-secure-store';
-import { getDoc, setDoc, doc, getDocs, collection, query, where } from 'firebase/firestore'; // For saving data in Firestore (optional)
+import { getDoc, setDoc, doc, getDocs, collection, query, where, onSnapshot } from 'firebase/firestore'; // For saving data in Firestore (optional)
 import { db } from '../../../../_dbconfig/dbconfig'; // Import Firestore instance
 
 const properties = [
@@ -64,44 +64,57 @@ export default function revenue() {
     };
 
     useEffect(() => {
-      const fetchRevenue = async () => {
+      const fetchRevenueRealtime = async () => {
         try {
           const uid = await SecureStore.getItemAsync('uid');
           if (uid) {
-            const walletRef = await getDoc(doc(db, 'wallets', uid));
-            if(walletRef.exists()){
-              const walletData = walletRef.data();
-              if(walletData){
-                const totalRevenue = walletData.revenueBalance
-                setRevenueBalance(totalRevenue);
+            // Real-time listener for the wallet document
+            const walletUnsubscribe = onSnapshot(doc(db, 'wallets', uid), (docSnapshot) => {
+              if (docSnapshot.exists()) {
+                const walletData = docSnapshot.data();
+                if (walletData) {
+                  const totalRevenue = walletData.revenueBalance;
+                  setRevenueBalance(totalRevenue);
+                }
               }
-            }
-
-            // Correcting the collection path based on Firestore structure
-            const revenueRef = await getDocs(collection(db, 'revenues', uid, 'revenueId'));
-            const revenues = revenueRef.docs.map((doc) => {
-              const data = doc.data();
-              return {
-                id: doc.id,
-                type: data.type || '',
-                transactionId: data.transactionId || '',
-                value: data.value || 0,
-                createdAt: data.createdAt || Timestamp.now(),
-              };
             });
     
-            // Updating states
-            setRevenueData(revenues as Revenue[]);
-            console.log(revenueData);
-            setFilteredProperties(revenues as Revenue[]); // Sync filtered data initially
+            // Real-time listener for the revenues subcollection
+            const revenueUnsubscribe = onSnapshot(
+              collection(db, 'revenues', uid, 'revenueId'),
+              (snapshot) => {
+                const revenues = snapshot.docs.map((doc) => {
+                  const data = doc.data();
+                  return {
+                    id: doc.id,
+                    uid: data.uid,
+                    type: data.paymentPurpose || '',
+                    transactionId: data.TransactionID || '',
+                    value: data.amount || 0,
+                    createdAt: data.dateTime || Timestamp.now(),
+                  };
+                });
+    
+                // Updating states
+                setRevenueData(revenues as Revenue[]);
+                setFilteredProperties(revenues as Revenue[]); // Sync filtered data initially
+              }
+            );
+    
+            // Cleanup on unmount
+            return () => {
+              walletUnsubscribe();
+              revenueUnsubscribe();
+            };
           }
         } catch (error) {
-          console.error('Error loading revenues:', error);
+          console.error('Error loading revenues in real-time:', error);
         }
       };
     
-      fetchRevenue();
+      fetchRevenueRealtime();
     }, []);
+    
     
   
 
@@ -133,7 +146,10 @@ export default function revenue() {
             <Text className='text-white text-3xl'>{revenueBalance.toLocaleString()}.00</Text>
           </View>
           <TouchableOpacity className='flex-row items-center mt-2 space-x-2'
-            onPress={() => router.push('./TransferRevenue/transferRevenue')}>
+            onPress={async () => {
+              router.push('./TransferRevenue/transferRevenue')
+              await SecureStore.setItemAsync('revenueBalance',revenueBalance.toString())
+              }}>
             <FontAwesome6 name="money-bill-transfer" size={13} color="white" />
             <Text className='text-white text-[10px]'>Transfer Wallet</Text>
           </TouchableOpacity>
@@ -163,8 +179,14 @@ export default function revenue() {
       <ScrollView contentContainerStyle={{ flexGrow: 1 }} showsVerticalScrollIndicator={false}>
         <View className="flex-col space-y-2 px-2 mb-20 flex-wrap">
           {filteredProperties.map((property) => (
-            <TouchableOpacity key={property.id} onPress={() => router.push('./viewRevenue')} className="w-full p-2.5 rounded-xl shadow-md border border-gray-100 bg-white flex flex-row">
-
+            <TouchableOpacity key={property.id} onPress={async () => {
+              router.push('./viewRevenue')
+              if(property){
+                console.log(property.transactionId);
+              await SecureStore.setItemAsync('revenueReceiptId', property.transactionId)
+              }
+            }} 
+              className="w-full p-2.5 rounded-xl shadow-md border border-gray-100 bg-white flex flex-row">
               <View className="w-full flex-col space-y-1" >
                   <View className='flex-row items-center justify-between'>
                     <Text className='text-xs font-bold'>{property.type}</Text>

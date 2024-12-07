@@ -11,6 +11,7 @@ const fees = 15.00; // Set your fees
 export default function ReviewTransaction() {
     const router = useRouter();
     const amount = getAmount(); // Get the amount from the shared data
+    console.log('Amount', amount);
     const { topUpWallet, addWalletTransaction } = useAuth();
     const [loading, setLoading] = useState(false);
     const type = 'Transfer'
@@ -77,9 +78,9 @@ export default function ReviewTransaction() {
                         <View className='bg-white flex flex-col space-y-2 p-5 rounded-xl my-2'>
                             <Text className='text-sm text-gray-500'>Transaction ID: {transactionData.transactionID}</Text>
                             <Text className='text-sm text-gray-500'>Date Time: {transactionData.dateTime}</Text>
-                            <Text className='text-sm text-gray-500'>Transfer Amount: ₱ {parseInt(amount.toLocaleString())}</Text>
+                            <Text className='text-sm text-gray-500'>Transfer Amount: ₱ {amount.toLocaleString()}</Text>
                             <Text className='text-sm text-gray-500'>Fees: ₱ {fees}</Text>
-                            <Text className='text-sm text-gray-500 font-bold'>TOTAL: ₱ {parseInt(total.toLocaleString())}</Text>
+                            <Text className='text-sm text-gray-500 font-bold'>TOTAL: ₱ {total.toLocaleString()}</Text>
                         </View>
                     </View>
 

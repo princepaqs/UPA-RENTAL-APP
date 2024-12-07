@@ -154,104 +154,112 @@ export default function MyLease() {
     }
   };
 
-    const fetchLeaseData = async () => {
-      const tenantId = await SecureStore.getItemAsync('uid');
-      if (tenantId) {
-        const transactionsRef = collection(db, 'propertyTransactions');
-        const q = query(
-          transactionsRef,
-          where('status', 'in', ['Waiting Signature & Payment', 'Approved']),
-          where('tenantId', '==', tenantId),
-        );
-
-        const transactionsSnapshot = await getDocs(q);
-
-        if (!transactionsSnapshot.empty) {
-          let totalLeaseData = 0;
-          const newLeases: MultipleLease[] = []; // Collect lease data in a new array
-
-          const fetchLease = async (transactionDoc: any) => {
-            const { transactionId, ownerId, propertyId, moveInDate, rentalStartDate, rentalEndDate, paymentStatus, createdAt } = transactionDoc.data();
-            //console.log(paymentStatus);
-            if (ownerId && propertyId && rentalStartDate) {
-              const userRef = await getDoc(doc(db, 'users', ownerId));
-              if (userRef.exists()) {
-                const userData = userRef.data();
-                const fullName = `${userData.firstName} ${userData.middleName || ''} ${userData.lastName}`;
-                const profilePicture = await getUserImageUrl(ownerId);
-
-                const propertyRef = await getDoc(doc(db, 'properties', ownerId, 'propertyId', propertyId));
-                if (propertyRef.exists()) {
-                  const propertyData = propertyRef.data();
-                  //console.log(propertyData)
-                  const firstImageUri = propertyData.images?.length > 0
-                    ? await getPropertyImageUrl(propertyId, propertyData.images[0])
-                    : null;
-
-                  const leaseDetails: LeaseData = {
-                    createdAt: createdAt,
-                    transactionId,
-                    ownerId,
-                    ownerImage: profilePicture || require('../../../assets/images/profile.png'),
-                    ownerFullName: fullName,
-                    ownerRole: userData.role,
-                    propertyId,
-                    propertyImage: firstImageUri || require('../../../assets/images/property1.png'),
-                    propertyName: propertyData.propertyName,
-                    propertyType: propertyData.propertyType,
-                    propertyCity: propertyData.propertyCity,
-                    propertyRegion: propertyData.propertyRegion,
-                    propertyPrice: propertyData.propertyMonthlyRent,
-                    propertySecurityDepositAmount: propertyData.propertySecurityDepositAmount,
-                    rentalStartDate,
-                    rentalEndDate,
-                    status: propertyData.status
-                  };
-                  
-                  const multipleLease: MultipleLease = {
-                    createdAt: createdAt,
-                    id: transactionId,
-                    propertyName: propertyData.propertyName,
-                    propertyMonthlyRent: propertyData.propertyMonthlyRent,
-                    propertyPaymentStatus: paymentStatus,
-                    type: propertyData.propertyType,
-                    city: propertyData.propertyCity,
-                    region: propertyData.propertyRegion,
-                    moveInDate: moveInDate,
-                    date: rentalStartDate,
-                    endDate: rentalEndDate,
-                    propertyStatus: propertyData.status,
-                    image: firstImageUri || require('../../../assets/images/property1.png'),
-                  };
-                  console.log('MoveInDate', rentalStartDate);
-                  console.log('CreatedAt', multipleLease.createdAt);
-                  //checkDate(rentalStartDate);
-                  // Store lease data in the map and new leases array
-                  setLeaseDataMap((prev) => ({ ...prev, [transactionId]: leaseDetails }));
-                  newLeases.push(multipleLease);
-                  totalLeaseData++;
-                }
-              }
-            }
-          };
+  const fetchLeaseData = async () => {
+    const tenantId = await SecureStore.getItemAsync('uid');
+    if (tenantId) {
+      const transactionsRef = collection(db, 'propertyTransactions');
+      const q = query(
+        transactionsRef,
+        where('status', 'in', ['Waiting Signature & Payment', 'Approved']),
+        where('tenantId', '==', tenantId),
+      );
+  
+      const transactionsSnapshot = await getDocs(q);
+  
+      if (!transactionsSnapshot.empty) {
+        let totalLeaseData = 0;
+        const newLeases: MultipleLease[] = []; // Collect lease data in a new array
+  
+        const fetchLease = async (transactionDoc: any) => {
+          const { transactionId, ownerId, propertyId, moveInDate, rentalStartDate, rentalEndDate, paymentStatus, createdAt } = transactionDoc.data();
           
-          // Fetch all leases in parallel
-          await Promise.all(transactionsSnapshot.docs.map(fetchLease));
-
-          // After collecting all leases, update state once
-          setMultipleLeases(newLeases);
-          setTotalLease(totalLeaseData);
-          // console.log(newLeases)
-          
-          /* Automatically set selectedLeaseId if there's only one lease
-          if (newLeases.length === 1) {
-            setSelectedLeaseId(newLeases[0].id);
-          }*/
-        } else {
-          console.log('No approved transactions found for this tenant.');
+          // Check if rentalEndDate is today's date
+          // Check if rentalEndDate is today's date
+        const today = new Date();
+        const formattedToday = `${String(today.getMonth() + 1).padStart(2, '0')}/${String(today.getDate()).padStart(2, '0')}/${today.getFullYear()}`;
+        console.log(formattedToday);
+        if (rentalEndDate === formattedToday) {
+          console.log(`Skipping property ${propertyId} as rentalEndDate (${rentalEndDate}) is today.`);
+          sendNotification(tenantId, 'lease-end', 'Lease Ended - Share Your Feedback', 'Your lease has ended! We’d love to hear about your experience staying at the property, interacting with the landlord, and using the app. Please take a moment to answer a few questions to help us improve our services.', 'Success', 'Unread')
+          router.replace('../tabs/Feedback/UPAFeedback/upaFeedback') // Go to Reviews
+          return; // Skip this lease
         }
+  
+        if (ownerId && propertyId && rentalStartDate) {
+          const userRef = await getDoc(doc(db, 'users', ownerId));
+          if (userRef.exists()) {
+            const userData = userRef.data();
+            const fullName = `${userData.firstName} ${userData.middleName || ''} ${userData.lastName}`;
+            const profilePicture = await getUserImageUrl(ownerId);
+
+            const propertyRef = await getDoc(doc(db, 'properties', ownerId, 'propertyId', propertyId));
+            if (propertyRef.exists()) {
+              const propertyData = propertyRef.data();
+
+              const firstImageUri = propertyData.images?.length > 0
+                ? await getPropertyImageUrl(propertyId, propertyData.images[0])
+                : null;
+
+              const leaseDetails: LeaseData = {
+                createdAt: createdAt,
+                transactionId,
+                ownerId,
+                ownerImage: profilePicture || require('../../../assets/images/profile.png'),
+                ownerFullName: fullName,
+                ownerRole: userData.role,
+                propertyId,
+                propertyImage: firstImageUri || require('../../../assets/images/property1.png'),
+                propertyName: propertyData.propertyName,
+                propertyType: propertyData.propertyType,
+                propertyCity: propertyData.propertyCity,
+                propertyRegion: propertyData.propertyRegion,
+                propertyPrice: propertyData.propertyMonthlyRent,
+                propertySecurityDepositAmount: propertyData.propertySecurityDepositAmount,
+                rentalStartDate,
+                rentalEndDate,
+                status: propertyData.status,
+              };
+
+              const multipleLease: MultipleLease = {
+                createdAt: createdAt,
+                id: transactionId,
+                propertyName: propertyData.propertyName,
+                propertyMonthlyRent: propertyData.propertyMonthlyRent,
+                propertyPaymentStatus: paymentStatus,
+                type: propertyData.propertyType,
+                city: propertyData.propertyCity,
+                region: propertyData.propertyRegion,
+                moveInDate: moveInDate,
+                date: rentalStartDate,
+                endDate: rentalEndDate,
+                propertyStatus: propertyData.status,
+                image: firstImageUri || require('../../../assets/images/property1.png'),
+              };
+
+              console.log('MoveInDate', rentalStartDate);
+              console.log('CreatedAt', multipleLease.createdAt);
+
+              // Store lease data in the map and new leases array
+              setLeaseDataMap((prev) => ({ ...prev, [transactionId]: leaseDetails }));
+              newLeases.push(multipleLease);
+              totalLeaseData++;
+            }
+          }
+        }
+      };
+
+      // Fetch all leases in parallel
+      await Promise.all(transactionsSnapshot.docs.map(fetchLease));
+
+      // After collecting all leases, update state once
+      setMultipleLeases(newLeases);
+      setTotalLease(totalLeaseData);
+      } else {
+        console.log('No approved transactions found for this tenant.');
       }
-    };
+    }
+  };
+  
 
    useEffect(() => {
     fetchLeaseData();
@@ -841,11 +849,11 @@ export default function MyLease() {
               contentContainerStyle={{ flexGrow: 1 }}
             >
               <View className='flex flex-col mb-20 flex-wrap space-y-4'>
-              {loading ? (
-                <View className="flex-1 w-full h-full justify-center items-center">
-                  <ActivityIndicator size="large" color="gray" />
-                </View>
-              ) : isLeaseVisible && multipleLeases.length > 0 ? (
+                {loading ? (
+                  <View className="flex-1 w-full h-full justify-center items-center">
+                    <ActivityIndicator size="large" color="gray" />
+                  </View>
+                ) : isLeaseVisible && multipleLeases.length > 0 ? (
                 multipleLeases.map((multipleLease) => (
                   <TouchableOpacity
                     className="py-1.5 px-2 flex w-full items-center justify-center bg-white rounded-xl shadow-xl border border-gray-200"
@@ -861,7 +869,7 @@ export default function MyLease() {
                             : require('../../../assets/images/property1.png')
                         }
                       />
-                      <View className="flex flex-col flex-1 gap-1 px-2">
+                      <View className="flex-col gap-1 px-2">
                         <Text numberOfLines={1} ellipsizeMode="tail" className="text-xs text-[#6C6C6C]">
                           {multipleLease.propertyName}
                         </Text>
@@ -872,17 +880,17 @@ export default function MyLease() {
                           ₱{parseInt(multipleLease.propertyMonthlyRent).toLocaleString()}/monthly
                         </Text>
                         {multipleLease.propertyStatus === 'Rented' ? (
-                          <View className='flex-row items-center space-x-1'>
-                            <Text numberOfLines={1} ellipsizeMode="tail" className="text-xs text-[#6C6C6C]">
-                            {multipleLease.propertyStatus === 'Rented' ? "Application Status:" : "Renewal Status:"} 
-                            </Text>
-                            <Text
-                            className="w-2.5 h-2.5 rounded-full bg-[#0FA958]"
-                            ></Text>
-                            <Text numberOfLines={1} ellipsizeMode="tail" className="text-xs font-bold text-[#0FA958]">
-                              Approved
-                            </Text>
-                          </View>
+                        <View className='flex-row items-center space-x-1'>
+                          <Text numberOfLines={1} ellipsizeMode="tail" className="text-xs text-[#6C6C6C]">
+                          {multipleLease.propertyStatus === 'Rented' ? "Application Status:" : "Renewal Status:"} 
+                          </Text>
+                          <Text
+                          className="w-2.5 h-2.5 rounded-full bg-[#0FA958]"
+                          ></Text>
+                          <Text numberOfLines={1} ellipsizeMode="tail" className="text-xs font-bold text-[#0FA958]">
+                            Approved
+                          </Text>
+                        </View>
                         ) : (
                           <View>
                             <Text numberOfLines={1} ellipsizeMode="tail" className="text-xs text-[#6C6C6C]">
@@ -1047,7 +1055,7 @@ export default function MyLease() {
                           )
                           .map((transaction) => (
                             <View
-                              key={`${transaction.uid}-${transaction.dateTime}`}
+                              key={`${transaction.uid}-${transaction.transactionId}`}
                               className="flex flex-col px-2 p-3 rounded-xl shadow-xl bg-white border-gray-100"
                             >
                               <View className="flex-row items-center justify-between">

@@ -15,6 +15,7 @@ interface Receipt {
   referenceNo: string;
   transactionId: string;
   dateTime: string;
+  uid: string;
   ownerName: string;
   ownerEmail: string;
   propertyId: string;
@@ -24,6 +25,7 @@ interface Receipt {
   billingPeriod: string;
   fee: string;
   total: string;
+  _type: string;
 }
 
 export default function paymentReceipt() {
@@ -65,6 +67,7 @@ export default function paymentReceipt() {
                       referenceNo: referenceNumber,
                       transactionId: transactionPaymentId,
                       dateTime: '',
+                      uid: userData.uid,
                       ownerName: `${userData.firstName} ${userData.middleName} ${userData.lastName}`,
                       ownerEmail: userData.email,
                       propertyId: propertyId,
@@ -74,6 +77,7 @@ export default function paymentReceipt() {
                       billingPeriod: '',
                       fee: '100',
                       total: total.toString(),
+                      _type: 'Payment',
                     })
                   }
                 }
@@ -119,8 +123,11 @@ export default function paymentReceipt() {
 
     const handleContinue = async () => {
         setLoading(true); // Set loading to true when starting the process
-        setTimeout(() => {
+        setTimeout(async () => {
             setLoading(false); // Reset loading state after saving data
+            if(receiptData && receiptData.uid){
+              await setDoc(doc(db, 'receipts', receiptData?.uid, 'receiptId', receiptData?.transactionId), receiptData)
+            }
             router.replace('../wallet'); // Navigate to the receipt transaction screen
         }, 1000);
     };

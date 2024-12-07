@@ -481,7 +481,7 @@ export const AuthContextProvider = ({ children }: { children: ReactNode }) => {
             const ownerPermit = await uploadImageToStorage(permit, 'ownerpermits', tenantId)
 
             if(ownerPermit){
-                await updateDoc(doc(db, 'users', tenantId), {ownerPermit, ownerPermitStatus: 'Pending', roleStatus: 'Under-review'} );
+                await updateDoc(doc(db, 'users', tenantId), {ownerPermit, ownerPermitStatus: 'Pending', roleStatus: 'Under-review', upgradedAt: new Date()} );
             }else{
                 console.log('Error uploading ownerPermit')
             }
@@ -1136,7 +1136,7 @@ export const AuthContextProvider = ({ children }: { children: ReactNode }) => {
                         revenueBalance: newOwnerBalance,
                     };
                     await updateDoc(doc(db, 'wallets', tenantId), setTenantWalletData);
-                    addRevenue(ownerId, 'Payment' , payment, transactionId);
+                    //addRevenue(ownerId, 'Payment' , payment, transactionId);
                     await updateDoc(doc(db, 'wallets', ownerId), setOwnerWalletData);
                     console.log('Rent Paid');
                 }
