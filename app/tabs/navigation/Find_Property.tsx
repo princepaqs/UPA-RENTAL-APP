@@ -117,7 +117,7 @@ const DirectionsMap = () => {
         </MapView>
       )}
 
-      <View className="absolute top-12 right-[305px] w-full flex-row space-x-5 items-center justify-end">
+      <View className="absolute top-12 right-5 w-full flex-row space-x-5 items-center justify-end">
         <TouchableOpacity onPress={() => router.push('./AugmentReality')} className="flex-row items-center space-x-2 bg-white rounded-full p-1 border border-gray-400 shadow-md">
           <MaterialIcons name="camera" size={24} color="black" />
         </TouchableOpacity>
