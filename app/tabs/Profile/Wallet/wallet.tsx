@@ -6,7 +6,7 @@ import walletData from './walletData.json'; // Adjust the path as needed
 import * as FileSystem from 'expo-file-system'; // Import FileSystem for reading/writing files
 import { getTransactionData } from './secureStorage'; 
 import * as SecureStore from 'expo-secure-store';
-import { getDoc, setDoc, doc, getDocs, collection, query, where } from 'firebase/firestore'; // For saving data in Firestore (optional)
+import { getDoc, setDoc, doc, getDocs, collection, query, where, onSnapshot } from 'firebase/firestore'; // For saving data in Firestore (optional)
 import { db } from '../../../../_dbconfig/dbconfig'; // Import Firestore instance
 
 
@@ -48,18 +48,26 @@ export default function Wallet() {
   const loadWalletData = async () => {
     try {
       const uid = await SecureStore.getItemAsync('uid');
-      if(uid){
-        const walletRef = doc(db, 'wallets', uid); 
-        const walletSnap = await getDoc(walletRef);
-
-        if (walletSnap.exists()) {
+      if (uid) {
+        const walletRef = doc(db, 'wallets', uid);
+  
+        // Listen for real-time updates
+        const unsubscribe = onSnapshot(walletRef, (walletSnap) => {
+          if (walletSnap.exists()) {
             const walletData = walletSnap.data();
             const currentBalance = walletData.balance || 0;
             setWalletBalance(currentBalance);
-        }
+          } else {
+            console.error('No wallet found for this user.');
+            setWalletBalance(0); // Default to zero if no document exists
+          }
+        });
+  
+        // Optional: Return the unsubscribe function to stop listening when not needed
+        return unsubscribe;
       }
     } catch (error) {
-      console.error("Error loading wallet data:", error);
+      console.error('Error loading wallet data:', error);
     }
   };
 

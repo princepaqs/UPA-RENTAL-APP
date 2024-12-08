@@ -110,7 +110,7 @@ useEffect(() => {
 
                         const testId = 'l83M6RSGb3gCmBrJk9XWxAmjnm03'
                         const reviewQuery = query(
-                          collection(db, 'reviews', testId, 'reviewId'),
+                          collection(db, 'reviews', ownerId, 'reviewId'),
                           where('feedbackType', '!=', 'UPA'),
                         );
                         const reviewSnapshot = await getDocs(reviewQuery);
