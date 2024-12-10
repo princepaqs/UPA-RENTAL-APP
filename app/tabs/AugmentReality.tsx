@@ -58,7 +58,7 @@ export default function App() {
 
   // Array of property locations with latitudes, longitudes, and property details
   const propertyLocations = [
-    { latitude: 14.6551900, longitude: 120.9757200, title: 'Trillion Game Inc.', price: '10,000' },
+    { latitude: 14.6501858, longitude: 120.9934021, title: 'Trillion Game Inc.', price: '10,000' },
     { latitude: 14.6551901, longitude: 120.9757201 , title: 'Skyline Towers', price: '50,000' },
     { latitude: 14.6170150, longitude: 120.9835250, title: 'Oceanview Residence', price: '30,000' },
     { latitude: 14.5944130, longitude: 120.9798530, title: 'City Plaza', price: '15,500' },
@@ -92,7 +92,7 @@ export default function App() {
 
     const userLat = location.coords.latitude;
     const userLong = location.coords.longitude;
-    
+    console.log(userLat, userLong);
     // Calculate distances for all properties
     const distances = propertyLocations.map(property => {
       const distance = haversineDistance(userLat, userLong, property.latitude, property.longitude);
@@ -101,7 +101,7 @@ export default function App() {
     });
     
     // Filter out properties with a distance greater than 5 meters
-    const filteredProperties = distances.filter(property => property.distance <= 10);
+    const filteredProperties = distances.filter(property => property.distance <= 50);
 
     // If there are no properties within 5 meters, return null
     if (filteredProperties.length === 0) {

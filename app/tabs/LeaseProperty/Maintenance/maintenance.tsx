@@ -48,82 +48,92 @@ export default function MaintenanceScreen() {
 
   // Fetch maintenances on component mount
 
-useEffect(() => {
-  const fetchMaintenances = async () => {
-    const uid = await SecureStore.getItemAsync('uid');
-    if (!uid) return;
-
-    try {
-      // Step 1: Fetch all tenant IDs under "contracts"
-      const maintenancesRef = query(collection(db, 'contracts'), where('ownerId', '==', uid));
-      console.log(maintenancesRef); 
-      const tenantSnapshot = await getDocs(maintenancesRef);
-
-      if (tenantSnapshot.empty) {
-        console.log('No tenants found in maintenances collection.');
-        setError('No maintenance records found');
-        return;
+  useEffect(() => {
+    const fetchMaintenancesRealtime = async () => {
+      const uid = await SecureStore.getItemAsync('uid');
+      if (!uid) return;
+  
+      const unsubscribeMaintenancesArray: (() => void)[] = [];
+  
+      try {
+        // Step 1: Listen for changes in the "contracts" collection
+        const maintenancesRef = query(collection(db, 'contracts'), where('ownerId', '==', uid));
+  
+        const unsubscribeContracts = onSnapshot(maintenancesRef, async (tenantSnapshot) => {
+          if (tenantSnapshot.empty) {
+            console.log('No tenants found in maintenances collection.');
+            setError('No maintenance records found');
+            setMaintenances([]);
+            setFilteredProperties([]);
+            return;
+          }
+  
+          // Clear previous maintenance data and listeners
+          setMaintenances([]);
+          setFilteredProperties([]);
+          unsubscribeMaintenancesArray.forEach((unsubscribe) => unsubscribe());
+          unsubscribeMaintenancesArray.length = 0;
+  
+          // Step 2: For each tenant, listen for changes in their maintenance subcollections
+          const tenantPromises = tenantSnapshot.docs.map(async (tenantDoc) => {
+            const data = tenantDoc.data();
+            if (!data) {
+              console.log('No data found.');
+              return;
+            }
+  
+            const maintenanceSubCollectionRef = collection(db, 'maintenances', data.tenantId, 'maintenanceId');
+            const maintenanceQuery = query(maintenanceSubCollectionRef, where('ownerId', '==', uid));
+  
+            // Listen for changes in this tenant's maintenance records
+            const unsubscribeMaintenances = onSnapshot(maintenanceQuery, async (maintenanceSnapshot) => {
+              if (!maintenanceSnapshot.empty) {
+                const tenantMaintenances = await Promise.all(
+                  maintenanceSnapshot.docs.map(async (doc) => {
+                    const maintenanceData = doc.data();
+                    const image = maintenanceData.images?.[0]
+                      ? await getImageUrl(data.tenantId, maintenanceData.images[0])
+                      : require('../../../../assets/images/property1.png');
+  
+                    return {
+                      id: doc.id,
+                      tenantId: data.tenantId,
+                      propertyId: maintenanceData.propertyId,
+                      ownerId: maintenanceData.ownerId,
+                      name: maintenanceData.fullName,
+                      date: formatDate(maintenanceData.submittedAt),
+                      status: maintenanceData.status,
+                      image,
+                    };
+                  })
+                );
+                setMaintenances((prev) => [...prev, ...tenantMaintenances]);
+                setFilteredProperties((prev) => [...prev, ...tenantMaintenances]);
+              }
+            });
+  
+            // Track the unsubscribe function for cleanup
+            unsubscribeMaintenancesArray.push(unsubscribeMaintenances);
+          });
+  
+          // Wait for all tenant processing to finish
+          await Promise.all(tenantPromises);
+        });
+  
+        // Clean up subscriptions on unmount
+        return () => {
+          unsubscribeContracts();
+          unsubscribeMaintenancesArray.forEach((unsubscribe) => unsubscribe());
+        };
+      } catch (error) {
+        console.error('Failed to fetch maintenance data:', error);
+        setError('Failed to fetch maintenance data.');
       }
-
-      // Array to hold all maintenance records
-      const maintenanceArray : Maintenance[]= [];
-
-      // Step 2: For each tenant, fetch their maintenance records
-      const promises = tenantSnapshot.docs.map(async (tenantDoc) => {
-        const data = tenantDoc.data();
-        if(!data){
-          console.log('No data found.');
-        }
-        
-
-        // Access the subcollection for this tenant's maintenance records
-        const maintenanceSubCollectionRef = collection(db, 'maintenances', data.tenantId, 'maintenanceId');
-        const maintenanceQuery = query(maintenanceSubCollectionRef, where('ownerId', '==', uid));
-
-        const maintenanceSnapshot = await getDocs(maintenanceQuery);
-
-        if (!maintenanceSnapshot.empty) {
-          const tenantMaintenances = await Promise.all(
-            maintenanceSnapshot.docs.map(async (doc) => {
-              const maintenanceData = doc.data();
-              const image = maintenanceData.images?.[0]
-                ? await getImageUrl(data.tenantId, maintenanceData.images[0])
-                : require('../../../../assets/images/property1.png');
-
-              return {
-                id: doc.id,
-                tenantId: data.tenantId,
-                propertyId: maintenanceData.propertyId,
-                ownerId: maintenanceData.ownerId,
-                name: maintenanceData.fullName,
-                date: formatDate(maintenanceData.submittedAt),
-                status: maintenanceData.status,
-                image,
-              };
-            })
-          );
-          maintenanceArray.push(...tenantMaintenances);
-        }
-      });
-
-      // Wait for all maintenance records to be fetched
-      await Promise.all(promises);
-
-      setMaintenances(maintenanceArray);
-      setFilteredProperties(maintenanceArray);
-
-      if (maintenanceArray.length === 0) {
-        console.log('No maintenance records found1');
-        setError('No maintenance records found');
-      }
-    } catch (error) {
-      console.error('Failed to fetch maintenance data:', error);
-      setError('Failed to fetch maintenance data.');
-    }
-  };
-
-  fetchMaintenances();
-}, []);
+    };
+  
+    fetchMaintenancesRealtime();
+  }, []);
+  
 
   
   

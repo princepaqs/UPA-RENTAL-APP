@@ -258,7 +258,9 @@ export default function Profile() {
             <Text className='text-lg font-semibold'>Reviews</Text>
             <View className='flex flex-row items-center'>
               {/* Displaying dynamically calculated average rating */}
-              <Text className='text-lg font-bold mr-2'>{averageRating}</Text>
+              <Text className='text-lg font-bold mr-2'>
+                {isNaN(parseInt(averageRating)) ? 0 : averageRating}
+              </Text>
               <Ionicons name="star" size={20} color="gold" />
             </View>
           </View>

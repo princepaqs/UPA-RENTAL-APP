@@ -267,11 +267,7 @@ export default function ViewPropertyDetails() {
                         propertyName: propertyData.propertyName,
                         propertyType: propertyData.propertyType,
                         propertyFullAddress: `${propertyData.propertyCity}, ${propertyData.propertyRegion}`,
-                        preferredTime: preferredDate.toLocaleString('en-US', {
-                            year: 'numeric',
-                            month: 'long',
-                            day: 'numeric',
-                        }),
+                        preferredTime: maintenanceData.time,
                         issueType: maintenanceData.issueType,
                         description: maintenanceData.description,
                         propertyImage,
