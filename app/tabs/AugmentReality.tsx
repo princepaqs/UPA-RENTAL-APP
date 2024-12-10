@@ -6,11 +6,25 @@ import Animated, { withRepeat, withTiming, Easing, useSharedValue, useAnimatedSt
 import { TouchableOpacity } from 'react-native';
 import { AntDesign, Ionicons, MaterialIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
+import { collection, getDocs } from 'firebase/firestore';
+import { db } from '@/_dbconfig/dbconfig';
+import * as SecureStore from 'expo-secure-store';
+
+interface PropertyLocations {
+  title: string;
+  propertyId: string;
+  ownerId: string;
+  latitude: number;
+  longitude: number;
+  price: string;
+}
 
 export default function App() {
   const [facing, setFacing] = useState<CameraType>('back');
   const [permission, requestPermission] = useCameraPermissions();
   const [location, setLocation] = useState<Location.LocationObject | null>(null);
+  const [propertyLocationsArray, setPropertyLocationsArray] = useState<PropertyLocations[] | null>(null);
+  const [uid, setUid] = useState('');
   const router = useRouter();
   // Shared value for scaling
   const scale = useSharedValue(1);
@@ -21,6 +35,100 @@ export default function App() {
       transform: [{ scale: scale.value }],
     };
   });
+
+  const fetchPropertyLocations = async (location: Location.LocationObject) => {
+    
+const uid = await SecureStore.getItemAsync('uid');
+if(uid){
+  setUid(uid);
+}
+    if (!location) {
+      console.log('No users');
+      return null;
+    }
+
+    const userLat = location.coords.latitude;
+    const userLong = location.coords.longitude;
+    console.log('Test user lat and long', userLat, userLong);
+  
+    const userRef = await getDocs(collection(db, 'users'));
+    if (userRef.empty) {
+      console.log('No users');
+      return null;
+    }
+    // let allProperties: PropertyLocations[] = []; // Initialize an empty array
+
+    // Loop through all users and fetch properties
+    for (const doc of userRef.docs) {
+      const userData = doc.data();
+      console.log(userData);
+      // Check if the user has properties
+      const propertyRef = await getDocs(collection(db, 'properties', doc.id, 'propertyId'));
+      if(doc.id != uid){
+        for(const pdoc of propertyRef.docs){
+          const propertyData = pdoc.data();
+          console.log(propertyData.propertyId);
+          if (!propertyRef.empty) {
+            // Assuming you have location data for each property, e.g., coordinates
+            propertyRef.forEach((propertyDoc) => {
+                const propertyData = propertyDoc.data();
+                console.log('Property Data:', propertyData);
+                if (propertyData && propertyData.propertyLatitude && propertyData.propertyLongitude) {
+                    // Calculate distance between the user's location and the property's location
+                    const propertyLat = parseFloat(propertyData.propertyLatitude);
+                    const propertyLong = parseFloat(propertyData.propertyLongitude);
+  
+                    const distance = calculateDistance(userLat, userLong, propertyLat, propertyLong);
+                    console.log('Distance to property:', distance);
+  
+                    // Optionally, add properties within a certain radius
+                    if (distance < 50) {  // example: properties within 50 km
+                      setPropertyLocationsArray((prevLocations) => {
+                          const updatedLocations = [
+                              ...(prevLocations || []),  // Spread the existing array, default to empty array if null
+                              {
+                                  title: propertyData.propertyName,
+                                  price: propertyData.propertyMonthlyRent,
+                                  latitude: propertyLat,
+                                  longitude: propertyLong,
+                                  propertyId: propertyData.propertyId,
+                                  ownerId: pdoc.id
+                              }
+                          ];
+                          console.log('Updated Array:', updatedLocations);  // Log the updated array
+                          return updatedLocations;  // Return the new state
+                      });
+                  } else {
+                      console.log('No properties within the radius');
+                  }
+                  
+                }
+            });
+          } else {
+            console.log('No property')
+          }
+        }
+      }
+    }
+  }  
+
+// Function to calculate the distance between two latitude/longitude points
+const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: number) => {
+  const R = 6371; // Radius of Earth in km
+  const dLat = toRad(lat2 - lat1);
+  const dLon = toRad(lon2 - lon1);
+  const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+            Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) *
+            Math.sin(dLon / 2) * Math.sin(dLon / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  const distance = R * c; // Distance in km
+  return distance;
+};
+
+// Function to convert degrees to radians
+const toRad = (deg: number) => {
+  return deg * (Math.PI / 180);
+};
 
   // Request camera and location permissions
   useEffect(() => {
@@ -33,6 +141,8 @@ export default function App() {
 
       const loc = await Location.getCurrentPositionAsync({});
       setLocation(loc);
+      console.log('Test fetch');
+      fetchPropertyLocations(loc);
     })();
 
     // Apply the scaling animation (in-out, in-out)
@@ -43,22 +153,9 @@ export default function App() {
     );
   }, [scale]);
 
-  if (!permission) {
-    return <View />;
-  }
-
-  if (!permission.granted) {
-    return (
-      <View style={styles.container}>
-        <Text style={styles.message}>We need your permission to show the camera</Text>
-        <Button onPress={requestPermission} title="Grant Permission" />
-      </View>
-    );
-  }
-
   // Array of property locations with latitudes, longitudes, and property details
   const propertyLocations = [
-    { latitude: 14.6501858, longitude: 120.9934021, title: 'Trillion Game Inc.', price: '10,000' },
+    { latitude: 14.6501399, longitude: 120.9933554, title: 'Trillion Game Inc.', price: '10,000' },
     { latitude: 14.6551901, longitude: 120.9757201 , title: 'Skyline Towers', price: '50,000' },
     { latitude: 14.6170150, longitude: 120.9835250, title: 'Oceanview Residence', price: '30,000' },
     { latitude: 14.5944130, longitude: 120.9798530, title: 'City Plaza', price: '15,500' },
@@ -86,33 +183,70 @@ export default function App() {
     return R * c; // Distance in meters
   }
 
-  // Function to get the nearest property to the user's location
-  function getNearestProperty() {
-    if (!location) return null;
+  function getNearestProperty(uid: string) {
+    if (!location || !propertyLocationsArray) {
+        console.log('Error: location or propertyLocationsArray is null');
+        return null;  // Ensure propertyLocationsArray is not null
+    }
+
+    console.log(propertyLocationsArray);
 
     const userLat = location.coords.latitude;
     const userLong = location.coords.longitude;
-    console.log(userLat, userLong);
-    // Calculate distances for all properties
-    const distances = propertyLocations.map(property => {
-      const distance = haversineDistance(userLat, userLong, property.latitude, property.longitude);
-      console.log('Properties Distance:', distance)
-      return { ...property, distance };
-    });
-    
-    // Filter out properties with a distance greater than 5 meters
-    const filteredProperties = distances.filter(property => property.distance <= 50);
+    console.log('User Location:', userLat, userLong);
 
-    // If there are no properties within 5 meters, return null
-    if (filteredProperties.length === 0) {
-      return null;
+    // Use reduce to find the closest property within 50 meters
+    const nearestProperty = propertyLocationsArray.reduce<{
+        distance: number;
+        title: string;
+        propertyId: string;
+        ownerId: string;
+        latitude: number;
+        longitude: number;
+        price: string;
+    } | null>((closest, property) => {
+        const distance = haversineDistance(userLat, userLong, property.latitude, property.longitude);
+        console.log('Property Distance:', distance);
+
+        // Only consider properties within 50 meters and not owned by the current user (uid)
+        if (distance <= 50 && property.ownerId !== uid) {
+            // If no closest property or the current one is closer, update the closest property
+            if (!closest || distance < closest.distance) {
+                return { ...property, distance }; // Add distance to the property object
+            }
+        }
+        return closest; // Return the closest property found so far
+    }, null);  // Start with null as there's no closest property initially
+
+    // If no property is found within 50 meters, return null
+    if (!nearestProperty) {
+        console.log('No properties within 50 meters or owned by the current user');
+        return null;
     }
 
-    // Return the closest property within 5 meters
-    return filteredProperties.sort((a, b) => a.distance - b.distance)[0];
+    // Return the closest property within 50 meters that is not owned by the current user
+    return nearestProperty;
+}
+
+// Call the function with the current user's uid
+const nearestProperty = getNearestProperty(uid);
+console.log('Nearest Property:', nearestProperty);
+
+
+
+  
+  if (!permission) {
+    return <View />;
   }
 
-  const nearestProperty = getNearestProperty();
+  if (!permission.granted) {
+    return (
+      <View style={styles.container}>
+        <Text style={styles.message}>We need your permission to show the camera</Text>
+        <Button onPress={requestPermission} title="Grant Permission" />
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
@@ -125,8 +259,11 @@ export default function App() {
             <View className='w-full items-center justify-center'>
                 <TouchableOpacity
                     className="flex-row items-center space-x-2 bg-[#333333] rounded-lg px-4 py-1.5 mt-4 border border-gray-500 shadow-md"
-                    onPress={() => router.push('./Property')} 
-                    >
+                    onPress={async () => {
+                      await SecureStore.setItemAsync('propertyId', nearestProperty.propertyId)
+                      await SecureStore.setItemAsync('userId', nearestProperty.ownerId)
+                      router.push('./Property')
+                    }}>
                     <AntDesign name="eyeo" size={15} color="white" />
                     <Text className=" text-xs text-white font-semibold">
                         View
@@ -176,7 +313,7 @@ const styles = StyleSheet.create({
     shadowRadius: 5,
   },
   propertyTitle: {
-    fontSize: 12,
+    fontSize: 15,
     fontWeight: 'normal',
     textAlign: 'center',
   },

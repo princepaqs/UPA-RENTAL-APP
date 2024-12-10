@@ -312,7 +312,7 @@ export default function Profile() {
                 <Text className='text-sm text-white font-semibold'>Logout</Text>
               </TouchableOpacity>
               <View className='items-center justify-center mt-4'>
-                <Text className='text-xs font-bold text-gray-400'>v2.1.0</Text>
+                <Text className='text-xs font-bold text-gray-400'>v2.0.2</Text>
               </View>
           </View>
           

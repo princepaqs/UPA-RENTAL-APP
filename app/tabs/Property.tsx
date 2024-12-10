@@ -787,7 +787,7 @@ const handlePhoneCall = () => {
             <TouchableOpacity className='py-4 flex-row item-center justify-center '
           onPress={() => router.push('../tabs/Reports/ReportProperty/reportProperty')}>
           <MaterialIcons name="report" size={20} color="#D9534F" />
-            <Text className='text-center text-xs text-[#D9534F]'>Report the owner</Text>
+            <Text className='text-center text-xs text-[#D9534F]'>Report Property</Text>
           </TouchableOpacity>
 
             </View>

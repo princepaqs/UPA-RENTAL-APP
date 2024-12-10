@@ -837,7 +837,12 @@ export default function MyLease() {
   
   return (
     <View className="px-8 bg-[#F6F6F6] h-screen">
-
+<ScrollView
+              showsVerticalScrollIndicator={false}
+              refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
+              className="h-5/6"
+              contentContainerStyle={{ flexGrow: 1 }}
+            >
       {totalLeaseData > 0 ? (
         // Multiple Leases View
         <View className="w-full">
@@ -1257,6 +1262,7 @@ export default function MyLease() {
         </View>
         </ScrollView>
       )}
+      </ScrollView>
     </View>
   );
 }  

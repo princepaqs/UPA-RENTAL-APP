@@ -2,7 +2,7 @@
   "expo": {
     "name": "UPA",
     "slug": "thesis",
-    "version": "2.0.1",
+    "version": "2.0.2",
     "orientation": "portrait",
     "icon": "./assets/images/mainlogo.jpg",
     "scheme": "myapp",
