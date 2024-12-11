@@ -18,7 +18,7 @@ interface Users {
 
 export default function ReportIssue() {
   const router = useRouter();
-  const { reportIssue } = useAuth();
+  const { reportIssue, sendMessage } = useAuth();
 
   // State for the form
   const [fullName, setFullName] = useState('');
@@ -56,6 +56,7 @@ export default function ReportIssue() {
     if(user){
       console.log(user?.userFullName, user?.userAccountId, issueType, transactionID, description);
       reportIssue(user.userFullName, user.userAccountId, issueType, transactionID, description);
+
       router.back();
     }
     Alert.alert("Report Issue", "Your report is submitted")

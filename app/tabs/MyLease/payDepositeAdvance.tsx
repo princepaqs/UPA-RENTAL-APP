@@ -79,19 +79,20 @@ export default function payDepositeAdvance() {
           if (balance >= rent) {
             // Balance is greater than or equal to rent, proceed with payment
             await SecureStore.setItemAsync('rent', rent.toString());
-
+            console.log(paymentData);
             if(paymentData && rentData){
-              payRent(paymentData?.transactionId, paymentData?.ownerId, paymentData?.tenantId, rentData?.propertyRentAmount, rentData.propertyLeaseStart, rentData.propertyLeaseEnd);
-              sendNotification(paymentData?.tenantId, 'approval', 'Payment Successful', `Your advance and downpayment have been successfully processed. Your lease is now secured, and the next steps will be provided shortly.`, 'Success', 'Unread')
-              sendNotification(paymentData.ownerId, 'approval', 'Deposit and Advance Payment Received', `You have successfully received the deposit and advance payment from ${paymentData.tenantFullName} for ${paymentData.propertyName}.`, 'Success', 'Unread');
-              addWalletTransaction(paymentData?.tenantId, 'Payment', paymentData?.transactionId, formatDate(new Date()), rentData?.propertyRentAmount, 'PAY_ONTIME');
-              await updateDoc(doc(db, 'propertyTransactions', paymentData.transactionId), {status: 'Approved'});
-              await updateDoc(doc(db, 'properties', paymentData?.ownerId, 'propertyId', paymentData?.propertyId), {status: "Occupied"})
-              await updateDoc(doc(db, 'contracts', paymentData.transactionId), {status: "Active"});
-              //await updateDoc(doc(db, 'propertyTransactions', paymentData?.transactionId), {status: "Rented"})
-              // router.replace('./paymentReceipt'); // Navigate to the receipt transaction screen
-              Alert.alert("Payment", "Payment Success")
-              router.replace('./successContract')
+              console.log(paymentData, rentData);
+              // payRent(paymentData?.transactionId, paymentData?.ownerId, paymentData?.tenantId, rentData?.propertyRentAmount, rentData.propertyLeaseStart, rentData.propertyLeaseEnd);
+              // sendNotification(paymentData?.tenantId, 'approval', 'Payment Successful', `Your advance and downpayment have been successfully processed. Your lease is now secured, and the next steps will be provided shortly.`, 'Success', 'Unread')
+              // sendNotification(paymentData.ownerId, 'approval', 'Deposit and Advance Payment Received', `You have successfully received the deposit and advance payment from ${paymentData.tenantFullName} for ${paymentData.propertyName}.`, 'Success', 'Unread');
+              // addWalletTransaction(paymentData?.tenantId, 'Payment', paymentData?.transactionId, formatDate(new Date()), rentData?.propertyRentAmount, 'PAY_ONTIME');
+              // await updateDoc(doc(db, 'propertyTransactions', paymentData.transactionId), {status: 'Approved'});
+              // await updateDoc(doc(db, 'properties', paymentData?.ownerId, 'propertyId', paymentData?.propertyId), {status: "Occupied", propertyCurrentRenter: paymentData.tenantId, propertyCurrentLeaseStart: rentData.propertyLeaseStart, propertyCurrentLeaseEnd: rentData.propertyLeaseEnd, propertyCurrentRentAmount: rentData.propertyRentAmount, propertyCurrentRentDeposit: rentData.propertySecurityDepositAmount, propertyCurrentRentPeriod: rentData.propertySecurityDepositRefundPeriod, propertyCurrentDuration: rentData.propertyLeaseDuration})
+              // await updateDoc(doc(db, 'contracts', paymentData.transactionId), {status: "Active"});
+              // //await updateDoc(doc(db, 'propertyTransactions', paymentData?.transactionId), {status: "Rented"})
+              // // router.replace('./paymentReceipt'); // Navigate to the receipt transaction screen
+              // Alert.alert("Payment", "Payment Success")
+              // router.replace('./successContract')
             }else{
               Alert.alert('Error', 'Error payment.');
               console.log('Error: ', paymentData?.transactionId, paymentData?.tenantId, rentData?.propertyRentAmount)
@@ -264,7 +265,7 @@ export default function payDepositeAdvance() {
                   </Text>
                   <TouchableOpacity
                     className="bg-[#D9534F] mt-2 py-2 px-4 rounded-md"
-                    onPress={async () => await handlePayment()}
+                    onPress={() => handlePayment()}
                     disabled={loading}
                   >
                     {loading ? (

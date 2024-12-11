@@ -2,6 +2,10 @@ import { View, Text, TouchableOpacity, ScrollView, TextInput, Alert } from 'reac
 import React, { useState } from 'react';
 import { AntDesign, Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
+import { collection, getDocs, query, where, doc, getDoc, orderBy, limit, deleteDoc, updateDoc, setDoc } from 'firebase/firestore';
+import { db, storage } from '../../../../_dbconfig/dbconfig';
+import { getDownloadURL, ref } from "firebase/storage";
+import * as SecureStore from 'expo-secure-store';
 
 export default function tenantFeedback() {
     const router = useRouter();
@@ -23,16 +27,34 @@ export default function tenantFeedback() {
         "Would you be willing to rent your property to this tenant again in the future?"
     ];
 
-    const onSubmit = () => {
+    const generateTransactionID = () => {
+        const now = new Date();
+        const date = now.toISOString().slice(0, 10).replace(/-/g, ''); // Format YYYYMMDD
+        const randomNumbers = Math.floor(1000 + Math.random() * 9000); // Generate 4 random digits
+        return `${date}${randomNumbers}`; // Format: YYYYMMDDXXXX
+    };
+
+    const onSubmit = async () => {
         if (ratings.includes(0)) {
             Alert.alert("Incomplete Feedback", "Please rate all questions before submitting.");
             return;
         }
 
+        const uid = await SecureStore.getItemAsync('uid');
+        const reviewId = generateTransactionID()
+
         const feedbackData = {
+            uid,
             ratings,
             comment,
+            createdAt: new Date()
         };
+
+        if(uid && feedbackData){
+            await setDoc(doc(db, 'reviews', uid, 'reviewId', reviewId), feedbackData);
+            console.log("Feedback Submitted:", feedbackData);
+            router.replace('../UPAFeedback/upaFeedback');
+        }
 
         console.log("Feedback Submitted:", feedbackData);
         router.replace('../ThankYouFeedback/thankyouFeedback');
@@ -42,9 +64,9 @@ export default function tenantFeedback() {
         <>
         <View className="h-screen pt-4 pb-8 px-6">
             <View className="flex-row items-center justify-between mt-10 pb-5 px-4 border-b border-gray-300">
-                <TouchableOpacity onPress={() => router.back()}>
+                {/* <TouchableOpacity onPress={() => router.back()}>
                     <Ionicons name="chevron-back-circle-outline" size={25} color="black" />
-                </TouchableOpacity>
+                </TouchableOpacity> */}
                 <Text className="flex-1 text-sm font-bold text-center">End of Contract - Review</Text>
             </View>
 
