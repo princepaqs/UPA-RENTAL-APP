@@ -42,7 +42,7 @@ export default function setContractDetails() {
   const [showEndDatePicker, setShowEndDatePicker] = useState(false);
   const [startDate, setStartDate] = useState<Date | undefined>(undefined);
   const [endDate, setEndDate] = useState<Date | undefined>(undefined);
-  const [depositRefundDays, setDepositRefundDays] = useState<string>('1');
+  const [depositRefundDays, setDepositRefundDays] = useState<string>('7');
   const [terminationNoticeDays, setTerminationNoticeDays] = useState<string | null>(null);
 
   const today = new Date();

@@ -61,60 +61,6 @@ export default function payDepositeAdvance() {
     });
   };
 
-  const handlePayment = async () => {
-    setLoading(true);
-    try {
-      const uid = await SecureStore.getItemAsync('uid');
-      const rent = parseInt(rentData?.propertyRentAmount || '0');
-      if(uid && rent){
-        // Reference to the user's wallet document in the 'wallets' collection
-        const walletDocRef = doc(db, 'wallets', uid);
-        const walletDoc = await getDoc(walletDocRef);
-    
-        if (walletDoc.exists()) {
-          // Parse the balance for comparison
-          const walletData = walletDoc.data();
-          const balance = parseInt(walletData?.balance) || 0;
-    
-          if (balance >= rent) {
-            // Balance is greater than or equal to rent, proceed with payment
-            await SecureStore.setItemAsync('rent', rent.toString());
-            console.log(paymentData);
-            if(paymentData && rentData){
-              console.log(paymentData, rentData);
-              // payRent(paymentData?.transactionId, paymentData?.ownerId, paymentData?.tenantId, rentData?.propertyRentAmount, rentData.propertyLeaseStart, rentData.propertyLeaseEnd);
-              // sendNotification(paymentData?.tenantId, 'approval', 'Payment Successful', `Your advance and downpayment have been successfully processed. Your lease is now secured, and the next steps will be provided shortly.`, 'Success', 'Unread')
-              // sendNotification(paymentData.ownerId, 'approval', 'Deposit and Advance Payment Received', `You have successfully received the deposit and advance payment from ${paymentData.tenantFullName} for ${paymentData.propertyName}.`, 'Success', 'Unread');
-              // addWalletTransaction(paymentData?.tenantId, 'Payment', paymentData?.transactionId, formatDate(new Date()), rentData?.propertyRentAmount, 'PAY_ONTIME');
-              // await updateDoc(doc(db, 'propertyTransactions', paymentData.transactionId), {status: 'Approved'});
-              // await updateDoc(doc(db, 'properties', paymentData?.ownerId, 'propertyId', paymentData?.propertyId), {status: "Occupied", propertyCurrentRenter: paymentData.tenantId, propertyCurrentLeaseStart: rentData.propertyLeaseStart, propertyCurrentLeaseEnd: rentData.propertyLeaseEnd, propertyCurrentRentAmount: rentData.propertyRentAmount, propertyCurrentRentDeposit: rentData.propertySecurityDepositAmount, propertyCurrentRentPeriod: rentData.propertySecurityDepositRefundPeriod, propertyCurrentDuration: rentData.propertyLeaseDuration})
-              // await updateDoc(doc(db, 'contracts', paymentData.transactionId), {status: "Active"});
-              // //await updateDoc(doc(db, 'propertyTransactions', paymentData?.transactionId), {status: "Rented"})
-              // // router.replace('./paymentReceipt'); // Navigate to the receipt transaction screen
-              // Alert.alert("Payment", "Payment Success")
-              // router.replace('./successContract')
-            }else{
-              Alert.alert('Error', 'Error payment.');
-              console.log('Error: ', paymentData?.transactionId, paymentData?.tenantId, rentData?.propertyRentAmount)
-            }
-            
-          } else {
-            // Insufficient balance
-            Alert.alert('Error', `Insufficient balance. Top-up first. \nBalance: ${balance}\nAmount Due: ${rent}`);
-          }
-        } else {
-          // Wallet does not exist
-          Alert.alert('Error', 'Insufficient balance. Top-up first.');
-        }
-      }
-    } catch (error) {
-      console.error('Error checking wallet balance:', error);
-      Alert.alert('Error', 'An error occurred while processing the payment. Please try again.');
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const [isDetailsVisible, setIsDetailsVisible] = useState(false); 
   const toggleDetails = () => {
     setIsDetailsVisible(!isDetailsVisible); // Toggle visibility
@@ -190,12 +136,67 @@ export default function payDepositeAdvance() {
               paymentTotal: (paymentAmount + paymentFee).toString()
             })
           }
+          console.log(paymentData);
         }
       }
     }
 
     fetchPropertyData();
   }, [rentData]);
+
+  const handlePayment = async () => {
+    setLoading(true);
+    try {
+      const uid = await SecureStore.getItemAsync('uid');
+      const rent = parseInt(rentData?.propertyRentAmount || '0');
+      if(uid && rent){
+        // Reference to the user's wallet document in the 'wallets' collection
+        const walletDocRef = doc(db, 'wallets', uid);
+        const walletDoc = await getDoc(walletDocRef);
+    
+        if (walletDoc.exists()) {
+          // Parse the balance for comparison
+          const walletData = walletDoc.data();
+          const balance = parseInt(walletData?.balance) || 0;
+    
+          if (balance >= rent) {
+            // Balance is greater than or equal to rent, proceed with payment
+            await SecureStore.setItemAsync('rent', rent.toString());
+            console.log(paymentData);
+            if(paymentData && rentData){
+              console.log(paymentData, rentData);
+              payRent(paymentData?.transactionId, paymentData?.ownerId, paymentData?.tenantId, rentData?.propertyRentAmount, rentData.propertyLeaseStart, rentData.propertyLeaseEnd);
+              sendNotification(paymentData?.tenantId, 'approval', 'Payment Successful', `Your advance and downpayment have been successfully processed. Your lease is now secured, and the next steps will be provided shortly.`, 'Success', 'Unread')
+              sendNotification(paymentData.ownerId, 'approval', 'Deposit and Advance Payment Received', `You have successfully received the deposit and advance payment from ${paymentData.tenantFullName} for ${paymentData.propertyName}.`, 'Success', 'Unread');
+              addWalletTransaction(paymentData?.tenantId, 'Payment', paymentData?.transactionId, formatDate(new Date()), rentData?.propertyRentAmount, 'PAY_ONTIME');
+              await updateDoc(doc(db, 'propertyTransactions', paymentData.transactionId), {status: 'Approved'});
+              await updateDoc(doc(db, 'properties', paymentData?.ownerId, 'propertyId', paymentData?.propertyId), {status: "Occupied", propertyCurrentRenter: paymentData.tenantId, propertyCurrentLeaseStart: rentData.propertyLeaseStart, propertyCurrentLeaseEnd: rentData.propertyLeaseEnd, propertyCurrentRentAmount: rentData.propertyRentAmount, propertyCurrentRentDeposit: rentData.propertySecurityDepositAmount, propertyCurrentRentPeriod: rentData.propertySecurityDepositRefundPeriod, propertyCurrentDuration: rentData.propertyLeaseDuration})
+              await updateDoc(doc(db, 'contracts', paymentData.transactionId), {status: "Active"});
+              //await updateDoc(doc(db, 'propertyTransactions', paymentData?.transactionId), {status: "Rented"})
+              // router.replace('./paymentReceipt'); // Navigate to the receipt transaction screen
+              Alert.alert("Payment", "Payment Success")
+              router.replace('./successContract')
+            }else{
+              Alert.alert('Error', 'Error payment.');
+              console.log('Error: ', paymentData?.transactionId, paymentData?.tenantId, rentData?.propertyRentAmount)
+            }
+            
+          } else {
+            // Insufficient balance
+            Alert.alert('Error', `Insufficient balance. Top-up first. \nBalance: ${balance}\nAmount Due: ${rent}`);
+          }
+        } else {
+          // Wallet does not exist
+          Alert.alert('Error', 'Insufficient balance. Top-up first.');
+        }
+      }
+    } catch (error) {
+      console.error('Error checking wallet balance:', error);
+      Alert.alert('Error', 'An error occurred while processing the payment. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <View className="bg-[#B33939] flex-1">
@@ -266,9 +267,9 @@ export default function payDepositeAdvance() {
                   <TouchableOpacity
                     className="bg-[#D9534F] mt-2 py-2 px-4 rounded-md"
                     onPress={() => handlePayment()}
-                    disabled={loading}
+                    disabled={loading || paymentData == null}
                   >
-                    {loading ? (
+                    {loading || paymentData == null ? (
                       <ActivityIndicator size="small" color="#fff" />
                     ) : (
                       <Text className="text-white text-center font-semibold">Pay Now</Text>
