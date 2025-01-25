@@ -138,7 +138,7 @@ const DirectionsMap = () => {
   const [selectedId, setSelectedId] = useState<string>('');
 
   const handleMarkerPress = (userId: string, propertyId: string) => {
-    setSelectedUserId(userId === selectedUserId ? '' : userId);
+    setSelectedUserId(userId);
     setSelectedMarkerId(propertyId === selectedMarkerId ? '' : propertyId); // Toggle visibility
     setSelectedId(`${userId}-${propertyId}` === `${selectedUserId}-${selectedMarkerId}` ? '' : `${userId}-${propertyId}`);
   };
@@ -148,6 +148,7 @@ const DirectionsMap = () => {
       console.log(`Navigating to Property with ID: ${selectedUserId} ${selectedMarkerId}`);
       await SecureStore.setItemAsync('propertyId', selectedMarkerId);
       await SecureStore.setItemAsync('userId', selectedUserId);
+      console.log(selectedUserId);
       router.push('./Property');
     } else {
       // Handle case where no marker is selected
@@ -229,11 +230,11 @@ const DirectionsMap = () => {
       <View className="absolute bottom-[100px] w-full flex-row space-x-5 items-center justify-center">
         {selectedMarkerId ? (
           <TouchableOpacity
-            className="flex-row items-center space-x-2 bg-white rounded-lg px-4 py-1 border border-gray-500 shadow-lg"
+            className="flex-row items-center space-x-2 bg-[#B33939] rounded-lg px-4 py-1 border border-gray-500 shadow-lg"
             onPress={handleViewProperty}
           >
-            <AntDesign name="eye" size={15} color="black" />
-            <Text className=" text-sm font-bold">
+            <AntDesign name="eye" size={15} color="white" />
+            <Text className=" text-sm text-white font-bold">
               View
             </Text>
           </TouchableOpacity>

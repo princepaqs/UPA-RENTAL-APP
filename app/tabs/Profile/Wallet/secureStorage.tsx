@@ -9,6 +9,10 @@ export interface TransactionData {
   email: string;
   type: string;
   dateTime: string;
+  bankName: string;
+  accountHolderName: string;
+  accountNumber: string;
+  emailAddress: string;
   amount: number; // Ensure amount is a number
   total: number;  // Ensure total is a number
 }

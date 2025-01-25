@@ -358,11 +358,30 @@ export const AuthContextProvider = ({ children }: { children: ReactNode }) => {
     }
 
     const withdrawWallet = async (tenantId: string, value: string) => {
-        if(tenantId){
+        if(tenantId && value){
             try{
-
+                console.log('TenantId : ', tenantId, 'Withdraw value : ', value);
+                // Get wallet data using the tenantId
+                const walletRef = doc(db, 'wallets', tenantId);
+                const walletSnap = await getDoc(walletRef);
+    
+                if (walletSnap.exists()) {
+                    const walletData = walletSnap.data();
+                    const currentBalance = walletData.balance || 0;
+    
+                    // Parse balance and value to integers
+                    const updatedBalance = parseInt(currentBalance) - parseInt(value);
+    
+                    // Set the updated balance back into the database
+                    await setDoc(walletRef, { ...walletData, balance: updatedBalance });
+    
+                    console.log(`Wallet updated: ${tenantId} has new balance of ${updatedBalance}`);
+                } else {
+                    // Handle if wallet does not exist for the tenant
+                    console.error(`No wallet found for tenantId: ${tenantId}`);
+                }
             }catch(error){
-
+                console.error('Error topping up wallet:', error);
             }
         }
     }
