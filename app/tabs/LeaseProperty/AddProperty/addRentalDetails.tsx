@@ -6,6 +6,7 @@ import * as SecureStore from 'expo-secure-store';
 
 export default function AddNewProperty() {
   const router = useRouter();
+  const [monthlyRent, setMonthlyRent] = useState("");
   const [monthlyRentPrice, setMonthlyRentPrice] = useState("");
   const [leaseDuration, setLeaseDuration] = useState("Short-term (6 months)");
   const [securityDepositMonths, setSecurityDepositMonths] = useState("1 month");
@@ -61,6 +62,7 @@ export default function AddNewProperty() {
       return;
     }
 
+    console.log(monthlyRentPrice);
     try {
       await SecureStore.setItemAsync('propertyMonthlyRent', monthlyRentPrice);
       await SecureStore.setItemAsync('propertyLeaseDuration', leaseDuration);
@@ -85,10 +87,37 @@ export default function AddNewProperty() {
     }
   };
 
-  const handleMonthlyRentChange = (value: any) => {
+  const handleMonthlyRentChange = (value: string) => {
+    // Remove spaces
+    value = value.replace(/\s/g, '');
+  
+    // Prevent dots or commas
+    if (/[.,]/.test(value)) {
+      Alert.alert('Error', 'Rent price should not contain dots, commas, or spaces!');
+      setMonthlyRent('');
+      setMonthlyRentPrice('');
+      setIsPriceError(true);
+      return;
+    }
+  
+    // Allow empty input so users can delete and retype
+    if (value === '') {
+      setMonthlyRent('');
+      setMonthlyRentPrice('');
+      setIsPriceError(false);
+      return;
+    }
+  
+    // Ensure input is a valid number
+    if (isNaN(Number(value))) {
+      return;
+    }
+  
+    setMonthlyRent(value);
     setMonthlyRentPrice(value);
+  
     const price = parseFloat(value);
-    setIsPriceError(isNaN(price) || price < 2000 || price > 100000);
+    setIsPriceError(price < 2000 || price > 100000);
   };
 
   return (
@@ -126,6 +155,7 @@ export default function AddNewProperty() {
               <View className='flex flex-row px-8 py-2 items-center bg-gray-100 rounded-md'>
                 <Text className='text-xs '>₱</Text>
                 <TextInput
+                  value={monthlyRent}
                   onChangeText={handleMonthlyRentChange}
                   className='flex-1 font-semibold text-xs'
                   placeholderTextColor={'gray'}

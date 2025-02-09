@@ -621,6 +621,13 @@ export default function _layout() {
         }}
       />
 
+      <Stack.Screen
+        name='Profile/changePinConfirm'
+        options={{
+          header: ()=> <HomeHeader/>
+        }}
+      />
+
 
       <Stack.Screen
         name='Profile/DeleteAccount'

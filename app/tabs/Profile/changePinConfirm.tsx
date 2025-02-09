@@ -25,18 +25,16 @@ export default function ChangePin() {
 
   // Function to handle the button press
   const handleSetNewPin = async () => {
-    const oldPin = await SecureStore.getItemAsync('oldPin');
-    if (pin.length === 6 && oldPin !== pin) {
+    const newPin = await SecureStore.getItemAsync('newPin');
+    if (pin.length === 6 && newPin == pin) {
       setLoading(true); // Start loading
-      setTimeout( async () => {
-        //setPin(pin);
-        await SecureStore.setItemAsync('newPin', pin);
+      setTimeout(() => {
+        setPin(pin);
         setLoading(false); // Simulate completion of setting new PIN
-        router.replace('./changePinConfirm')
-        //setModalVisible(true); // Show the modal
+        setModalVisible(true); // Show the modal
       }, 2000); // Simulate a delay (e.g., 2 seconds)
-    } else if (pin.length === 6 && oldPin === pin){
-      setError('Please enter a different PIN');
+    } else if (pin.length === 6 && newPin !== pin){
+      setError('Please enter the correct PIN');
     }else {
       setError('Please enter a 6-digit PIN');
     }
@@ -91,9 +89,9 @@ export default function ChangePin() {
         </View>
         
         <View className='flex flex-col items-center px-4'>
-          <Text className='text-3xl font-bold text-center'>Set New PIN</Text>
+          <Text className='text-3xl font-bold text-center'>Confirm New PIN</Text>
           <Text className='text-sm text-[#B5B5B5] font-bold text-center'>
-            Enter a new PIN to secure your account.
+            Enter the new PIN to confirm the account.
           </Text>
         </View>
 
@@ -150,18 +148,18 @@ export default function ChangePin() {
             {loading ? (
               <ActivityIndicator color="white" />
             ) : (
-              <Text className='text-xs text-white font-bold'>Set New PIN</Text>
+              <Text className='text-xs text-white font-bold'>Confirm PIN</Text>
             )}
           </TouchableOpacity>
         </View>
       </View>
       {/* Stay Logged In Modal */}
-      {/* <StayLoggedInModal
+      <StayLoggedInModal
         visible={modalVisible}
         onClose={() => setModalVisible(false)}
         onYes={handleYes}
         onNo={handleNo}
-      /> */}
+      />
     </View>
   );
 }

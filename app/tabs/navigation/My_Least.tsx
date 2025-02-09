@@ -1139,7 +1139,7 @@ export default function MyLease() {
                                   if (selectedLeaseData) {
                                     await SecureStore.setItemAsync('propertyId', selectedLeaseData.propertyId);
                                     await SecureStore.setItemAsync('userId', selectedLeaseData.ownerId);
-                                    router.push('../tabs/Property');
+                                    router.push('../tabs/LeaseProperty/PropertyDetails');
                                   } else {
                                     console.log('Lease data is not available');
                                   }

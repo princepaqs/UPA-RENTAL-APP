@@ -399,7 +399,14 @@ const handlePhoneCall = () => {
           {/* Profile */}
           <View className='px-8'>
             <View className='py-4 flex flex-row items-center gap-2 border-b border-gray-200'>
-              <TouchableOpacity className='flex flex-row space-x-2' onPress={() => router.push('./LeaseProperty/OwnerProfile')}>
+              <TouchableOpacity className='flex flex-row space-x-2' 
+              onPress={() => {
+                if (ownerData?.id !== userData?.uid) {
+                  router.push('./OwnerProfile');
+                }
+              }}
+              disabled={ownerData?.id === userData?.uid}
+              >
               <Image
                 className='w-[40px] h-[40px] rounded-full'
                 source={ownerData?.profilePicture || require('../../../assets/images/profile.png')}

@@ -294,132 +294,132 @@ export default function AddPropertyLocation() {
         </ScrollView>
 
         {/* Location Modal */}
-<Modal
-  visible={showLocationModal}
-  transparent={true}
-  animationType='slide'
-  onRequestClose={() => setShowLocationModal(false)}
->
-  <View className='flex-1 justify-center bg-black/50 px-5 py-20'>
-    <View className='bg-white mx-5 p-5 rounded-lg h-5/6'>
-      <Text className='text-lg font-bold mb-2'>Select Region/Province</Text>
-      <TextInput
-        className='bg-gray-100 rounded-md p-2 mb-2'
-        placeholder='Search Region/Province'
-        value={searchLocation}
-        onChangeText={setSearchLocation}
-      />
-      <FlatList
-        data={filteredLocations}
-        keyExtractor={(item) => item.code}
-        renderItem={({ item }) => (
-          <TouchableOpacity
-            onPress={() => {
-              setSelectedLocation(item.code);
-              setAddress((prev) => ({ ...prev, region: item.name }));
-              setShowLocationModal(false);
-            }}
-            className='py-2'
-          >
-            <Text>{item.name}</Text>
-          </TouchableOpacity>
-        )}
-      />
-      {/* Close Button */}
-      <TouchableOpacity 
-        onPress={() => setShowLocationModal(false)} 
-        className='bg-[#333333] rounded-md py-2 mt-4'
-      >
-        <Text className='text-white text-center'>Close</Text>
-      </TouchableOpacity>
-    </View>
-  </View>
-</Modal>
+        <Modal
+          visible={showLocationModal}
+          transparent={true}
+          animationType='slide'
+          onRequestClose={() => setShowLocationModal(false)}
+        >
+          <View className='flex-1 justify-center bg-black/50 px-5 py-20'>
+            <View className='bg-white mx-5 p-5 rounded-lg h-5/6'>
+              <Text className='text-lg font-bold mb-2'>Select Region/Province</Text>
+              <TextInput
+                className='bg-gray-100 rounded-md p-2 mb-2'
+                placeholder='Search Region/Province'
+                value={searchLocation}
+                onChangeText={setSearchLocation}
+              />
+              <FlatList
+                data={filteredLocations}
+                keyExtractor={(item) => item.code}
+                renderItem={({ item }) => (
+                  <TouchableOpacity
+                    onPress={() => {
+                      setSelectedLocation(item.code);
+                      setAddress((prev) => ({ ...prev, region: item.name, city: '', barangay: '' }));
+                      setShowLocationModal(false);
+                    }}
+                    className='py-2'
+                  >
+                    <Text>{item.name}</Text>
+                  </TouchableOpacity>
+                )}
+              />
+              {/* Close Button */}
+              <TouchableOpacity 
+                onPress={() => setShowLocationModal(false)} 
+                className='bg-[#333333] rounded-md py-2 mt-4'
+              >
+                <Text className='text-white text-center'>Close</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </Modal>
 
-{/* City Modal */}
-<Modal
-  visible={showCityModal}
-  transparent={true}
-  animationType='slide'
-  onRequestClose={() => setShowCityModal(false)}
->
-  <View className='flex-1 justify-center bg-black/50 px-5 py-20'>
-    <View className='bg-white mx-5 p-5 rounded-lg h-5/6'>
-      <Text className='text-lg font-bold mb-2'>Select City/Municipality</Text>
-      <TextInput
-        className='bg-gray-100 rounded-md p-2 mb-2'
-        placeholder='Search City/Municipality'
-        value={searchCity}
-        onChangeText={setSearchCity}
-      />
-      <FlatList
-        data={filteredCities}
-        keyExtractor={(item) => item.code}
-        renderItem={({ item }) => (
-          <TouchableOpacity
-            onPress={() => {
-              setSelectedCity(item.code);
-              setAddress((prev) => ({ ...prev, city: item.name }));
-              setShowCityModal(false);
-            }}
-            className='py-2'
-          >
-            <Text>{item.name}</Text>
-          </TouchableOpacity>
-        )}
-      />
-      {/* Close Button */}
-      <TouchableOpacity 
-        onPress={() => setShowCityModal(false)} 
-        className='bg-[#333333] rounded-md py-2 mt-4'
-      >
-        <Text className='text-white text-center'>Close</Text>
-      </TouchableOpacity>
-    </View>
-  </View>
-</Modal>
+        {/* City Modal */}
+        <Modal
+          visible={showCityModal}
+          transparent={true}
+          animationType='slide'
+          onRequestClose={() => setShowCityModal(false)}
+        >
+          <View className='flex-1 justify-center bg-black/50 px-5 py-20'>
+            <View className='bg-white mx-5 p-5 rounded-lg h-5/6'>
+              <Text className='text-lg font-bold mb-2'>Select City/Municipality</Text>
+              <TextInput
+                className='bg-gray-100 rounded-md p-2 mb-2'
+                placeholder='Search City/Municipality'
+                value={searchCity}
+                onChangeText={setSearchCity}
+              />
+              <FlatList
+                data={filteredCities}
+                keyExtractor={(item) => item.code}
+                renderItem={({ item }) => (
+                  <TouchableOpacity
+                    onPress={() => {
+                      setSelectedCity(item.code);
+                      setAddress((prev) => ({ ...prev, city: item.name, barangay: '' }));
+                      setShowCityModal(false);
+                    }}
+                    className='py-2'
+                  >
+                    <Text>{item.name}</Text>
+                  </TouchableOpacity>
+                )}
+              />
+              {/* Close Button */}
+              <TouchableOpacity 
+                onPress={() => setShowCityModal(false)} 
+                className='bg-[#333333] rounded-md py-2 mt-4'
+              >
+                <Text className='text-white text-center'>Close</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </Modal>
 
-{/* Barangay Modal */}
-<Modal
-  visible={showBarangayModal}
-  transparent={true}
-  animationType='slide'
-  onRequestClose={() => setShowBarangayModal(false)}
->
-  <View className='flex-1 justify-center bg-black/50 px-5 py-20'>
-    <View className='bg-white mx-5 p-5 rounded-lg h-5/6'>
-      <Text className='text-lg font-bold mb-2'>Select Barangay</Text>
-      <TextInput
-        className='bg-gray-100 rounded-md p-2 mb-2'
-        placeholder='Search Barangay'
-        value={searchBarangay}
-        onChangeText={setSearchBarangay}
-      />
-      <FlatList
-        data={filteredBarangays}
-        keyExtractor={(item) => item.code}
-        renderItem={({ item }) => (
-          <TouchableOpacity
-            onPress={() => {
-              setAddress((prev) => ({ ...prev, barangay: item.name }));
-              setShowBarangayModal(false);
-            }}
-            className='py-2'
-          >
-            <Text>{item.name}</Text>
-          </TouchableOpacity>
-        )}
-      />
-      {/* Close Button */}
-      <TouchableOpacity 
-        onPress={() => setShowBarangayModal(false)} 
-        className='bg-[#333333] rounded-md py-2 mt-4'
-      >
-        <Text className='text-white text-center'>Close</Text>
-      </TouchableOpacity>
-    </View>
-  </View>
-</Modal>
+        {/* Barangay Modal */}
+        <Modal
+          visible={showBarangayModal}
+          transparent={true}
+          animationType='slide'
+          onRequestClose={() => setShowBarangayModal(false)}
+        >
+          <View className='flex-1 justify-center bg-black/50 px-5 py-20'>
+            <View className='bg-white mx-5 p-5 rounded-lg h-5/6'>
+              <Text className='text-lg font-bold mb-2'>Select Barangay</Text>
+              <TextInput
+                className='bg-gray-100 rounded-md p-2 mb-2'
+                placeholder='Search Barangay'
+                value={searchBarangay}
+                onChangeText={setSearchBarangay}
+              />
+              <FlatList
+                data={filteredBarangays}
+                keyExtractor={(item) => item.code}
+                renderItem={({ item }) => (
+                  <TouchableOpacity
+                    onPress={() => {
+                      setAddress((prev) => ({ ...prev, barangay: item.name }));
+                      setShowBarangayModal(false);
+                    }}
+                    className='py-2'
+                  >
+                    <Text>{item.name}</Text>
+                  </TouchableOpacity>
+                )}
+              />
+              {/* Close Button */}
+              <TouchableOpacity 
+                onPress={() => setShowBarangayModal(false)} 
+                className='bg-[#333333] rounded-md py-2 mt-4'
+              >
+                <Text className='text-white text-center'>Close</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </Modal>
 
 
       </View>
