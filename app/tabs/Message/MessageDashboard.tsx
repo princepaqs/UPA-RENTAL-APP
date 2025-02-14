@@ -217,7 +217,7 @@ export default function MessageDashboard() {
                     await SecureStore.setItemAsync('messageRecipientId', message.userId2 ?? '');
                   }
 
-                  console.log(message.userId2);
+                  console.log('Receiver: ',message.userId2);
                 }}
               >
                 {/* User Avatar */}

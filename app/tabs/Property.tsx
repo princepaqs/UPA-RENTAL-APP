@@ -528,7 +528,9 @@ const handlePhoneCall = () => {
               {ownerData?.firstName} {ownerData?.middleName} {ownerData?.lastName}
             </Text>
             <View className='flex flex-row space-x-2'>
-              <TouchableOpacity onPress={() => router.push('./Message/msgDetails')}>
+              <TouchableOpacity onPress={async () => {
+                router.push('./Message/msgDetails')
+                await SecureStore.setItemAsync('messageRecipientId', ownerData?.id || '')}}>
                 <AntDesign name="message1" size={18} color="gray" />
               </TouchableOpacity>
               <TouchableOpacity onPress={handlePhoneCall}>

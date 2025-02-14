@@ -6,6 +6,7 @@ import { getDownloadURL, ref } from 'firebase/storage';
 import { db, storage } from '../_dbconfig/dbconfig'; 
 import { collection, getDocs, query, where, doc, getDoc } from 'firebase/firestore';
 import { useAuth } from '@/context/authContext';
+import ErrorModal from '@/components/ErrorModal';
 
 export default function SignIn() {
   const bgOpacity = useRef(new Animated.Value(0)).current;  // Animation for background opacity
@@ -13,6 +14,18 @@ export default function SignIn() {
   const textOpacity = useRef(new Animated.Value(0)).current; // Animation for text opacity
   const [isVisible, setIsVisible] = useState(true);  // State to track visibility
   const { login, logout } = useAuth();
+  const [modalVisible, setModalVisible] = useState(false);
+  const [modalMessage, setModalMessage] = useState('');
+
+  const showErrorModal = (message: string) => {
+    setModalMessage(message);
+    setModalVisible(true);
+  };
+
+  const closeModal = () => {
+    setModalVisible(false);
+    setModalMessage('');
+  };
 
   useEffect(() => {
     fadeIn();
@@ -52,7 +65,18 @@ export default function SignIn() {
 
               //console.log(lastLoginTime, token, email, password);
 
-              const oneHourInMs = 3600000;
+              const oneHourInMs = (3600000 * 24) * 30; // one month
+
+              if (userData?.onlineStatus === 'Online' && Date.now() - lastLoginTime < oneHourInMs){
+                console.log('Multiple device login detected. Signing out...');
+                logout();
+                return;
+              }
+              
+              if(usePassword === 'true' && email && password){
+                login(email, password);
+              }
+
               if (Date.now() - lastLoginTime < oneHourInMs && email && password) {
                 login(email, password); // Ensure email and password are strings
               } else {
@@ -75,7 +99,7 @@ export default function SignIn() {
 
       } catch (e) {
         console.error("Error retrieving user data: ", e);
-        // Handle error
+        showErrorModal('No internet connection');
       }
     };
   
@@ -127,39 +151,45 @@ export default function SignIn() {
 
   const router = useRouter();
   return (
-    isVisible && (
-      <View className="flex-1 items-start justify-center relative">
-        {/* Animated Background Image */}
-        <Animated.Image
-          className="w-full h-full absolute"
-          source={require('../assets/images/bg.png')}
-          style={{ opacity: bgOpacity }} // Apply opacity animation
-          resizeMode="cover"
-        />
+    <>
+      {isVisible && (
+        <View className="flex-1 items-start justify-center relative">
+          {/* Animated Background Image */}
+          <Animated.Image
+            className="w-full h-full absolute"
+            source={require('../assets/images/bg.png')}
+            style={{ opacity: bgOpacity }} // Apply opacity animation
+            resizeMode="cover"
+          />
 
-        {/* Animated Logo */}
-        <Animated.Image
-          className="w-16 h-16 absolute top-14 left-8"
-          source={require('../assets/images/logo1.png')}
-          style={{ opacity: logoOpacity }} // Apply opacity animation
-        />
+          {/* Animated Logo */}
+          <Animated.Image
+            className="w-16 h-16 absolute top-14 left-8"
+            source={require('../assets/images/logo1.png')}
+            style={{ opacity: logoOpacity }} // Apply opacity animation
+          />
 
-        {/* Animated Text */}
-        <Animated.Text
-          className="absolute mt-10 top-14 p-10 text-[#973030] text-4xl font-bold"
-          style={{ opacity: textOpacity }} // Apply opacity animation
-        >
-          The Heartbeat of
-        </Animated.Text>
+          {/* Animated Text */}
+          <Animated.Text
+            className="absolute mt-10 top-14 p-10 text-[#973030] text-4xl font-bold"
+            style={{ opacity: textOpacity }} // Apply opacity animation
+          >
+            The Heartbeat of
+          </Animated.Text>
 
-        <Animated.Text
-          className="absolute mt-20 top-16 px-10 py-10 text-[#973030] text-4xl font-bold"
-          style={{ opacity: textOpacity }} // Apply opacity animation
-        >
-          Urban Rentals
-        </Animated.Text>
-
-      </View>
-    )
+          <Animated.Text
+            className="absolute mt-20 top-16 px-10 py-10 text-[#973030] text-4xl font-bold"
+            style={{ opacity: textOpacity }} // Apply opacity animation
+          >
+            Urban Rentals
+          </Animated.Text>
+        </View>
+      )}
+      <ErrorModal
+        visible={modalVisible}
+        message={modalMessage}
+        onClose={closeModal}
+      />
+    </>
   );
 }

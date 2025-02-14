@@ -56,7 +56,7 @@ export default function MessageHeader() {
             ...doc.data(),
           })) as Message[];
   
-          handleNewMessages(newMessagesList);
+          handleNewMessages(newMessagesList, userId);
         })
       );
   
@@ -94,9 +94,9 @@ export default function MessageHeader() {
   
 
   // Process new message data, remove duplicates, and update counts
-  const handleNewMessages = (allMessages: Message[]) => {
+  const handleNewMessages = (allMessages: Message[], userId: string) => {
     const uniqueMessagesMap = new Map<string, Message>();
-
+  
     allMessages.forEach((message) => {
       const pairKey = [message.userId1, message.userId2].sort().join('-');
       const existingMessage = uniqueMessagesMap.get(pairKey);
@@ -104,12 +104,12 @@ export default function MessageHeader() {
         uniqueMessagesMap.set(pairKey, message);
       }
     });
-
+  
     const uniqueMessages = Array.from(uniqueMessagesMap.values());
     setMessages(uniqueMessages);
-
+    console.log('NavHeaderMessage:', userId);
     const unreadCount = uniqueMessages.filter(
-      (message) => message.status === 'Unread' && message.userId1 !== uid
+      (message) => message.status === 'Unread' && message.userId1 !== userId
     ).length;
     setNewMessages(unreadCount);
   };

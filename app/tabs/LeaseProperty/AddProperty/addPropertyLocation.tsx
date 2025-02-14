@@ -225,7 +225,7 @@ export default function AddPropertyLocation() {
               onLocationChange={(value) => {
                 setSelectedLocation(value);
                 setAddress((prev) => ({ ...prev, region: value }));
-                setSelectedCity(''); // Reset city and barangay when location changes
+                //setSelectedCity(''); // Reset city and barangay when location changes
                 setAddress((prev) => ({ ...prev, city: '', barangay: '' }));
               }}
               onCityChange={(value) => {

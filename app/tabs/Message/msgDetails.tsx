@@ -108,15 +108,18 @@ const MsgDetails: React.FC = () => {
     if (newMessage.trim()) {
       const messageRecipientId = await SecureStore.getItemAsync('messageRecipientId');
       const messageSenderId = await SecureStore.getItemAsync('uid');
-    
-      if (messageSenderId && messageRecipientId) {
-        sendMessage(messageSenderId, messageRecipientId, newMessage);
       
+      if (messageSenderId && messageRecipientId) {
+        // Truncate the message if it exceeds 500 characters
+        const truncatedMessage = newMessage.length > 500 ? newMessage.substring(0, 500) : newMessage;
+
+        sendMessage(messageSenderId, messageRecipientId, truncatedMessage);
+        
         const newMessageObject: Message = {
           messageId: `${Date.now()}`,
           userId1: messageSenderId,
           userId2: messageRecipientId,
-          text: newMessage,
+          text: truncatedMessage,
           createdAt: Timestamp.now(),
           time: Timestamp.now().toString(),
           status: 'Unread'

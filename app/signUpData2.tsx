@@ -428,6 +428,8 @@ const isPasswordValid = (password: string) => {
                       <TouchableOpacity
                         onPress={() => {
                           setSelectedLocation(item.code);
+                          setSelectedCity(''); // Clear the selected city
+                          setSelectedBarangay(''); // Clear the selected barangay
                           setShowLocationModal(false);
                           userSelectedRegion(item.name);
                         }}
@@ -471,6 +473,7 @@ const isPasswordValid = (password: string) => {
                       <TouchableOpacity
                         onPress={() => {
                           setSelectedCity(item.code);
+                          setSelectedBarangay(''); // Clear the selected barangay
                           setShowCityModal(false);
                           userSelectedCity(item.name);
                         }}
@@ -514,8 +517,6 @@ const isPasswordValid = (password: string) => {
                       <TouchableOpacity
                         onPress={() => {
                           setSelectedBarangay(item.code);
-                          setSelectedCity(''); // Clear the selected city
-                          setSelectedBarangay(''); // Clear the selected barangay
                           setShowBarangayModal(false);
                           userSelectedBrgy(item.name);
                         }}

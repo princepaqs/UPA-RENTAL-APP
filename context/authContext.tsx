@@ -97,6 +97,7 @@ export const AuthContextProvider = ({ children }: { children: ReactNode }) => {
                 const userData = userDocSnap.data();
                 const fullname = `${userData.firstName} ${userData.lastName}`;
                 const accountStatus = userData?.accountStatus || '';
+                const uLog = userData.userLoginTime;
                 await SecureStore.setItemAsync('accountStatus', accountStatus);
                 
                 const isVerified = user.emailVerified;
@@ -104,6 +105,31 @@ export const AuthContextProvider = ({ children }: { children: ReactNode }) => {
                     await sendEmailVerification(user);
                     router.replace('../LoginEmailVerify');
                     return;
+                }
+
+                if (uLog) {
+                    let lastLoginTime;
+      
+                    if (uLog.toMillis) {
+                      // If uLog is a Firestore Timestamp object
+                      lastLoginTime = uLog.toMillis();
+                    } else if (typeof uLog === 'number') {
+                      // If uLog is a Unix timestamp (in milliseconds)
+                      lastLoginTime = uLog;
+                    } else if (typeof uLog === 'string') {
+                      // If uLog is stored as a string (e.g., ISO 8601 date)
+                      lastLoginTime = new Date(uLog).getTime();
+                    }
+      
+                    //console.log(lastLoginTime, token, email, password);
+      
+                    const oneHourInMs = (3600000 * 24) * 30; // one month
+      
+                    if (userData?.onlineStatus === 'Online' && Date.now() - lastLoginTime < oneHourInMs){
+                      console.log('Multiple device login detected. Signing out...try');
+                      logout();
+                      throw new Error("multiple-device-login");
+                    }
                 }
 
                 const hasPin = userData?.userPin;
@@ -135,7 +161,7 @@ export const AuthContextProvider = ({ children }: { children: ReactNode }) => {
             } else {
                 showErrorModal("No such user document in Firestore!");
             }
-        } catch (error) {
+        } catch (error: any) {
             console.log(error)
             const firebaseError = error as { code: string; message: string };
             if (firebaseError.code === 'auth/invalid-email') {
@@ -147,6 +173,10 @@ export const AuthContextProvider = ({ children }: { children: ReactNode }) => {
             } else if (firebaseError.code === 'auth/invalid-credential') {
                 router.replace('../signIn');
                 showErrorModal('Invalid credentials provided. Please check your email and password.');
+            } else if (error.code === 'auth/too-many-requests') {
+                showErrorModal('Account temporarily locked. Please try again later.');
+            } else if (firebaseError.code === 'multiple-device-login') {
+                showErrorModal('You have been logged out because you logged in on another device.');
             } else {
                 showErrorModal('No internet connection');
             }
@@ -223,6 +253,7 @@ export const AuthContextProvider = ({ children }: { children: ReactNode }) => {
         const proofOfIncomeURL = await SecureStore.getItemAsync('proofOfIncomeURL') || '';
         const userPin = '';
         const userLoginTime = '';
+        const onlineStatus = 'Offline';
 
 
         // add an email verification that will be sent to user's email
@@ -294,6 +325,7 @@ export const AuthContextProvider = ({ children }: { children: ReactNode }) => {
             nbiClearanceStatus: 'Pending',
             govtIdStatus: 'Pending',
             proofOfIncomeStatus: 'Pending',
+            onlineStatus,
             createdAt: new Date(),
         };
 
@@ -1357,6 +1389,7 @@ export const AuthContextProvider = ({ children }: { children: ReactNode }) => {
                 reportPropertyStep1,
                 reportPropertyStep2,
                 reportPropertyStep3,
+                status: 'Pending',
                 createdAt: new Date()
             }
 
@@ -1378,6 +1411,7 @@ export const AuthContextProvider = ({ children }: { children: ReactNode }) => {
                 tenantId,
                 reportPropertyStep1,
                 reportPropertyStep2,
+                status: 'Pending',
                 createdAt: new Date()
             }
 
