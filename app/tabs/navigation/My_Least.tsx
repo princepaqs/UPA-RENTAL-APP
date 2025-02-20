@@ -1235,7 +1235,7 @@ export default function MyLease() {
                       </View>
                     ) : (
                       <Text className="text-center mt-4 text-gray-500">
-                        It looks like you haven't rented any property. Browse available listings and find your new place!
+                        Your account is under review. This feature will be available after approval.
                       </Text>
                     )}
                     </ScrollView>
@@ -1257,7 +1257,7 @@ export default function MyLease() {
             <Text className="text-2xl font-bold">My Lease</Text>
           </View>
           <Text className="text-center mt-4 text-gray-500">
-            It looks like you haven't rented any property. Browse available listings and find your new place!
+           Your account is under review. This feature will be available after approval.
           </Text>
         </View>
         </ScrollView>

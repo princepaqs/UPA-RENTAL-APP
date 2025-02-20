@@ -44,6 +44,7 @@ export default function tenantFeedback() {
         const reviewId = generateTransactionID()
 
         const feedbackData = {
+            feedbackType: 'Tenant',
             uid,
             ratings,
             comment,

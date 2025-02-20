@@ -45,6 +45,7 @@ export default function ownerFeedback() {
         const reviewId = generateTransactionID()
 
         const feedbackData = {
+            feedbackType: 'Owner',
             uid,
             ratings,
             comment,

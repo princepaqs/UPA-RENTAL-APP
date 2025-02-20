@@ -508,6 +508,13 @@ export default function _layout() {
           header: ()=> <HomeHeader/>
         }}
       />
+
+      <Stack.Screen
+        name='MyLease/ViewContractDetails'
+        options={{
+          header: ()=> <HomeHeader/>
+        }}
+      />
  
       <Stack.Screen
         name='MyLease/ReceivedContract'

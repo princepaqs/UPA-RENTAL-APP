@@ -76,13 +76,13 @@ export default function SignIn() {
 
               const oneHourInMs = (3600000 * 24) * 30; // one month
 
-              if (userData?.onlineStatus === 'Online' && Date.now() - lastLoginTime < oneHourInMs){
-                console.log('Multiple device login detected. Signing out...');
-                setModalMessage('You have been logged out because you logged in on another device.');
-                setModalVisible(true);
-                logout();
-                return;
-              }
+              // if (userData?.onlineStatus === 'Online' && Date.now() - lastLoginTime < oneHourInMs){
+              //   console.log('Multiple device login detected. Signing out...');
+              //   setModalMessage('You have been logged out because you logged in on another device.');
+              //   setModalVisible(true);
+              //   logout();
+              //   return;
+              // }
               
               if(usePassword === 'true' && email && password){
                 login(email, password);

@@ -49,7 +49,7 @@ export default function ReportIssue() {
   const confirmSubmission = () => {
     setConfirmationModalVisible(false);
     if(!user || !issueType || !transactionID || !description){
-      Alert.alert("Report Issue", "Please fill all fields.")
+      Alert.alert("Report Issue", "Please select an issue type.")
       return
     }
 
