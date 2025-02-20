@@ -115,7 +115,8 @@ const isPasswordValid = (password: string) => {
 
   const validatePassword = (password: string) => {
     // Regular expression: At least 8 characters, 1 special character, and 1 number
-    const passwordRegex = /^(?=.*[0-9])(?=.*[!@#$%^&*])(?=.{8,})/;
+    // const passwordRegex = /^(?=.*[0-9])(?=.*[!@#$%^&*])(?=.{8,})/;
+    const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)(?=.*[!@#$%^&*]).{8,}$/;
 
     if (!passwordRegex.test(password)) {
       setPasswordError('Password must have at least 8 characters, 1 special character, and 1 number.');
@@ -153,8 +154,14 @@ const isPasswordValid = (password: string) => {
       return;
     }
 
+    if (!confirmPassword){
+      Alert.alert('Confirm Password', 'Confirm password is required.');
+      setLoading(false);
+      return;
+    }
+
     if (password !== confirmPassword){
-      Alert.alert('Invalid Password', 'Password is not correct.');
+      Alert.alert('Invalid Password', 'Password do not match.');
       setLoading(false);
       return;
     }
@@ -265,7 +272,7 @@ const isPasswordValid = (password: string) => {
                 className='px-8 py-1 bg-gray-100 rounded-xl text-xs'
                 placeholder='Phone Number'
                 placeholderTextColor={'gray'}
-                keyboardType='phone-pad'
+                keyboardType='numeric'
                 maxLength={11}
               />
               {error !== '' && (

@@ -19,7 +19,7 @@ const numberPadKeys = [
 ];
 
 const MAX_ATTEMPTS = 3; // Max failed attempts allowed
-const TIMEOUT_DURATION = 10 * 1000; // Timeout in milliseconds (10 seconds)
+const TIMEOUT_DURATION = 10 * 1000 * 60 * 10; // Timeout in milliseconds (10 seconds)
 const IDLE_DURATION = 60 * 1000;
 
 export default function LoginPin() {
@@ -166,7 +166,7 @@ export default function LoginPin() {
         {/* Timeout Message */}
         {isTimeout && (
           <Text className='text-center text-red-500 mt-4'>
-            Too many attempts. Try again in {Math.ceil((timeoutEnd! - Date.now()) / 1000)} seconds.
+            Too many attempts. Try again in {Math.ceil((timeoutEnd! - Date.now()) / 60000)} minutes.
           </Text>
         )}
 

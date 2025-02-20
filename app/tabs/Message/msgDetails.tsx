@@ -294,6 +294,7 @@ const MsgDetails: React.FC = () => {
             value={newMessage}
             onChangeText={setNewMessage}
             multiline
+            maxLength={500}
             onContentSizeChange={(event) => setInputHeight(event.nativeEvent.contentSize.height)}
             style={{ height: Math.min(inputHeight, 140), maxHeight: 120 }}
           />

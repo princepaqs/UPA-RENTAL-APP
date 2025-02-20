@@ -11,6 +11,8 @@ import { storage } from '../_dbconfig/dbconfig'; // Import the storage from fire
 import { Alert } from "react-native";
 import ErrorModal from '../components/ErrorModal';
 import React from "react";
+import * as Device from 'expo-device';
+import * as Application from 'expo-application';
 
 // Define the shape of the context
 interface AuthContextType {
@@ -99,6 +101,15 @@ export const AuthContextProvider = ({ children }: { children: ReactNode }) => {
                 const accountStatus = userData?.accountStatus || '';
                 const uLog = userData.userLoginTime;
                 await SecureStore.setItemAsync('accountStatus', accountStatus);
+
+                const deviceType = Device.deviceType === Device.DeviceType.PHONE ? 'Mobile' : 'Tablet';
+                const deviceName = Device.modelName || 'Unknown Device';
+                const deviceId = Application.getAndroidId() || 'Unknown Device ID';
+
+                const userDeviceType = userData?.deviceType;
+                const userDeviceName = userData?.deviceName;
+                const userDeviceId = userData?.deviceId;
+
                 
                 const isVerified = user.emailVerified;
                 if (!isVerified) {
@@ -125,7 +136,7 @@ export const AuthContextProvider = ({ children }: { children: ReactNode }) => {
       
                     const oneHourInMs = (3600000 * 24) * 30; // one month
       
-                    if (userData?.onlineStatus === 'Online' && Date.now() - lastLoginTime < oneHourInMs){
+                    if (userData?.onlineStatus === 'Online' && userDeviceType !== deviceType && userDeviceName !== deviceName && userDeviceId !== deviceId && Date.now() - lastLoginTime < oneHourInMs){
                       console.log('Multiple device login detected. Signing out...try');
                       logout();
                       throw new Error("multiple-device-login");
@@ -144,7 +155,14 @@ export const AuthContextProvider = ({ children }: { children: ReactNode }) => {
                     await SecureStore.setItemAsync('fullName', fullname);
                     await SecureStore.setItemAsync('accountId', userData.accountId);
 
-                    await updateDoc(doc(db, 'users', user.uid), {userLoginTime: Date.now(), onlineStatus: 'Online'});
+                    // await updateDoc(doc(db, 'users', user.uid), {userLoginTime: Date.now(), onlineStatus: 'Online'});
+                    await updateDoc(doc(db, 'users', user.uid), {
+                        userLoginTime: Date.now(),
+                        onlineStatus: 'Online',
+                        deviceType: deviceType,
+                        deviceName: deviceName,
+                        deviceId: deviceId
+                    });
                     if(usePassword === 'true'){
                         router.replace('../tabs/Dashboard');
                         await SecureStore.deleteItemAsync('usePassword');
