@@ -24,7 +24,7 @@ export default function tenantFeedback() {
         "Did the tenant consistently pay their rent on time?",
         "How effective was the communication between you and the tenant?",
         "Did the tenant follow the agreed-upon rules and terms of the lease?",
-        "Would you be willing to rent your property to this tenant again in the future?"
+        "Would you be willing to rent your property to this tenant again in the future?",
     ];
 
     const generateTransactionID = () => {

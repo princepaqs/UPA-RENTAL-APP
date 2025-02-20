@@ -41,7 +41,7 @@ export default function ownerFeedback() {
             return;
         }
 
-        const uid = await SecureStore.getItemAsync('reviewOwnerId') || 'test';
+        const uid = await SecureStore.getItemAsync('reviewOwnerId') || 'test ';
         const reviewId = generateTransactionID()
 
         const feedbackData = {

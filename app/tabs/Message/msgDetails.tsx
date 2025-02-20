@@ -25,7 +25,7 @@ interface User {
 }
 
 const MsgDetails: React.FC = () => {
-  const { id } = useLocalSearchParams();
+  // const { id } = useLocalSearchParams();
   const [messages, setMessages] = useState<Message[]>([]);
   const [user, setUser] = useState<User | null>(null);
   const [newMessage, setNewMessage] = useState('');
