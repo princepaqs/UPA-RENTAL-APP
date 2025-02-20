@@ -70,7 +70,7 @@ export default function changePassword() {
           </View>
           <View className="">
             <Text className='text-xl font-bold text-center'>Change Password</Text>
-            <Text className='text-xs text-[#B5B5B5] '>Enter the email address you used to register with. </Text>
+            <Text className='text-xs text-[#B5B5B5] '>Enter the email address you used to register with.</Text>
           </View>
         </View>
 
