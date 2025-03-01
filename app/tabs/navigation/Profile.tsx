@@ -300,7 +300,7 @@ export default function Profile() {
               </TouchableOpacity>
 
               <TouchableOpacity className='flex flex-row items-center bg-white p-2 border border-gray-100 rounded-lg shadow-md'
-
+                onPress={() => handleNavigate('../tabs/Profile/FAQ')}
               >
                 <AntDesign name="questioncircleo" size={20} color="gray" />
                 <Text className='text-sm font-normal ml-3'>FAQ</Text>

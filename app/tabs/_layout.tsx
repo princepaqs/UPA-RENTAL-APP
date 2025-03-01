@@ -598,6 +598,13 @@ export default function _layout() {
           header: ()=> <HomeHeader/>
         }}
       />
+
+      <Stack.Screen
+        name='Profile/FAQ'
+        options={{
+          header: ()=> <HomeHeader/>
+        }}
+      />
       
 
       <Stack.Screen
