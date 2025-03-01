@@ -73,7 +73,7 @@ if(uid){
             propertyRef.forEach((propertyDoc) => {
                 const propertyData = propertyDoc.data();
                 console.log('Property Data:', propertyData);
-                if (propertyData && propertyData.propertyLatitude && propertyData.propertyLongitude) {
+                if (propertyData && propertyData.propertyLatitude && propertyData.propertyLongitude && propertyData.status !== 'Occupied') {
                     // Calculate distance between the user's location and the property's location
                     const propertyLat = parseFloat(propertyData.propertyLatitude);
                     const propertyLong = parseFloat(propertyData.propertyLongitude);
@@ -92,7 +92,7 @@ if(uid){
                                   latitude: propertyLat,
                                   longitude: propertyLong,
                                   propertyId: propertyData.propertyId,
-                                  ownerId: pdoc.id
+                                  ownerId: doc.id
                               }
                           ];
                           console.log('Updated Array:', updatedLocations);  // Log the updated array

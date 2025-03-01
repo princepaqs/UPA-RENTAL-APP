@@ -132,7 +132,7 @@ export default function SignIn() {
       } else if (error.code === 'auth/too-many-requests') {
         setModalMessage('Account temporarily locked. Please try again later.');
       } else if (error.code === 'multiple-device-login') {
-        setModalMessage('You have been logged out because you logged in on another device.');
+        // setModalMessage('You have been logged out because you logged in on another device.');
       }else {
         setModalMessage(error.message || 'Login failed. Please try again.');
       }

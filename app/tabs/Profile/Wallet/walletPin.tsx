@@ -81,7 +81,7 @@ export default function LoginPin() {
         topUpWallet(uid, transactionAmount);
         sendNotification(uid, 'wallet-topup', 'Top-Up Successful', `Your wallet has been successfully topped up with ₱${transactionAmount}. You can now use the funds for payments and transactions.`, 'Success', 'Unread')
         addWalletTransaction(uid, transactionType, '', transactionDate, transactionAmount, '');
-        return '/TopUp/receiptTransaction';
+        return '../../../tabs/Profile/Wallet/TopUp/receiptTransaction';
       case '/Payment/paymentReceipt': 
         payRent(transactionPaymentId, transactionOwnerId, uid, transactionAmount, transactionLeaseStart, transactionLeaseEnd);
         sendNotification(uid, 'wallet-payment', 'Payment Successful', `Your payment of ₱${transactionAmount} has been successfully processed.`, 'Success', 'Unread')

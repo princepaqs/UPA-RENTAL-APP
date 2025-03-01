@@ -60,21 +60,22 @@ export default function paymentReceipt() {
                 if(userRef && propertyRef){
                   const userData = userRef.data();
                   const propertyData = propertyRef.data();
+                  console.log(propertyData)
                   if(userData && propertyData){
                     const referenceNumber = generateTransactionID();
-                    const total = parseInt('100') + parseInt(propertyData.propertyRentAmount);
+                    const total = parseInt('100') + parseInt(propertyData.propertyMonthlyRent);
                     setReceiptData({
                       referenceNo: referenceNumber,
                       transactionId: transactionPaymentId,
-                      dateTime: '',
+                      dateTime: new Date().toDateString(),
                       uid: userData.uid,
                       ownerName: `${userData.firstName} ${userData.middleName} ${userData.lastName}`,
                       ownerEmail: userData.email,
                       propertyId: propertyId,
-                      propertyAddress: `${propertyData.homeAddress}, ${propertyData.barangay}, ${propertyData.city}, ${propertyData.region}`,
+                      propertyAddress: `${propertyData.propertyHomeAddress}, ${propertyData.propertyBarangay}, ${propertyData.propertyCity}, ${propertyData.propertyRegion}`,
                       paymentPurpose: 'Rent',
-                      paymentAmount: propertyData.propertyRentAmount,
-                      billingPeriod: '',
+                      paymentAmount: propertyData.propertyMonthlyRent,
+                      billingPeriod: rentData.propertyLeaseDuration,
                       fee: '100',
                       total: total.toString(),
                       _type: 'Payment',
@@ -193,9 +194,9 @@ export default function paymentReceipt() {
                       </View>
                       <View className='flex-col space-y-1 w-1/2'>
                         <Text className='text-xs text-[#6C6C6C]'>{receiptData?.paymentPurpose}</Text>
-                        <Text className='text-xs text-[#6C6C6C]'>{receiptData?.paymentAmount}</Text>
+                        <Text className='text-xs text-[#6C6C6C]'>₱{receiptData?.paymentAmount}</Text>
                         <Text className='text-xs text-[#6C6C6C]'>{receiptData?.billingPeriod}</Text>
-                        <Text className='text-xs text-[#6C6C6C]'> {receiptData?.fee}</Text>
+                        <Text className='text-xs text-[#6C6C6C]'>₱{receiptData?.fee}</Text>
                       </View>
                     </View>
 
@@ -204,33 +205,33 @@ export default function paymentReceipt() {
                         <Text className='text-xs text-[#6C6C6C] font-bold'>TOTAL</Text>
                       </View>
                       <View className='flex-col w-1/2'>
-                        <Text className='text-xs text-[#6C6C6C]'>{receiptData?.total}</Text>
+                        <Text className='text-xs text-[#6C6C6C]'>₱{receiptData?.total}</Text>
                       </View>
                     </View>
                 </View>
           </View>
 
           <View className='w-full items-center mt-10'>
-                            <View className='px-5 mb-10'>
-                                <Text className='text-xs text-center text-[#6C6C6C]'>Your payment has been successfully processed. Thank you for choosing us!</Text>
-                            </View>
-                            <Pressable className='mb-4'
-                            onPress={handleDownload}>
-                                <Text className='text-xs text-[#EF5A6F]'>Download Receipt</Text>
-                            </Pressable>
-                            {loading ? ( // Show loading indicator when loading is true
-                                <ActivityIndicator size="large" color="#D9534F" />
-                            ) : (
-                                <View className='px-6 w-full'>
-                                    <TouchableOpacity
-                                        onPress={handleContinue}
-                                        className="w-full py-3 bg-[#333333] rounded-xl items-center space-x-2"
-                                    >
-                                        <Text className="font-bold text-white">Continue</Text>
-                                    </TouchableOpacity>
-                                </View>
-                            )}
-                        </View>
+            <View className='px-5 mb-4'>
+                <Text className='text-xs text-center text-[#6C6C6C]'>Your payment has been successfully processed. Thank you for choosing us!</Text>
+            </View>
+            <Pressable className='mb-4'
+            onPress={handleDownload}>
+                <Text className='text-xs text-[#EF5A6F]'>Download Receipt</Text>
+            </Pressable>
+            {loading ? ( // Show loading indicator when loading is true
+                <ActivityIndicator size="large" color="#D9534F" />
+            ) : (
+                <View className='px-6 w-full'>
+                    <TouchableOpacity
+                        onPress={handleContinue}
+                        className="w-full py-3 bg-[#333333] rounded-xl items-center space-x-2"
+                    >
+                        <Text className="font-bold text-white">Continue</Text>
+                    </TouchableOpacity>
+                </View>
+            )}
+          </View>
 
         </View>
         </ImageBackground>

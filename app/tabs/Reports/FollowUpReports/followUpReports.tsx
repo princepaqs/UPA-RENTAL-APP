@@ -18,7 +18,7 @@ interface Users {
 
 export default function ReportIssue() {
   const router = useRouter();
-  const { reportIssue } = useAuth();
+  const { followUpReport } = useAuth();
 
   const [description, setDescription] = useState('');
   const [transactionID, setTransactionID] = useState('');
@@ -37,17 +37,22 @@ export default function ReportIssue() {
   // Function to confirm submission
   const confirmSubmission = () => {
     setConfirmationModalVisible(false);
-    if(!user || !transactionID || !description){
-      Alert.alert("Report Issue", "Please fill all fields.")
+    if(!user || !transactionID){
+      Alert.alert("Report Issue", "Report ID is required.")
+      return
+    }
+
+    if(!user || !description){
+      Alert.alert("Report Issue", "Detailed desccription is required")
       return
     }
 
     if(user){
       console.log(user?.userFullName, user?.userAccountId, transactionID, description);
-
+      followUpReport(user?.userId, user?.userFullName, user?.userAccountId, transactionID, description);
       router.back();
     }
-    Alert.alert("Report Issue", "Your report is submitted")
+    Alert.alert("Report Issue", "Your report has been successfully submitted. It will be reviewed and handled promptly.")
   };
 
 
@@ -135,6 +140,7 @@ export default function ReportIssue() {
                 onChangeText={setDescription}
                 multiline
                 numberOfLines={4}
+                maxLength={1000}
                 style={{ textAlignVertical: 'top' }} // Ensures multiline input aligns from the top
               />
             </View>

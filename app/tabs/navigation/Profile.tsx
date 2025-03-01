@@ -152,7 +152,10 @@ export default function Profile() {
           {(role === 'Owner' && accountStatus === 'Approved') ? (
             <TouchableOpacity
             className='px-8' 
-            onPress={() => handleNavigate('../tabs/LeaseProperty/PropertyDashboard')}
+            onPress={async () => {
+              handleNavigate('../tabs/LeaseProperty/PropertyDashboard')
+              await SecureStore.setItemAsync('isPropertyOwner', 'true');
+            }}
           >
             <View className='py-4'>
               <View className='p-3 flex flex-row items-center rounded-2xl bg-[#EF5A6F] shadow-md'>

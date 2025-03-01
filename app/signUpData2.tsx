@@ -147,12 +147,18 @@ const isPasswordValid = (password: string) => {
       return;
     }
 
-    // Password length validation
-    if (password.length < 8 || password.length > 16) {
-      Alert.alert('Invalid Password', 'Password must be between 8 and 16 characters and contains 1 or more special characters.');
+    // Password length and complexity validation
+    const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,16}$/;
+
+    if (!passwordRegex.test(password)) {
+      Alert.alert(
+        'Invalid Password',
+        'Password must be 8-16 characters long and include at least one letter, one number, and one special character.'
+      );
       setLoading(false);
       return;
     }
+
 
     if (!confirmPassword){
       Alert.alert('Confirm Password', 'Confirm password is required.');

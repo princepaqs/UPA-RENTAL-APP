@@ -323,32 +323,63 @@ export default function MyLease() {
   };
 
   const loadWalletTransactions = async () => {
-    try {
-      const uid = await SecureStore.getItemAsync('uid');
-  
-      if (uid) {
-        const transactionsQuery = query(collection(db, 'walletTransactions', uid, 'walletId'), where('uid', '==', uid));
-        const querySnapshot = await getDocs(transactionsQuery);
-  
-        const transactions = querySnapshot.docs.map(doc => {
-          const data = doc.data();
-          
-          return {
-            uid: data.uid,
-            transactionId: doc.id,
-            transactionType: data.transactionType,
-            paymentTransactionId: data.paymentTransactionId,
-            dateTime: data.date,
-            value: parseInt(data.value),  // Ensure the value is correctly retrieved
-          };
-        });
-  
-        setTransactionData(transactions as TransactionData[]);
+      try {
+        const uid = await SecureStore.getItemAsync('uid');
+    
+        if (uid) {
+          const transactionsQuery = query(
+            collection(db, 'walletTransactions', uid, 'walletId'),
+            where('uid', '==', uid)
+          );
+          const querySnapshot = await getDocs(transactionsQuery);
+    
+          const transactions = querySnapshot.docs.map(doc => {
+            const data = doc.data();
+    
+            // Manually parse the date string "MM/DD/YYYY, hh:mm:ss AM/PM"
+            const dateParts = data.date.split(', ')[0].split('/'); // ["MM", "DD", "YYYY"]
+            const timeParts = data.date.split(', ')[1].split(':'); // ["hh", "mm", "ss AM/PM"]
+            const meridian = timeParts[2].split(' ')[1]; // "AM" or "PM"
+    
+            let hours = parseInt(timeParts[0]);
+            const minutes = parseInt(timeParts[1]);
+            const seconds = parseInt(timeParts[2].split(' ')[0]);
+    
+            // Convert 12-hour format to 24-hour format
+            if (meridian === 'PM' && hours !== 12) hours += 12;
+            if (meridian === 'AM' && hours === 12) hours = 0;
+    
+            const formattedDate = new Date(
+              parseInt(dateParts[2]), // YYYY
+              parseInt(dateParts[0]) - 1, // MM (0-based index)
+              parseInt(dateParts[1]), // DD
+              hours,
+              minutes,
+              seconds
+            );
+    
+            return {
+              uid: data.uid,
+              transactionId: doc.id,
+              transactionType: data.transactionType,
+              paymentTransactionId: data.paymentTransactionId,
+              dateTime: data.date, // Keep original string format
+              value: parseInt(data.value), // Ensure value is correctly retrieved
+              dateObject: formattedDate // Parsed Date object for sorting
+            };
+          });
+    
+          // Sort transactions by date in ascending order (oldest → newest)
+          transactions.sort((b, a) => a.dateObject.getTime() - b.dateObject.getTime());
+    
+          console.log(transactions.length);
+          console.log(transactions);
+          setTransactionData(transactions as TransactionData[]);
+        }
+      } catch (error) {
+        console.error("Error loading transactions:", error);
       }
-    } catch (error) {
-      console.error("Error loading transactions:", error); // Log any errors that occur
-    }
-  };
+    };
   
   const [isLeaseVisible, setIsLeaseVisible] = useState(true); // Step 1: State for visibility
  
@@ -1257,7 +1288,7 @@ export default function MyLease() {
             <Text className="text-2xl font-bold">My Lease</Text>
           </View>
           <Text className="text-center mt-4 text-gray-500">
-           Your account is under review. This feature will be available after approval.
+            You have no active leases. Apply for a property to start your lease journey.
           </Text>
         </View>
         </ScrollView>

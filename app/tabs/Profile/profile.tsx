@@ -23,6 +23,7 @@ export default function Profile() {
   const [fullName, setFullName] = useState<string | null>(null);
   const [profilePicUrl, setProfilePicUrl] = useState<string | null>(null);
   const [accountId, setAccountID] = useState<string | null>(null);
+  const [joinedDate, setJoinedDate] = useState<string | null>(null);
   const [review, setReviews] = useState<Reviews[]>([]);
 
   const getUserImageUrl = async (ownerId: string) => {
@@ -74,8 +75,10 @@ export default function Profile() {
         // Fetch user's full name and account ID
         const storedFullName = await SecureStore.getItemAsync('fullName');
         const accountId = await SecureStore.getItemAsync('accountId');
+        const joinedDate = await SecureStore.getItemAsync('joinedDate');
         setFullName(storedFullName || '');
         setAccountID(accountId || '');
+        setJoinedDate(joinedDate || '');
   
         // Fetch profile picture
         const profilePictureFileName = `${uid}-profilepictures`;
@@ -248,7 +251,7 @@ export default function Profile() {
               <Feather color={'gray'} name="copy" size={15} />
             </TouchableOpacity>
           </View>
-          <Text className='text-xs text-gray-500'>Joined March 2024</Text>
+          <Text className='text-xs text-gray-500'>Joined {joinedDate}</Text>
           </View>
 
 

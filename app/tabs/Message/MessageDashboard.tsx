@@ -61,6 +61,7 @@ export default function MessageDashboard() {
     const fetchMessages = async () => {
       const messageRecipientId = await SecureStore.getItemAsync('messageRecipientId');
       const messageSenderId = await SecureStore.getItemAsync('uid');
+      const isPropertyOwner = await SecureStore.getItemAsync('isPropertyOwner');
 
       if (messageRecipientId || messageSenderId) {
         setUID(messageSenderId ?? '');
@@ -78,12 +79,36 @@ export default function MessageDashboard() {
 
         // Using onSnapshot for real-time updates
         const unsubscribeUser1 = onSnapshot(queryUser1, (snapshotUser1) => {
-          const allMessages: Message[] = snapshotUser1.docs.map(doc => ({ messageId: doc.id, ...doc.data() } as Message));
+          const allMessages: Message[] = snapshotUser1.docs.map(doc => {
+            const data = doc.data();
+            const message: Message = {
+              messageId: doc.id,
+              userId1: data.userId1,   // Ensure userId1 is added
+              userId2: data.userId2,   // Ensure userId2 is added
+              text: data.text,         // Ensure text is added
+              createdAt: data.createdAt, // Ensure createdAt (timestamp) is included
+              time: data.time,         // Ensure time is added
+              status: data.status,  // Ensure the timestamp is included
+            };
+            return message;
+          });
 
           const unsubscribeUser2 = onSnapshot(queryUser2, (snapshotUser2) => {
-            allMessages.push(...snapshotUser2.docs.map(doc => ({ messageId: doc.id, ...doc.data() } as Message)));
+            allMessages.push(...snapshotUser2.docs.map(doc => {
+              const data = doc.data();
+              const message: Message = {
+                messageId: doc.id,
+                userId1: data.userId1,   // Ensure userId1 is added
+                userId2: data.userId2,   // Ensure userId2 is added
+                text: data.text,         // Ensure text is added
+                createdAt: data.createdAt, // Ensure createdAt (timestamp) is included
+                time: data.time,         // Ensure time is added
+                status: data.status, // Ensure the timestamp is included
+              };
+              return message;
+            }));
 
-            // Format messages and remove duplicates by user pair (userId1, userId2)
+            // Sort messages based on createdAt and remove duplicates by user pair (userId1, userId2)
             const messageMap = new Map<string, Message>();
             allMessages.forEach(message => {
               const pairKey = [message.userId1, message.userId2].sort().join('-');
@@ -93,9 +118,31 @@ export default function MessageDashboard() {
               }
             });
 
-            // Get the unique messages
-            const uniqueMessages = Array.from(messageMap.values());
-            setMessages(uniqueMessages);
+            // Get the unique messages and sort them by createdAt in ascending order
+            const uniqueMessages = Array.from(messageMap.values()).sort((b, a) => {
+              const aDate = a.createdAt.toDate();
+              const bDate = b.createdAt.toDate();
+
+              return aDate.getTime() - bDate.getTime(); // Sort in ascending order
+            });
+
+            // Format the messages and include the formatted date
+            const formattedMessages = uniqueMessages.map((message) => {
+              const date = message.createdAt.toDate();
+              const formattedDate = date.toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
+              });
+
+              return { ...message, formattedDate };
+            });
+
+            if (isPropertyOwner === 'true') {
+              setMessages(formattedMessages.filter(message => message.userId1 !== 'cvz6NsXRDec8hycylRK6vgKOL8d2' && message.userId2 !== 'cvz6NsXRDec8hycylRK6vgKOL8d2')); // UPA ID
+            } else {
+              setMessages(formattedMessages);
+            }
           });
 
           // Cleanup on unmount

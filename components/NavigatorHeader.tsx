@@ -199,9 +199,9 @@ export default function MessageHeader() {
       const userId = await SecureStore.getItemAsync('uid');
       if (userId) {
         setUID(userId);
-        await checkUserStatus(userId);
+        checkUserStatus(userId);
 
-        if (userStatus === 'approved') {
+        if (userStatus === 'Approved') {
           // Subscribe to messages and notifications only if user is approved
           subscribeToMessages(userId);
           subscribeToNotifications(userId);
@@ -214,6 +214,7 @@ export default function MessageHeader() {
       const userDocSnap = await getDoc(userDocRef);
       if (userDocSnap.exists()) {
         setUserStatus(userDocSnap.data().accountStatus);
+        console.log(userDocSnap.data().accountStatus)
       }
     };
 
@@ -287,7 +288,7 @@ export default function MessageHeader() {
     setNewMessages(unreadCount);
   };
 
-  if (userStatus !== 'approved') {
+  if (userStatus !== 'Approved') {
     return null; // Hide the MessageHeader if the user is not approved
   }
 

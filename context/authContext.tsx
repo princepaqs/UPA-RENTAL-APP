@@ -47,6 +47,7 @@ interface AuthContextType {
     reportProperty: (ownerId: string, propertyId: string, tenantId: string, reportPropertyStep1: string, reportPropertyStep2: string, reportPropertyStep3: string) => Promise<void>;
     reportProfile: (ownerId: string, tenantId: string, reportPropertyStep1: string, reportPropertyStep2: string) => Promise<void>;
     reportIssue: (fullName: string, accountId: string, issue: string, issueId: string, description: string) => Promise<void>;
+    followUpReport: (fullName: string, accountId: string, issue: string, issueId: string, description: string) => Promise<void>;
     maintenanceRequest: (uid: string, ownerId: string, propertyId: string, fullName: string, time: string, issueType: string, images: string, description: string) => Promise<void>;
     withdrawMaintenance: (uid: string, maintenanceId: string) => Promise<void>;
     updateMaintenance: (uid: string, maintenanceId: string, timeType: string, time: Date, status: string) => Promise<void>;
@@ -98,8 +99,13 @@ export const AuthContextProvider = ({ children }: { children: ReactNode }) => {
             if (userDocSnap.exists()) {
                 const userData = userDocSnap.data();
                 const fullname = `${userData.firstName} ${userData.lastName}`;
+                const joinedDate = userData.createdAt.toDate();
+                const convertedDate = joinedDate.toLocaleString("en-US", { month: "long", year: "numeric" });
                 const accountStatus = userData?.accountStatus || '';
                 const uLog = userData.userLoginTime;
+
+
+
                 await SecureStore.setItemAsync('accountStatus', accountStatus);
 
                 const deviceType = Device.deviceType === Device.DeviceType.PHONE ? 'Mobile' : 'Tablet';
@@ -137,7 +143,8 @@ export const AuthContextProvider = ({ children }: { children: ReactNode }) => {
                     const oneHourInMs = (3600000 * 24) * 30; // one month
       
                     if (userData?.onlineStatus === 'Online' && userDeviceType !== deviceType && userDeviceName !== deviceName && userDeviceId !== deviceId && Date.now() - lastLoginTime < oneHourInMs){
-                      console.log('Multiple device login detected. Signing out...try');
+                      console.log('Multiple device login detected. Signing out...try again');
+                      await SecureStore.setItemAsync('multipleDeviceLogin', 'true');
                       logout();
                       throw new Error("multiple-device-login");
                     }
@@ -153,6 +160,7 @@ export const AuthContextProvider = ({ children }: { children: ReactNode }) => {
                     await SecureStore.setItemAsync('email', email);
                     await SecureStore.setItemAsync('password', password);
                     await SecureStore.setItemAsync('fullName', fullname);
+                    await SecureStore.setItemAsync('joinedDate', convertedDate);
                     await SecureStore.setItemAsync('accountId', userData.accountId);
 
                     // await updateDoc(doc(db, 'users', user.uid), {userLoginTime: Date.now(), onlineStatus: 'Online'});
@@ -174,13 +182,12 @@ export const AuthContextProvider = ({ children }: { children: ReactNode }) => {
                         //setIsAuthenticated(true); // this is where auto logged begins
                         //router.replace('../routes/userRoutes');
                     }
-                    
                 }
             } else {
                 showErrorModal("No such user document in Firestore!");
             }
         } catch (error: any) {
-            console.log(error)
+            console.log(error, error.code, error.message);
             const firebaseError = error as { code: string; message: string };
             if (firebaseError.code === 'auth/invalid-email') {
                 showErrorModal('The email address is not valid.');
@@ -193,10 +200,11 @@ export const AuthContextProvider = ({ children }: { children: ReactNode }) => {
                 showErrorModal('Invalid credentials provided. Please check your email and password.');
             } else if (error.code === 'auth/too-many-requests') {
                 showErrorModal('Account temporarily locked. Please try again later.');
-            } else if (firebaseError.code === 'multiple-device-login') {
+            } else if (firebaseError.code === 'multiple-device-login' || error.message === 'multiple-device-login') {
                 showErrorModal('You have been logged out because you logged in on another device.');
+                logout();
             } else {
-                showErrorModal('No internet connection');
+                showErrorModal(error.message);
             }
         }
     };
@@ -1466,6 +1474,28 @@ export const AuthContextProvider = ({ children }: { children: ReactNode }) => {
         }
     }
 
+    const followUpReport = async (fullName: string, accountId: string, issue: string, issueId: string, description: string) => {
+        try {
+            const uid = await SecureStore.getItemAsync('uid')
+            const followUpReportData = {
+                reportId: generateTransactionID(),
+                fullName,
+                accountId,
+                issue,
+                issueId,
+                description
+            }
+
+            if(followUpReportData && uid){
+                await setDoc(doc(db, 'followUp', followUpReportData.reportId), followUpReportData)
+                console.log('Follow-up report successful');
+                sendNotification(uid, 'follow-up-report', 'Follow-up Report Submitted', 'Your follow-up report has been successfully received. Our team will review it and get back to you shortly.', 'Success', 'Unread')
+            }
+        } catch (error) {
+            console.log('Follow-up report failed');
+        }
+    }
+
     const maintenanceRequest = async (
         tenantId: string,
         ownerId: string,
@@ -1679,7 +1709,7 @@ export const AuthContextProvider = ({ children }: { children: ReactNode }) => {
         <AuthContext.Provider value={{ user, isAuthenticated, onboardingCompleted, login, register, logout, setPin, editUser, removeUser, 
             withdrawWallet, topUpWallet, addWalletTransaction, upgradeRole, resetPassword, addProperty, editProperty, deleteProperty, 
             completeOnboarding, rentProperty, withdrawRent, payRent, approveTenant, rejectTenant, addFavorite, removeFavorite, 
-            reportProperty, reportProfile, reportIssue, maintenanceRequest, withdrawMaintenance, updateMaintenance, 
+            reportProperty, reportProfile, reportIssue, followUpReport, maintenanceRequest, withdrawMaintenance, updateMaintenance, 
             sendMessage, sendNotification }}>
             {children}
             <ErrorModal visible={modalVisible} message={modalMessage} onClose={closeModal} />

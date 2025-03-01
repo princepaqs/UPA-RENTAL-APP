@@ -155,7 +155,10 @@ const vacantCount = properties.filter(property => property.status === 'Available
 
       <View className="flex flex-col pt-5 border-t">
       <View className='flex-row items-center justify-between mb-5'>
-        <TouchableOpacity className='flex flex-row items-center gap-2' onPress={() => router.replace('/tabs/Dashboard')}>
+        <TouchableOpacity className='flex flex-row items-center gap-2' onPress={async() => {
+          router.replace('/tabs/Dashboard')
+          await SecureStore.deleteItemAsync('isPropertyOwner');
+          }}>
           <Ionicons name="home" size={24} color="black" />
           <Text className="text-xl font-bold">My Property Dashboard</Text>
         </TouchableOpacity>

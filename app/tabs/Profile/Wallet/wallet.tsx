@@ -76,29 +76,61 @@ export default function Wallet() {
       const uid = await SecureStore.getItemAsync('uid');
   
       if (uid) {
-        const transactionsQuery = query(collection(db, 'walletTransactions', uid, 'walletId'), where('uid', '==', uid));
+        const transactionsQuery = query(
+          collection(db, 'walletTransactions', uid, 'walletId'),
+          where('uid', '==', uid)
+        );
         const querySnapshot = await getDocs(transactionsQuery);
   
         const transactions = querySnapshot.docs.map(doc => {
           const data = doc.data();
-          
+  
+          // Manually parse the date string "MM/DD/YYYY, hh:mm:ss AM/PM"
+          const dateParts = data.date.split(', ')[0].split('/'); // ["MM", "DD", "YYYY"]
+          const timeParts = data.date.split(', ')[1].split(':'); // ["hh", "mm", "ss AM/PM"]
+          const meridian = timeParts[2].split(' ')[1]; // "AM" or "PM"
+  
+          let hours = parseInt(timeParts[0]);
+          const minutes = parseInt(timeParts[1]);
+          const seconds = parseInt(timeParts[2].split(' ')[0]);
+  
+          // Convert 12-hour format to 24-hour format
+          if (meridian === 'PM' && hours !== 12) hours += 12;
+          if (meridian === 'AM' && hours === 12) hours = 0;
+  
+          const formattedDate = new Date(
+            parseInt(dateParts[2]), // YYYY
+            parseInt(dateParts[0]) - 1, // MM (0-based index)
+            parseInt(dateParts[1]), // DD
+            hours,
+            minutes,
+            seconds
+          );
+  
           return {
             uid: data.uid,
             transactionId: doc.id,
             transactionType: data.transactionType,
-            dateTime: data.date,
-            value: parseInt(data.value),  // Ensure the value is correctly retrieved
+            dateTime: data.date, // Keep original string format
+            value: parseInt(data.value), // Ensure value is correctly retrieved
+            dateObject: formattedDate // Parsed Date object for sorting
           };
         });
-        
+  
+        // Sort transactions by date in ascending order (oldest → newest)
+        transactions.sort((b, a) => a.dateObject.getTime() - b.dateObject.getTime());
+  
         console.log(transactions.length);
-        console.log(transactions)
+        console.log(transactions);
         setTransactionData(transactions as TransactionData[]);
       }
     } catch (error) {
-      console.error("Error loading transactions:", error); // Log any errors that occur
+      console.error("Error loading transactions:", error);
     }
   };
+  
+  
+  
   
 
   // Function to determine color based on transaction type
@@ -213,7 +245,7 @@ export default function Wallet() {
               <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
             }
           >
-            <View className='px-5 h-screen'>
+            <View className='px-5 min-h-screen'>
               <Text className='text-lg font-bold'>Transactions</Text>
 
               {transactionData.length === 0 ? (
@@ -233,6 +265,9 @@ export default function Wallet() {
                   </View>
                 ))
               )}
+
+              {/* Dummy view at the bottom to ensure visibility */}
+              <View className="h-60" />
             </View>
           </ScrollView>
         </View>

@@ -7,7 +7,7 @@ import * as Location from 'expo-location'; // Import Expo Locationimport { colle
 import { db, storage } from '../../../_dbconfig/dbconfig';
 import { getDownloadURL, ref } from "firebase/storage";
 import * as SecureStore from 'expo-secure-store';
-import { collection, doc, getDoc, getDocs } from "firebase/firestore";
+import { collection, doc, getDoc, getDocs, query, where } from "firebase/firestore";
 
 interface Properties {
   userId: string;
@@ -94,7 +94,7 @@ const DirectionsMap = () => {
 
       for (const userId of filteredUserIds) {
         try {
-          const propertyQuerySnapshot = await getDocs(collection(db, 'properties', userId, 'propertyId'));
+          const propertyQuerySnapshot = await getDocs(query(collection(db, 'properties', userId, 'propertyId'), where('status' , '==', 'Available')));
 
           for (const doc of propertyQuerySnapshot.docs) {
             const propertyData = doc.data();
