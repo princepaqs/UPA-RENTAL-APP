@@ -402,7 +402,7 @@ export default function AccountInformation({ user }: { user: User }) {
 
   const handleUpdateInformation = () => {
         if(isAnyFieldEditing){
-          if (phoneNumber?.length === 11 || profession) {
+          if (phoneNumber?.length === 11 && profession) {
             setShowConfirmModal(true);
           } else if (!phoneNumber || !profession || !selectedSalary || !profileImage) {
             Alert.alert('Error', 'Please complete all necessary details.');

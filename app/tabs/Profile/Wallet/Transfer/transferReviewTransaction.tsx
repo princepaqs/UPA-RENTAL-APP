@@ -35,7 +35,8 @@ export default function TransferReviewTransaction() {
 
       setTimeout(() => {
         setLoading(false); // Reset loading state
-        router.replace('./transferReceipt'); // Navigate to receipt transaction screen
+        // router.replace('./transferReceipt'); // Navigate to receipt transaction screen
+        router.replace('../walletPin');
       }, 1000);
     }
   };
@@ -43,7 +44,7 @@ export default function TransferReviewTransaction() {
   const formatDate = (date: Date): string => {
     return date.toLocaleDateString('en-US', {
       year: 'numeric',
-      month: 'long',
+      month: '2-digit',
       day: '2-digit',
       hour: 'numeric',
       minute: 'numeric',

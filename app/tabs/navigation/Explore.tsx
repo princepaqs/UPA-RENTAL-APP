@@ -33,7 +33,7 @@ interface Property {
 
 const Explore = () => {
   const router = useRouter();
-  const { addFavorite, removeFavorite, logout } = useAuth();
+  const { addFavorite, removeFavorite, logout, listenForLogout } = useAuth();
   const app = initializeApp(firebaseConfig);
   const auth = getAuth(app);
   
@@ -56,25 +56,6 @@ const Explore = () => {
     setModalMessage('');
     logout();
   };
-
-  const listenForLogout = async () => {
-    const uid = await SecureStore.getItemAsync('uid');
-    const isMultiple = await SecureStore.getItemAsync('multipleDeviceLogin');
-    if (!uid) return;
-  
-    const userDocRef = doc(db, 'users', uid);
-    onSnapshot(userDocRef, (docSnap) => {
-      if (docSnap.exists() && docSnap.data().onlineStatus === 'Offline' && isMultiple === 'true') {
-        auth.signOut();
-        // showErrorModal('You have been logged out because you logged in on another device.');
-        SecureStore.deleteItemAsync('password');
-        SecureStore.deleteItemAsync('token');
-        SecureStore.deleteItemAsync('multipleDeviceLogin');
-        // router.replace('../signIn');
-      }
-    });
-  };
-
 
   const { filters } = useFilter();
   // Debugging
@@ -140,7 +121,7 @@ const Explore = () => {
   );
 });
 
-console.log(filteredProperties);
+// console.log(filteredProperties);
 
 
   
@@ -237,6 +218,7 @@ console.log(filteredProperties);
     
         const unsubscribe = onSnapshot(favoritesRef, (favoritesSnapshot) => {
           const favoritesList: { [key: string]: boolean } = {};
+          listenForLogout();
           favoritesSnapshot.forEach(doc => {
             const data = doc.data();
             const key = `${data.ownerId}_${data.propertyId}`;

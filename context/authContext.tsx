@@ -4,7 +4,7 @@ import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, se
 import { initializeApp } from '@firebase/app';
 import { firebaseConfig } from "@/_dbconfig/dbconfig";
 import * as SecureStore from 'expo-secure-store';
-import { getDoc, setDoc, doc, getDocs, collection, updateDoc, deleteDoc, query, where } from 'firebase/firestore'; // For saving data in Firestore (optional)
+import { getDoc, setDoc, doc, getDocs, collection, updateDoc, deleteDoc, query, where, onSnapshot } from 'firebase/firestore'; // For saving data in Firestore (optional)
 import { db } from '../_dbconfig/dbconfig'; // Import Firestore instance
 import { ref, uploadBytes, getDownloadURL, deleteObject, listAll } from 'firebase/storage'; // Import Firebase storage functions
 import { storage } from '../_dbconfig/dbconfig'; // Import the storage from firebaseConfig
@@ -21,6 +21,7 @@ interface AuthContextType {
     onboardingCompleted: boolean; // Add a flag to track if onboarding has been completed
     login: (email: string, password: string) => Promise<void>;
     logout: () => Promise<void>;
+    listenForLogout: () => Promise<void>;
     register: (email: string, password: string, username: string) => Promise<void>;
     setPin: (pin: string) => Promise<void>;
     editUser: (uid: string, phoneNo: string, profession: string, salary: string, email: string, profilePictureUrl: string) => Promise<void>;
@@ -91,6 +92,7 @@ export const AuthContextProvider = ({ children }: { children: ReactNode }) => {
         try {
             const userCredential = await signInWithEmailAndPassword(auth, email, password);
             const user = userCredential.user;
+            // const token = 
 
             await SecureStore.setItemAsync('uid', user.uid);
             const userDocRef = doc(db, 'users', user.uid);
@@ -145,7 +147,8 @@ export const AuthContextProvider = ({ children }: { children: ReactNode }) => {
                     if (userData?.onlineStatus === 'Online' && userDeviceType !== deviceType && userDeviceName !== deviceName && userDeviceId !== deviceId && Date.now() - lastLoginTime < oneHourInMs){
                       console.log('Multiple device login detected. Signing out...try again');
                       await SecureStore.setItemAsync('multipleDeviceLogin', 'true');
-                      logout();
+                    //   logout(); // To prevent logging in on another device unless logged out or session timed out
+                    //   router.replace('../signIn');
                       throw new Error("multiple-device-login");
                     }
                 }
@@ -223,10 +226,29 @@ export const AuthContextProvider = ({ children }: { children: ReactNode }) => {
             await SecureStore.deleteItemAsync('token');
             //setIsAuthenticated(false);
             auth.signOut();
-            router.replace('../signIn')
+            router.replace('../signIn');
         } catch (error) {
             console.error(error);
         }
+    };
+
+    const listenForLogout = async () => {
+        const uid = await SecureStore.getItemAsync('uid');
+        const isMultiple = await SecureStore.getItemAsync('multipleDeviceLogin');
+        if (!uid) return;
+      
+        const userDocRef = doc(db, 'users', uid);
+        onSnapshot(userDocRef, (docSnap) => {
+          if (docSnap.exists() && docSnap.data().onlineStatus === 'Offline' && isMultiple === 'true') {
+            auth.signOut();
+            // showErrorModal('You have been logged out because you logged in on another device.');
+            SecureStore.deleteItemAsync('password');
+            SecureStore.deleteItemAsync('token');
+            SecureStore.deleteItemAsync('multipleDeviceLogin');
+            logout();
+            console.log("LOGOUT")
+          }
+        });
     };
 
     //let sequence = 1;
@@ -1710,7 +1732,7 @@ export const AuthContextProvider = ({ children }: { children: ReactNode }) => {
             withdrawWallet, topUpWallet, addWalletTransaction, upgradeRole, resetPassword, addProperty, editProperty, deleteProperty, 
             completeOnboarding, rentProperty, withdrawRent, payRent, approveTenant, rejectTenant, addFavorite, removeFavorite, 
             reportProperty, reportProfile, reportIssue, followUpReport, maintenanceRequest, withdrawMaintenance, updateMaintenance, 
-            sendMessage, sendNotification }}>
+            sendMessage, sendNotification, listenForLogout }}>
             {children}
             <ErrorModal visible={modalVisible} message={modalMessage} onClose={closeModal} />
         </AuthContext.Provider>

@@ -124,7 +124,7 @@ export default function Payment() {
             const rentData = transactionDoc.data();
   
             // Only include transactions that match the uid
-            if (rentData.tenantId === uid) {
+            if (rentData.tenantId === uid && rentData.paymentDuration > 0) {
 
               const leaseStart = rentData.propertyLeaseStart; // Sample date in MM/DD/YYYY format
               console.log(leaseStart);

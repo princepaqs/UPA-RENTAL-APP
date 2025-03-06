@@ -8,6 +8,7 @@ import { db, storage } from '../../../_dbconfig/dbconfig';
 import { getDownloadURL, ref } from "firebase/storage";
 import * as SecureStore from 'expo-secure-store';
 import { collection, doc, getDoc, getDocs, query, where } from "firebase/firestore";
+import { useAuth } from "@/context/authContext";
 
 interface Properties {
   userId: string;
@@ -21,6 +22,7 @@ interface Properties {
 
 const DirectionsMap = () => {
   const router = useRouter();
+  const { listenForLogout } = useAuth();
   const [loading, setLoading] = useState(true);
   const [properties, setProperties] = useState<Properties[] | null>(null)
   const [userLocation, setUserLocation] = useState<{ latitude: number, longitude: number } | null>(null); // State to store user location
@@ -127,7 +129,7 @@ const DirectionsMap = () => {
         console.error('Error fetching properties:', error);
       }
     };
-
+    listenForLogout();
     fetchUserImage();
     fetchUserLocation();
     fetchProperties();

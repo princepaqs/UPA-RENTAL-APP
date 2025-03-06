@@ -67,7 +67,14 @@ export default function WithdrawReviewTransaction() {
 
   // Get current date and time
   const getCurrentDateTime = () => {
-      return new Date().toLocaleString(); // Formats the date and time based on the user's locale
+      return new Date().toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: 'numeric',
+        minute: 'numeric',
+        hour12: true,
+    }); // Formats the date and time based on the user's locale
   };
 
   const transactionData = {

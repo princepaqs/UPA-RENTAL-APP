@@ -72,62 +72,55 @@ export default function Wallet() {
   };
 
   const loadWalletTransactions = async () => {
-    try {
-      const uid = await SecureStore.getItemAsync('uid');
-  
-      if (uid) {
-        const transactionsQuery = query(
-          collection(db, 'walletTransactions', uid, 'walletId'),
-          where('uid', '==', uid)
-        );
-        const querySnapshot = await getDocs(transactionsQuery);
-  
-        const transactions = querySnapshot.docs.map(doc => {
-          const data = doc.data();
-  
-          // Manually parse the date string "MM/DD/YYYY, hh:mm:ss AM/PM"
-          const dateParts = data.date.split(', ')[0].split('/'); // ["MM", "DD", "YYYY"]
-          const timeParts = data.date.split(', ')[1].split(':'); // ["hh", "mm", "ss AM/PM"]
-          const meridian = timeParts[2].split(' ')[1]; // "AM" or "PM"
-  
-          let hours = parseInt(timeParts[0]);
-          const minutes = parseInt(timeParts[1]);
-          const seconds = parseInt(timeParts[2].split(' ')[0]);
-  
-          // Convert 12-hour format to 24-hour format
-          if (meridian === 'PM' && hours !== 12) hours += 12;
-          if (meridian === 'AM' && hours === 12) hours = 0;
-  
-          const formattedDate = new Date(
-            parseInt(dateParts[2]), // YYYY
-            parseInt(dateParts[0]) - 1, // MM (0-based index)
-            parseInt(dateParts[1]), // DD
-            hours,
-            minutes,
-            seconds
-          );
-  
-          return {
-            uid: data.uid,
-            transactionId: doc.id,
-            transactionType: data.transactionType,
-            dateTime: data.date, // Keep original string format
-            value: parseInt(data.value), // Ensure value is correctly retrieved
-            dateObject: formattedDate // Parsed Date object for sorting
-          };
-        });
-  
-        // Sort transactions by date in ascending order (oldest → newest)
-        transactions.sort((b, a) => a.dateObject.getTime() - b.dateObject.getTime());
-  
-        console.log(transactions.length);
-        console.log(transactions);
-        setTransactionData(transactions as TransactionData[]);
-      }
-    } catch (error) {
-      console.error("Error loading transactions:", error);
+  try {
+    const uid = await SecureStore.getItemAsync("uid");
+
+    if (uid) {
+      const transactionsQuery = query(
+        collection(db, "walletTransactions", uid, "walletId"),
+        where("uid", "==", uid)
+      );
+      const querySnapshot = await getDocs(transactionsQuery);
+
+      const transactions = querySnapshot.docs.map((doc) => {
+        const data = doc.data();
+        let formattedDate: Date | null = null;
+
+        // Check if date is in "MM/DD/YYYY, hh:mm:ss AM/PM" format
+        if (/^\d{2}\/\d{2}\/\d{4}, \d{1,2}:\d{2}(:\d{2})? [APM]{2}$/.test(data.date)) {
+          const [datePart, timePart] = data.date.split(", ");
+          const [month, day, year] = datePart.split("/").map(Number);
+          const [time, meridian] = timePart.split(" ");
+          let [hours, minutes] = time.split(":").map(Number);
+
+          if (meridian === "PM" && hours !== 12) hours += 12;
+          if (meridian === "AM" && hours === 12) hours = 0;
+
+          formattedDate = new Date(year, month - 1, day, hours, minutes);
+        }
+
+        return {
+          uid: data.uid,
+          transactionId: doc.id,
+          transactionType: data.transactionType,
+          dateTime: data.date,
+          value: parseInt(data.value),
+          dateObject: formattedDate || new Date(0), // Default to epoch if parsing fails
+        };
+      });
+
+      // Sort transactions by date in descending order (latest → oldest)
+      transactions.sort((b, a) => a.dateObject.getTime() - b.dateObject.getTime());
+
+      console.log(transactions.length);
+      console.log(transactions);
+      setTransactionData(transactions as TransactionData[]);
     }
-  };
+  } catch (error) {
+    console.error("Error loading transactions:", error);
+  }
+};
+
   
   
   

@@ -4,7 +4,7 @@ import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import walletData from '../walletData.json';
 import ValidationModal from '../validationModal'; // Import the modal
-import { collection, getDocs, query, where } from 'firebase/firestore';
+import { collection, doc, getDoc, getDocs, query, where } from 'firebase/firestore';
 import { db } from '@/_dbconfig/dbconfig';
 import * as SecureStore from 'expo-secure-store';
 
@@ -14,27 +14,51 @@ export default function Transfer() {
   const [receiptName, setReceiptName] = useState('');
   const [receiptEmail, setReceiptEmail] = useState('');
   const [accountNumber, setAccountNumber] = useState('');
+  const [accountId, setAccountId] = useState('');
   const [modalVisible, setModalVisible] = useState(false);
+  const [walletBalance, setWalletBalance] = useState<number>(0); // State to hold wallet balance
   const [loading, setLoading] = useState(false);
 
   const handleContinue = async () => {
     // Validate the fields
-    if (!amount || !receiptName || !receiptEmail || !accountNumber) {
+    if (!amount || !receiptName || !receiptEmail || !accountNumber || parseInt(amount) > walletBalance || accountId === accountNumber) {
+      console.log(amount, receiptName, receiptEmail, accountNumber, parseInt(amount), walletBalance)
       setModalVisible(true); // Show the modal if any field is empty
     } else {
-      if(amount && receiptName && receiptEmail && accountNumber){
+      if(amount && receiptName && receiptEmail && accountNumber && parseInt(amount) < walletBalance){
         await SecureStore.setItemAsync('transferAmount', amount);
         await SecureStore.setItemAsync('transferReceiptName', receiptName);
         await SecureStore.setItemAsync('transferReceiptEmail', receiptEmail);
         await SecureStore.setItemAsync('transferAccountNumber', accountNumber);
+        await SecureStore.setItemAsync('transactionType', 'Transfer');
         router.push('./transferReviewTransaction');
       }
     }
   };
 
+  const loadWalletData = async () => {
+      try {
+        const uid = await SecureStore.getItemAsync('uid');
+        const accountId = await SecureStore.getItemAsync('accountId') || '';
+        if(uid){
+          const walletRef = doc(db, 'wallets', uid);
+          const walletSnap = await getDoc(walletRef);
+  
+          if (walletSnap.exists()) {
+              const walletData = walletSnap.data();
+              const currentBalance = walletData.balance || 0;
+              setWalletBalance(currentBalance);
+              setAccountId(accountId);
+          }
+        }
+      } catch (error) {
+    }
+  }
+
   useEffect(() => {
     const fetchTransferData = async () => {
       if (!accountNumber) {
+        loadWalletData()
         setReceiptName('');
         setReceiptEmail('');
         return;
@@ -95,6 +119,11 @@ export default function Transfer() {
               <View className="p-3">
                 <Text className="text-sm font-bold">Set Amount</Text>
               </View>
+              {(amount && parseFloat(amount) > walletBalance) ? (
+                <Text className='text-xs text-red-500 mb-2'>Amount exceeds current balance!</Text>
+              ) : (amount === '0') && (
+                <Text className='text-xs text-red-500 mb-2'>Amount cannot be zero!</Text>
+              )}
               <TextInput
                 className="px-4 bg-white py-1 rounded-2xl text-sm text-center"
                 keyboardType="number-pad"
@@ -103,7 +132,7 @@ export default function Transfer() {
               />
               <View className="p-3 flex flex-row gap-1">
                 <Ionicons name="wallet-outline" size={15} color="gray" />
-                <Text className="text-xs text-gray-500">Current balance: {`Php ${walletData.balance.toFixed(2)}`}</Text>
+                <Text className="text-xs text-gray-500">Current balance: {`Php ${walletBalance.toFixed(2)}`}</Text>
               </View>
             </View>
 
@@ -111,6 +140,11 @@ export default function Transfer() {
               <View className="p-3">
                 <Text className="text-sm font-bold">Receipt Account Number</Text>
               </View>
+              {(accountId && accountId === accountNumber) ? (
+                <Text className='text-xs text-red-500 mb-2'>You cannot transfer money to yourself.</Text>
+              ) : (accountNumber === '0') && (
+                <Text className='text-xs text-red-500 mb-2'>Invalid Account Id</Text>
+              )}
               <TextInput
                 className="px-4 bg-white py-1 rounded-2xl text-sm"
                 value={accountNumber}
@@ -152,7 +186,7 @@ export default function Transfer() {
 
           <ValidationModal
             visible={modalVisible}
-            message=""
+            message="Invalid or missing input fields"
             onClose={() => setModalVisible(false)}
           />
         </View>

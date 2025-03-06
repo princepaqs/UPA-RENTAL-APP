@@ -25,7 +25,7 @@ interface Property {
 
 export default function Favorite() {
   const router = useRouter();
-  const { addFavorite, removeFavorite } = useAuth();
+  const { addFavorite, removeFavorite, listenForLogout } = useAuth();
   
   const [favorites, setFavorites] = useState<{ [key: string]: boolean }>({});
   const [refreshing, setRefreshing] = useState(false);
@@ -136,6 +136,7 @@ const fetchFavoriteData = async () => {
 
   useEffect(() => {
     fetchFavoriteData();
+    listenForLogout();
   }, []);
 
   const newMessage = 1;

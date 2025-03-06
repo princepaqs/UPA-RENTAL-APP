@@ -75,6 +75,8 @@ export default function LoginPin() {
     if(!transactionType || !transactionPaymentId || !transactionOwnerId || !transactionDate || !transactionLeaseStart || !transactionLeaseEnd || !transactionAmount || !transactionStatus){
       Alert.alert('Error', 'Missing fields')
       return routes = '';
+    } else if (transactionType === 'Transfer') {
+      return routes = '/Transfer/transferReceipt';
     }
     switch(routes){
       case '/TopUp/receiptTransaction': 
@@ -92,6 +94,10 @@ export default function LoginPin() {
         sendNotification(uid, 'wallet-withdraw', 'Withdraw Successful', `Your wallet has been successfully withdrawn ₱${transactionAmount}. You can now use the funds for payments and transactions.`, 'Success', 'Unread')
         addWalletTransaction(uid, transactionType, '', transactionDate, transactionAmount, '');
         return './Withdraw/withdrawReceipt';
+      case '/Transfer/transferReceipt': 
+        sendNotification(uid, 'wallet-withdraw', 'Withdraw Successful', `Your wallet has been successfully withdrawn ₱${transactionAmount}. You can now use the funds for payments and transactions.`, 'Success', 'Unread')
+        // addWalletTransaction(uid, transactionType, '', transactionDate, transactionAmount, '');
+        return './Transfer/transferReceipt';
       default: return 'defaultFallbackRoute';
     }
   }  

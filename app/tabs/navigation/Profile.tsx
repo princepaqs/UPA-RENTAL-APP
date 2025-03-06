@@ -19,7 +19,7 @@ const dummyData = {
 
 export default function Profile() {
   const router = useRouter();
-  const { logout } = useAuth();
+  const { logout, listenForLogout } = useAuth();
   const [fullName, setFullName] = useState<string | null>(null);
   const [profilePicUrl, setProfilePicUrl] = useState<string | null>(null);
   const [accountId, setAccountId] = useState<string | null>(null);
@@ -81,6 +81,7 @@ export default function Profile() {
 
   useEffect(() => {
     fetchUserData();
+    listenForLogout();
   }, []);
 
   const handleCopyAccountId = (accountId: string | null) => {
