@@ -29,6 +29,13 @@ export default function ReportIssue() {
   // Modal state for confirmation
   const [confirmationModalVisible, setConfirmationModalVisible] = useState(false);
 
+  const generateTransactionID = () => {
+    const now = new Date();
+    const date = now.toISOString().slice(0, 10).replace(/-/g, ''); // Format YYYYMMDD
+    const randomNumbers = Math.floor(1000 + Math.random() * 9000); // Generate 4 random digits
+    return `${date}${randomNumbers}`; // Format: YYYYMMDDXXXX
+};
+
   const handleSubmit = () => {
     // Open the confirmation modal
     setConfirmationModalVisible(true);
@@ -49,7 +56,7 @@ export default function ReportIssue() {
 
     if(user){
       console.log(user?.userFullName, user?.userAccountId, transactionID, description);
-      followUpReport(user?.userId, user?.userFullName, user?.userAccountId, transactionID, description);
+      followUpReport(user?.userFullName, user?.userAccountId, 'Follow-up Report', generateTransactionID(), description);
       router.back();
     }
     Alert.alert("Report Issue", "Your report has been successfully submitted. It will be reviewed and handled promptly.")

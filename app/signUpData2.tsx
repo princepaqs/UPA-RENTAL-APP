@@ -51,7 +51,7 @@ const toggleConfirmPasswordVisibility = () => setConfirmPasswordVisible(!confirm
 
 // Function to validate password requirements
 const isPasswordValid = (password: string) => {
-  return /^(?=.*[0-9])(?=.*[!@#$%^&*])[A-Za-z\d!@#$%^&*]{8,}$/.test(password);
+  return /^(?=.*[0-9])(?=.*[!@#$%^&*])[A-Za-z\d!@#$%^&*\.]{8,}$/.test(password);
 };
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -116,7 +116,7 @@ const isPasswordValid = (password: string) => {
   const validatePassword = (password: string) => {
     // Regular expression: At least 8 characters, 1 special character, and 1 number
     // const passwordRegex = /^(?=.*[0-9])(?=.*[!@#$%^&*])(?=.{8,})/;
-    const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)(?=.*[!@#$%^&*]).{8,}$/;
+    const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)(?=.*[!@#$%^&*\.]).{8,}$/;
 
     if (!passwordRegex.test(password)) {
       setPasswordError('Password must have at least 8 characters, 1 special character, and 1 number.');

@@ -21,7 +21,7 @@ export default function Transfer() {
 
   const handleContinue = async () => {
     // Validate the fields
-    if (!amount || !receiptName || !receiptEmail || !accountNumber || parseInt(amount) > walletBalance || accountId === accountNumber) {
+    if (!amount || !receiptName || !receiptEmail || !accountNumber || parseInt(amount) > walletBalance || accountId === accountNumber || receiptName === 'Account not found' || receiptEmail === 'Email not found') {
       console.log(amount, receiptName, receiptEmail, accountNumber, parseInt(amount), walletBalance)
       setModalVisible(true); // Show the modal if any field is empty
     } else {

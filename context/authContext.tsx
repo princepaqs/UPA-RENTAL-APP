@@ -97,6 +97,7 @@ export const AuthContextProvider = ({ children }: { children: ReactNode }) => {
             await SecureStore.setItemAsync('uid', user.uid);
             const userDocRef = doc(db, 'users', user.uid);
             const userDocSnap = await getDoc(userDocRef);
+            await SecureStore.deleteItemAsync('isPropertyOwner');
 
             if (userDocSnap.exists()) {
                 const userData = userDocSnap.data();
@@ -1501,6 +1502,7 @@ export const AuthContextProvider = ({ children }: { children: ReactNode }) => {
         try {
             const uid = await SecureStore.getItemAsync('uid')
             const reportIssueData = {
+                createdAt: new Date(),
                 reportId: generateTransactionID(),
                 fullName,
                 accountId,
@@ -1510,7 +1512,8 @@ export const AuthContextProvider = ({ children }: { children: ReactNode }) => {
             }
 
             if(reportIssueData && uid){
-                await setDoc(doc(db, 'issueReports', reportIssueData.reportId), reportIssueData)
+                await setDoc(doc(db, 'issueReports', reportIssueData.reportId), reportIssueData);
+                sendMessage(uid, 'cvz6NsXRDec8hycylRK6vgKOL8d2', `REPORT AN ISSUE\n\n${reportIssueData.reportId}\n${reportIssueData.fullName || 'Unknown'}\n${reportIssueData.accountId || ''}\n${reportIssueData.issue || 'General'}\n${reportIssueData.issueId || ''}\n${reportIssueData.description || 'No description available'}`);
                 console.log('Report issue successful');
                 sendNotification(uid, 'report-issue', 'Issue Report Submitted', 'Your issue report has been successfully received. Our team will review it and get back to you shortly.', 'Success', 'Unread')
             }
@@ -1523,6 +1526,7 @@ export const AuthContextProvider = ({ children }: { children: ReactNode }) => {
         try {
             const uid = await SecureStore.getItemAsync('uid')
             const followUpReportData = {
+                createdAt: new Date(),
                 reportId: generateTransactionID(),
                 fullName,
                 accountId,
@@ -1533,6 +1537,7 @@ export const AuthContextProvider = ({ children }: { children: ReactNode }) => {
 
             if(followUpReportData && uid){
                 await setDoc(doc(db, 'followUp', followUpReportData.reportId), followUpReportData)
+                sendMessage('cvz6NsXRDec8hycylRK6vgKOL8d2', uid, `FOLLOW UP REPORT\n\n${followUpReportData.reportId}\n${followUpReportData.fullName || 'Unknown'}\n${followUpReportData.accountId || ''}\n${followUpReportData.issue || 'General'}\n${followUpReportData.issueId || ''}\n${followUpReportData.description || 'No description available'}`);
                 console.log('Follow-up report successful');
                 sendNotification(uid, 'follow-up-report', 'Follow-up Report Submitted', 'Your follow-up report has been successfully received. Our team will review it and get back to you shortly.', 'Success', 'Unread')
             }

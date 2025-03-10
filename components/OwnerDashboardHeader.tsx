@@ -3,7 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { AntDesign, Feather } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { onSnapshot, query, where, collection, Timestamp } from 'firebase/firestore';
-import { db } from '../_dbconfig/dbconfig.tsx';
+import { db } from '../_dbconfig/dbconfig';
 import * as SecureStore from 'expo-secure-store';
 
 interface Message {

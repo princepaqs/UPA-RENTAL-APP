@@ -503,7 +503,7 @@ const handlePhoneCall = () => {
             <View className='gap-3 flex flex-row items-center justify-start border-gray-200'>
               <Feather name='map-pin' size={15} color="black" />
               <Text className={`text-xs font-normal ${propertyData ? '' : 'bg-gray-200 w-1/2 rounded-xl'}`}>
-                {propertyData ? `${propertyData.homeAddress}, ${propertyData.barangay}, ${propertyData.city}, ${propertyData.region}` : ''}
+                {propertyData && (userData?.accountStatus !== 'In-review' || 'Pending') ? `${propertyData.homeAddress}, ${propertyData.barangay}, ${propertyData.city}, ${propertyData.region}` : ''}
               </Text>
             </View>
           </View>
