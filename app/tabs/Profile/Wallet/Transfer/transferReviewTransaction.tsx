@@ -48,6 +48,7 @@ export default function TransferReviewTransaction() {
       day: '2-digit',
       hour: 'numeric',
       minute: 'numeric',
+      second: 'numeric',
       hour12: true,
     });
   };

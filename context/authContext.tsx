@@ -975,6 +975,28 @@ export const AuthContextProvider = ({ children }: { children: ReactNode }) => {
             const propertyPetPolicy = await SecureStore.getItemAsync('editpropertyPetPolicy');
             const propertyHouseRules = await SecureStore.getItemAsync('editpropertyHouseRules');
 
+            console.log(ownerId, propertyId);
+                console.log(propertyPetPolicy, propertyHouseRules);
+                console.log("propertyName:", propertyName);
+                console.log("propertyType:", propertyType);
+                console.log("noOfBedrooms:", noOfBedrooms);
+                console.log("noOfBathrooms:", noOfBathrooms);
+                console.log("noOfTenants:", noOfTenants);
+                console.log("furnishing:", furnishing);
+                console.log("images:", images);
+                console.log("propertyHomeAddress:", propertyHomeAddress);
+                console.log("propertyRegion:", propertyRegion);
+                console.log("propertyCity:", propertyCity);
+                console.log("propertyBarangay:", propertyBarangay);
+                console.log("propertyZipCode:", propertyZipCode);
+                console.log("propertyLatitude:", propertyLatitude);
+                console.log("propertyLongitude:", propertyLongitude);
+                console.log("propertyMonthlyRent:", propertyMonthlyRent);
+                console.log("propertyLeaseDuration:", propertyLeaseDuration);
+                console.log("propertySecurityDepositMonth:", propertySecurityDepositMonth);
+                console.log("propertySecurityDepositAmount:", propertySecurityDepositAmount);
+                console.log("propertyAdvancePaymentAmount:", propertyAdvancePaymentAmount);
+
             if (!propertyName && !propertyType && !noOfBedrooms && !noOfBathrooms && !noOfTenants && 
                 !furnishing && images.length === 0 && !propertyHomeAddress && !propertyRegion && 
                 !propertyCity && !propertyBarangay && !propertyZipCode && !propertyLatitude && 
@@ -983,8 +1005,7 @@ export const AuthContextProvider = ({ children }: { children: ReactNode }) => {
                 !propertyAdvancePaymentAmount) {
 
                 // Handle missing data, for example, show an alert, set defaults, or navigate
-                console.log(ownerId, propertyId);
-                console.log(propertyPetPolicy, propertyHouseRules);
+                
 
                 if (ownerId && propertyId) {
                     await updateDoc(doc(db, 'properties', ownerId, 'properties', propertyId), { 
@@ -1029,7 +1050,7 @@ export const AuthContextProvider = ({ children }: { children: ReactNode }) => {
                         uploadedImageUrls.push(imageUrl);
                     }
 
-                    await updateDoc(doc(db, 'properties', ownerId, 'properties', propertyId), { 
+                    await updateDoc(doc(db, 'properties', ownerId, 'propertyId', propertyId), { 
                         propertyName, 
                         propertyType, 
                         noOfBedrooms, 
@@ -1053,6 +1074,7 @@ export const AuthContextProvider = ({ children }: { children: ReactNode }) => {
                         propertyHouseRules
                     });
                     Alert.alert('Success', 'Successfully updated property with all details.');
+                    router.replace('../ViewPropertyDetails');
                     sendNotification(ownerId, 'property-edit', 'Property Details Updated', `The details for ${propertyName} have been successfully updated.`, 'Success', 'Unread');
                 } else {
                     Alert.alert('Error', 'Error updating property.');
@@ -1100,8 +1122,9 @@ export const AuthContextProvider = ({ children }: { children: ReactNode }) => {
             }
 
             await deleteDoc(doc(db, 'properties', ownerId, 'propertyId', propertyId));
+            router.replace('../PropertyDashboard');
         } catch (error) {
-            Alert.alert('Error', `${error}`);
+            Alert.alert('Error Test', `${error}`);
             sendNotification(ownerId, 'property-delete', 'Property Deletion Failed', `The property could not be deleted due to an ongoing contract or transaction. Please resolve the active agreements before attempting to delete the property.`, 'Rejected', 'Unread');
         }
     }

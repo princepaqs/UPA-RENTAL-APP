@@ -73,6 +73,7 @@ export default function WithdrawReviewTransaction() {
         day: '2-digit',
         hour: 'numeric',
         minute: 'numeric',
+        second: 'numeric',
         hour12: true,
     }); // Formats the date and time based on the user's locale
   };

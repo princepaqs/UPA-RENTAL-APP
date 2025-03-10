@@ -47,10 +47,12 @@ interface Contract {
 
 interface Property {
     id: string;
+    ownerId: string;
     propertyName: string;
     propertyType: string;
     noOfBedrooms: string;
     noOfBathrooms: string;
+    noOfTenants: string;
     furnishing: string;
     propertyWaterFee: string;
     propertyElectricFee: string;
@@ -98,11 +100,11 @@ export default function ViewPropertyDetails() {
   const handleDeleteConfirm = () => {
     // Handle the delete action here
     setDeleteModalVisible(false);
-    if(contractData){
-        deleteProperty(contractData?.propertyId, contractData?.propertyId);    
+    if(propertyData){
+        deleteProperty(propertyData?.id, propertyData?.ownerId);    
         console.log("Property deleted");
     }else{
-        console.log("Error");
+        console.log("Error deleting property", contractData);
     }
     
     
@@ -151,10 +153,12 @@ export default function ViewPropertyDetails() {
 
                     setPropertyData({
                         id: propertyId,
+                        ownerId: ownerId,
                         propertyName: data.propertyName,
                         propertyType: 'Condo',
                         noOfBedrooms: data.noOfBedrooms,
                         noOfBathrooms: data.noOfBathrooms,
+                        noOfTenants: data.noOfTenants,
                         furnishing: data.furnishing,
                         propertyWaterFee: data.propertyWaterFee,
                         propertyElectricFee: data.propertyElectricFee,
@@ -421,9 +425,7 @@ export default function ViewPropertyDetails() {
                         <View className='flex-row space-x-2 items-center'>
                             <Octicons name="location" size={14} color="black" />
                             <Text className='text-xs'>
-                            {`${propertyData?.homeAddress}, ${propertyData?.barangay}, ${propertyData?.city}, ${propertyData?.region}`.length > 40
-                                ? `${propertyData?.homeAddress}, ${propertyData?.barangay}, ${propertyData?.city}, ${propertyData?.region}`.slice(0, 40) + '...'
-                                : `${propertyData?.homeAddress}, ${propertyData?.barangay}, ${propertyData?.city}, ${propertyData?.region}`}
+                            {`${propertyData?.homeAddress}, ${propertyData?.barangay}, ${propertyData?.city}, ${propertyData?.region}`}
                             </Text>
                         </View>
                     </View>
@@ -443,6 +445,16 @@ export default function ViewPropertyDetails() {
                             <Text className={`text-sm text-[#6B6A6A] ${propertyData ? '' : 'bg-gray-200 w-1/2 rounded-xl'}`}>
                                 {propertyData ? 
                                 `${propertyData?.noOfBathrooms} ${parseInt(propertyData.noOfBathrooms) > 1 ? 'Bathrooms' : 'Bathroom'}` 
+                                : ''
+                                }
+                            </Text>
+                        </View>
+
+                        <View className='flex flex-row items-center space-x-4'>
+                            <MaterialIcons name="bed" size={18} color="black" />
+                            <Text className={`text-sm text-[#6B6A6A] ${propertyData ? '' : 'bg-gray-200 w-1/2 rounded-xl'}`}>
+                                {propertyData ? 
+                                `${propertyData?.noOfTenants} ${parseInt(propertyData?.noOfTenants) > 1 ? 'Tenants' : 'Tenant'}` 
                                 : ''
                                 }
                             </Text>
@@ -483,7 +495,7 @@ export default function ViewPropertyDetails() {
                     ) : (
                         <View className='flex flex-row items-center justify-between'>
                         <Text className='text-sm text-[#6B6A6A]'>
-                            Deposit Month
+                            Security Deposit Month
                         </Text>
                         <Text className='text-sm text-[#6B6A6A]'>
                             
@@ -498,7 +510,7 @@ export default function ViewPropertyDetails() {
                     ) : (
                         <View className='flex flex-row items-center justify-between'>
                         <Text className='text-sm text-[#6B6A6A]'>
-                            Deposit Amount
+                            Security Deposit Amount
                         </Text>
                         <Text className='text-sm text-[#6B6A6A]'>      
                             ₱{parseInt(propertyData?.propertySecurityDepositAmount).toLocaleString()}

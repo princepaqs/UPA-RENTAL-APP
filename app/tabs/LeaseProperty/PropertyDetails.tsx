@@ -24,6 +24,7 @@ interface Property {
   propertyName: string;
   propertyType: string;
   noOfBedrooms: string;
+  noOfTenants: string;
   noOfBathrooms: string;
   furnishing: string;
   propertyWaterFee: string;
@@ -230,6 +231,7 @@ const handlePhoneCall = () => {
             propertyName: data.propertyName,
             propertyType: 'Condo',
             noOfBedrooms: data.noOfBedrooms,
+            noOfTenants: data.noOfTenants,
             noOfBathrooms: data.noOfBathrooms,
             furnishing: data.furnishing,
             propertyWaterFee: data.propertyWaterFee,
@@ -307,7 +309,7 @@ const handlePhoneCall = () => {
     <View className='bg-[#B33939]'>
       <View className='h-screen bg-gray-100 mt-14 py-8 rounded-t-2xl'>
       <View className='flex flex-row items-center justify-between px-8 py-3'>
-                <TouchableOpacity onPress={() => router.back()}>
+                <TouchableOpacity onPress={() => router.replace('./PropertyDashboard')}>
                 <View className="flex flex-row items-center">
                     <Ionicons name="chevron-back-circle-outline" size={25} color="black" />
                 </View>
@@ -390,7 +392,7 @@ const handlePhoneCall = () => {
             <View className='gap-3 flex flex-row items-center justify-start pb-5 border-b border-gray-200'>
               <Feather name='map-pin' size={15} color="black" />
               <Text className={`text-xs font-normal ${propertyData ? '' : 'bg-gray-200 w-1/2 rounded-xl'}`}>
-                {propertyData ? `${propertyData.barangay}, ${propertyData.city}, ${propertyData.region}` : ''}
+                {propertyData ? `${propertyData.homeAddress}, ${propertyData.barangay}, ${propertyData.city}, ${propertyData.region}` : ''}
               </Text>
             </View>
           </View>
@@ -455,6 +457,16 @@ const handlePhoneCall = () => {
               <Text className={`text-sm text-[#6B6A6A] ${propertyData ? '' : 'bg-gray-200 w-1/2 rounded-xl'}`}>
                 {propertyData ? 
                   `${propertyData.noOfBathrooms} ${parseInt(propertyData.noOfBathrooms) > 1 ? 'Bathrooms' : 'Bathroom'}` 
+                  : ''
+                }
+              </Text>
+            </View>
+
+            <View className='flex flex-row items-center gap-4 py-2'>
+              <Feather name='home' size={20} color='black' />
+              <Text className={`text-sm text-[#6B6A6A] ${propertyData ? '' : 'bg-gray-200 w-1/2 rounded-xl'}`}>
+                {propertyData ? 
+                  `${propertyData.noOfTenants} ${parseInt(propertyData.noOfTenants) > 1 ? 'Tenants' : 'Tenant'}` 
                   : ''
                 }
               </Text>
@@ -563,7 +575,7 @@ const handlePhoneCall = () => {
               ) : (
                 <View className='flex flex-row items-center justify-between'>
                   <Text className='text-sm text-[#6B6A6A]'>
-                    Deposit Month
+                    Security Deposit Month
                   </Text>
                   <Text className='text-sm text-[#6B6A6A]'>
                     
@@ -578,7 +590,7 @@ const handlePhoneCall = () => {
               ) : (
                 <View className='flex flex-row items-center justify-between'>
                   <Text className='text-sm text-[#6B6A6A]'>
-                    Deposit Amount
+                    Security Deposit Amount
                   </Text>
                   <Text className='text-sm text-[#6B6A6A]'>      
                     ₱{parseInt(propertyData?.propertySecurityDepositAmount).toLocaleString()}
