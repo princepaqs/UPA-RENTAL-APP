@@ -86,14 +86,14 @@ export default function RentalHistory() {
   
         const propertyTransactionsQuery = query(
           propertyTransactionsRef,
-          where('paymentStatus', '==', 'ongoing'), // change to done
+          where('paymentStatus', '==', 'done'), // change to done
           where('tenantId', '==', uid)
         );
         const propertyTransactionsSnapshot = await getDocs(propertyTransactionsQuery);
   
         const rentTransactionsQuery = query(
           rentTransactionsRef,
-          where('status', '==', 'Rented'), // change to rentalEndDate <= today
+          where('rentalEndDate', '<=', today), // change to rentalEndDate <= today
           where('tenantId', '==', uid)
         );
         const rentTransactionsSnapshot = await getDocs(rentTransactionsQuery);

@@ -225,7 +225,7 @@ export default function SignIn() {
       </View>
 
       <View className='items-center py-5'>
-        <Text className='text-xs text-gray-300 font-bold'>v2.0.8</Text>
+        <Text className='text-xs text-gray-300 font-bold'>v2.0.9</Text>
       </View>
 
       {/* Error Modal */}

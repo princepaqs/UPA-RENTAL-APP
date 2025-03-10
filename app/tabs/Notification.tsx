@@ -77,12 +77,17 @@ export default function Notification() {
               });
             });
   
-            // Sort notifications by date in descending order
             fetchedNotifications.sort((a, b) => {
-              const dateA = new Date(a.date);
-              const dateB = new Date(b.date);
-              return dateB.getTime() - dateA.getTime(); // descending order
+              const [monthA, dayA, yearA] = a.date.split('/').map(Number);
+              const [monthB, dayB, yearB] = b.date.split('/').map(Number);
+              
+              const dateA = new Date(yearA, monthA - 1, dayA); // Month is zero-based in JS Date
+              const dateB = new Date(yearB, monthB - 1, dayB);
+              
+              return dateB.getTime() - dateA.getTime(); // Descending order
             });
+            
+
   
             console.log(fetchedNotifications);
             // Update the notifications state with the real-time data

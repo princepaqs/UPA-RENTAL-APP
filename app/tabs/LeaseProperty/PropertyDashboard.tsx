@@ -2,7 +2,7 @@ import { View, Text, Image, TouchableOpacity, TextInput, ScrollView, Animated, A
 import React, { useState, useEffect, useRef } from 'react';
 import { AntDesign, Feather, FontAwesome5, FontAwesome6, Fontisto, Ionicons, MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import { collection, getDocs, query, where, doc, getDoc } from 'firebase/firestore';
+import { collection, getDocs, query, where, doc, getDoc, onSnapshot } from 'firebase/firestore';
 import { db, storage } from '../../../_dbconfig/dbconfig';
 import { getDownloadURL, ref } from "firebase/storage";
 import * as SecureStore from 'expo-secure-store';
@@ -58,96 +58,95 @@ const vacantCount = properties.filter(property => property.status === 'Available
     router.push('./Property/ViewPropertyDetails')
   }
 
+  useEffect(() => {
+    let unsubscribeProperties: (() => void) | null = null;
+    let unsubscribeTransactions: (() => void) | null = null;
+  
     const fetchPropertyData = async () => {
       try {
         const uid = await SecureStore.getItemAsync('uid') || 'error';
         await SecureStore.setItemAsync('userId', uid);
   
-        // Get the document that contains all the propertyIds
-        const propertyIdsRef = collection(db, 'properties', uid, 'propertyId'); // Adjust to your structure
-        const propertyIdsSnapshot = await getDocs(propertyIdsRef); // Fetch all property IDs
+        const propertyIdsRef = collection(db, 'properties', uid, 'propertyId');
   
-        if (!propertyIdsSnapshot.empty) {
-          const propertiesList = await Promise.all(
-            propertyIdsSnapshot.docs.map(async (propertyDoc) => {
-              const propertyId = propertyDoc.id; // Get the propertyId
-              const propertyRef = doc(db, 'properties', uid, 'propertyId', propertyId); // Fetch property data for each propertyId
-              const propertySnapshot = await getDoc(propertyRef);
+        // **Real-time listener for property changes**
+        unsubscribeProperties = onSnapshot(propertyIdsRef, async (propertyIdsSnapshot) => {
+          if (!propertyIdsSnapshot.empty) {
+            const propertiesList = await Promise.all(
+              propertyIdsSnapshot.docs.map(async (propertyDoc) => {
+                const propertyId = propertyDoc.id; // Get the propertyId
+                const propertyData = propertyDoc.data();
   
-              if (propertySnapshot.exists()) {
-                const propertyData = propertySnapshot.data();
-  
-                // Assuming the propertyData contains the necessary fields
+                // Fetch first image URL
                 const firstImageUri = propertyData.images && propertyData.images.length > 0 
-                  ? await getImageUrl(propertyId, propertyData.images[0]) // Fetch the first image URL
+                  ? await getImageUrl(propertyId, propertyData.images[0]) 
                   : null;
-
-                  const transactionsRef = collection(db, 'propertyTransactions');
-                  const q = query(
-                    transactionsRef,
-                    where('ownerId', '==', uid)
-                  );
-
-                  try {
-                    // Get all transactions where the owner is the current UID
-                    const transactionsSnapshot = await getDocs(q);
-
-                    // Create a map to store the status of each transaction by propertyId
-                    const transactionStatusMap: Record<string, string> = {};
-
-                    // Populate the map with transaction data
-                    transactionsSnapshot.docs.forEach(doc => {
-                      const transactionData = doc.data();
-                      const propertyId = transactionData.propertyId;
-                      const status = transactionData.status; // Add fallback if status is missing
-                      transactionStatusMap[propertyId] = status;
-                    });
-
-                    // Return property data with the corresponding status from transactions
-                    return {
-                      id: propertyId.toString(), // Ensure it's a string
-                      name: propertyData.propertyName,
-                      price: propertyData.propertyMonthlyRent,
-                      status: transactionStatusMap[propertyId]|| 'Available', 
-                      location: propertyData.propertyCity,
-                      image: firstImageUri ? { uri: firstImageUri } : require('../../../assets/images/property1.png'),
-                    };
-                  } catch (error) {
-                    console.error('Error fetching transaction statuses:', error);
-                    return null;
-                  }
-              } else {
-                //(`Property with ID ${propertyId} does not exist.`);
-                return null;
-              }
-            })
-          );
   
-          // Filter out any null values in case some properties didn't exist
-          const validProperties = propertiesList.filter(property => property !== null);
-          setProperties(validProperties);
-          setFilteredProperties(validProperties);
-        } else {
-          //console.log("No property IDs found for this user.");
-        }
+                return {
+                  id: propertyId.toString(),
+                  name: propertyData.propertyName,
+                  price: propertyData.propertyMonthlyRent,
+                  location: propertyData.propertyCity,
+                  image: firstImageUri ? { uri: firstImageUri } : require('../../../assets/images/property1.png'),
+                  status: propertyData.status, // Default status
+                };
+              })
+            );
+  
+            setProperties(propertiesList);
+            setFilteredProperties(propertiesList);
+          }
+        });
+  
+        // **Real-time listener for transaction changes**
+        const transactionsRef = collection(db, 'propertyTransactions');
+        const transactionQuery = query(transactionsRef, where('ownerId', '==', uid));
+  
+        unsubscribeTransactions = onSnapshot(transactionQuery, (transactionsSnapshot) => {
+          const transactionStatusMap: Record<string, string> = {};
+  
+          transactionsSnapshot.docs.forEach(doc => {
+            const transactionData = doc.data();
+            const propertyId = transactionData.propertyId;
+            const status = transactionData.status || 'Available';
+            transactionStatusMap[propertyId] = status;
+          });
+  
+          // Update property status based on transactions
+          setProperties((prevProperties) =>
+            prevProperties.map(property => ({
+              ...property,
+              status: transactionStatusMap[property.id] || 'Available',
+            }))
+          );
+        });
       } catch (error) {
         console.error('Failed to retrieve property data from Firestore:', error);
       } finally {
         setLoading(false);
       }
     };
+  
+    fetchPropertyData();
+  
+    return () => {
+      if (unsubscribeProperties) unsubscribeProperties();
+      if (unsubscribeTransactions) unsubscribeTransactions();
+    };
+  }, []);
+  
 
 
   const [refreshing, setRefreshing] = useState(false);
   const onRefresh = async () => {
     setRefreshing(true);
-    await fetchPropertyData(); // This will shuffle the properties again
+    // await fetchPropertyData(); // This will shuffle the properties again
     setRefreshing(false);
   };
   
-  useEffect(() => {
-    fetchPropertyData();
-  }, []);
+  // useEffect(() => {
+  //   fetchPropertyData();
+  // }, []);
 
   return (
     <View className="px-6 flex-1 ">
@@ -284,18 +283,18 @@ const vacantCount = properties.filter(property => property.status === 'Available
                           className="w-2.5 h-2.5 rounded-full"
                           style={{
                             backgroundColor:
-                            property?.status === 'Approved'
+                            property?.status === 'Occupied'
                                 ? 'green'
-                                : property?.status === 'Occupied'
+                                : property?.status === 'Approved'
                                   ? 'black'
                                   : 'blue', // fallback color for other statuses
                           }}
                         ></Text>
                         <Text numberOfLines={1} ellipsizeMode="tail" className="text-xs font-bold" style={{
                             color:
-                            property?.status === 'Approved'
+                            property?.status === 'Occupied'
                                 ? 'green'
-                                : property?.status === 'Occupied'
+                                : property?.status === 'Approved'
                                   ? 'black'
                                   : 'blue', // fallback color for other statuses
                           }}>

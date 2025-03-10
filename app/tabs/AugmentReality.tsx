@@ -154,18 +154,18 @@ const toRad = (deg: number) => {
   }, [scale]);
 
   // Array of property locations with latitudes, longitudes, and property details
-  const propertyLocations = [
-    { latitude: 14.6501399, longitude: 120.9933554, title: 'Trillion Game Inc.', price: '10,000' },
-    { latitude: 14.6551901, longitude: 120.9757201 , title: 'Skyline Towers', price: '50,000' },
-    { latitude: 14.6170150, longitude: 120.9835250, title: 'Oceanview Residence', price: '30,000' },
-    { latitude: 14.5944130, longitude: 120.9798530, title: 'City Plaza', price: '15,500' },
-    { latitude: 14.6022820, longitude: 120.9831670, title: 'Sunset Apartments', price: '80,000' },
-    { latitude: 14.5679050, longitude: 120.9746950, title: 'Greenfield Residences', price: '20,000' },
-    { latitude: 14.6391120, longitude: 120.9852800, title: 'The Grand Palace', price: '120,000' },
-    { latitude: 14.6489840, longitude: 120.9913640, title: 'Central Business Hub', price: '60,000' },
-    { latitude: 14.6131340, longitude: 120.9865840, title: 'Lakeside Condos', price: '35,000' },
-    { latitude: 14.6002650, longitude: 120.9686420, title: 'Bayview Residences', price: '90,000' }
-  ];
+  // const propertyLocations = [
+  //   { latitude: 14.6501399, longitude: 120.9933554, title: 'Trillion Game Inc.', price: '10,000' },
+  //   { latitude: 14.6551901, longitude: 120.9757201 , title: 'Skyline Towers', price: '50,000' },
+  //   { latitude: 14.6170150, longitude: 120.9835250, title: 'Oceanview Residence', price: '30,000' },
+  //   { latitude: 14.5944130, longitude: 120.9798530, title: 'City Plaza', price: '15,500' },
+  //   { latitude: 14.6022820, longitude: 120.9831670, title: 'Sunset Apartments', price: '80,000' },
+  //   { latitude: 14.5679050, longitude: 120.9746950, title: 'Greenfield Residences', price: '20,000' },
+  //   { latitude: 14.6391120, longitude: 120.9852800, title: 'The Grand Palace', price: '120,000' },
+  //   { latitude: 14.6489840, longitude: 120.9913640, title: 'Central Business Hub', price: '60,000' },
+  //   { latitude: 14.6131340, longitude: 120.9865840, title: 'Lakeside Condos', price: '35,000' },
+  //   { latitude: 14.6002650, longitude: 120.9686420, title: 'Bayview Residences', price: '90,000' }
+  // ];
 
   // Function to calculate the distance between two points using the Haversine formula
   function haversineDistance(lat1: number, lon1: number, lat2: number, lon2: number): number {
