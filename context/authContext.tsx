@@ -1537,7 +1537,7 @@ export const AuthContextProvider = ({ children }: { children: ReactNode }) => {
 
             if(followUpReportData && uid){
                 await setDoc(doc(db, 'followUp', followUpReportData.reportId), followUpReportData)
-                sendMessage('cvz6NsXRDec8hycylRK6vgKOL8d2', uid, `FOLLOW UP REPORT\n\n${followUpReportData.reportId}\n${followUpReportData.fullName || 'Unknown'}\n${followUpReportData.accountId || ''}\n${followUpReportData.issue || 'General'}\n${followUpReportData.issueId || ''}\n${followUpReportData.description || 'No description available'}`);
+                sendMessage(uid, 'cvz6NsXRDec8hycylRK6vgKOL8d2', `FOLLOW UP REPORT\n\n${followUpReportData.reportId}\n${followUpReportData.fullName || 'Unknown'}\n${followUpReportData.accountId || ''}\n${followUpReportData.issue || 'General'}\n${followUpReportData.issueId || ''}\n${followUpReportData.description || 'No description available'}`);
                 console.log('Follow-up report successful');
                 sendNotification(uid, 'follow-up-report', 'Follow-up Report Submitted', 'Your follow-up report has been successfully received. Our team will review it and get back to you shortly.', 'Success', 'Unread')
             }
