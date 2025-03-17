@@ -7,6 +7,7 @@ import * as SecureStore from 'expo-secure-store';
 
 import { getDownloadURL, ref } from 'firebase/storage'; // Firebase Storage import
 import { db, storage } from '../../../_dbconfig/dbconfig'; // Import your Firebase config
+import { useAuth } from '@/context/authContext';
 
 interface Reviews {
   id: string;
@@ -19,6 +20,7 @@ interface Reviews {
 }
 
 export default function Profile() {
+  const { sendNotification } = useAuth();
   const router = useRouter();
   const [fullName, setFullName] = useState<string | null>(null);
   const [profilePicUrl, setProfilePicUrl] = useState<string | null>(null);
@@ -104,7 +106,7 @@ export default function Profile() {
             await Promise.all(
               reviewSnapshot.docs.map(async (docu) => {
                 const data = docu.data();
-                const userRef = doc(db, 'users', data.uid);
+                const userRef = doc(db, 'users', data.senderId);
                 const userDoc = await getDoc(userRef);
   
                 if (userDoc.exists()) {
@@ -139,7 +141,9 @@ export default function Profile() {
           setReviews(reviewDatas); // Assign only valid Reviews objects
           console.log(reviewDatas);
         }else{
-          console.log('Empty')
+          // sendNotification('owekG7o0p2SoWT84l4yKAnm80LW2', 'feedback-property-owner', 'Lease Ended - Share Your Feedback', `Your tenant's lease has ended! We’d love to hear about your experience with the tenant and using the app. Please take a moment to answer a few questions to help us improve our services.`, 'Success', 'Unread')
+        
+          console.log('Empty reviews of profile')
         }
       } catch (error) {
         console.error('Error fetching user data:', error);
@@ -183,7 +187,7 @@ export default function Profile() {
   // Function to calculate the average rating
   const calculateAverageRating = () => {
     const totalRating = review.reduce((sum, review) => sum + review.ratings, 0); // Sum of all ratings
-    return (totalRating / 4).toFixed(1); // Calculate average and round to 1 decimal place
+    return (totalRating).toFixed(1); // Calculate average and round to 1 decimal place
   };
 
   const handleCopyAccountId = (accountId: string | null) => {

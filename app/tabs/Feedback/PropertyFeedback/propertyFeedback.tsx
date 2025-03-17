@@ -41,11 +41,13 @@ export default function propertyFeedback() {
         }
 
         const uid = await SecureStore.getItemAsync('reviewPropertyId') || 'test';
+        const senderId = await SecureStore.getItemAsync('uid');
         const reviewId = generateTransactionID()
 
         const feedbackData = {
             feedbackType: 'Property',
             uid,
+            senderId,
             ratings,
             comment,
             createdAt: new Date()

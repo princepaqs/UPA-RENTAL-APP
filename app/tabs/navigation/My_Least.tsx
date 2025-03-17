@@ -181,6 +181,7 @@ export default function MyLease() {
         // router.replace('../tabs/Feedback/PropertyFeedback/propertyFeedback') // Go to Reviews
         if (rentalEndDate === formattedToday) {
           console.log(`Skipping property ${propertyId} as rentalEndDate (${rentalEndDate}) is today.`);
+          sendNotification(ownerId, 'feedback-property-owner', 'Lease Ended - Share Your Feedback', `Your tenant's lease has ended! We’d love to hear about your experience with the tenant and using the app. Please take a moment to answer a few questions to help us improve our services.`, 'Success', 'Unread')
           sendNotification(tenantId, 'lease-end', 'Lease Ended - Share Your Feedback', 'Your lease has ended! We’d love to hear about your experience staying at the property, interacting with the landlord, and using the app. Please take a moment to answer a few questions to help us improve our services.', 'Success', 'Unread')
           router.replace('../tabs/Feedback/PropertyFeedback/propertyFeedback') // Go to Reviews
           await SecureStore.setItemAsync('reviewPropertyId', propertyId);

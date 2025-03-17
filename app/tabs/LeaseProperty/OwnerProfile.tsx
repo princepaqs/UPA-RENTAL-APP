@@ -6,6 +6,7 @@ import * as SecureStore from 'expo-secure-store';
 import { collection, getDocs, query, where, doc, getDoc, Timestamp } from 'firebase/firestore';
 import { getDownloadURL, ref } from 'firebase/storage'; // Firebase Storage import
 import { db, storage } from '../../../_dbconfig/dbconfig'; // Import your Firebase config
+import { useAuth } from '@/context/authContext';
 
 interface Reviews {
   id: string;
@@ -19,6 +20,7 @@ interface Reviews {
 
 export default function Profile() {
   const router = useRouter();
+    const { sendNotification, listenForLogout } = useAuth();
   const [fullName, setFullName] = useState<string | null>(null);
   const [profilePicUrl, setProfilePicUrl] = useState<string | null>(null);
   const [email, setEmail] = useState<string | null>(null);
@@ -79,9 +81,10 @@ useEffect(() => {
     const fetchUserData = async () => {
         const ownerId = await SecureStore.getItemAsync('userId');
         setAccountID(ownerId);
-
+          
         if (ownerId) {
             const userRef = await getDoc(doc(db, 'users', ownerId?.toString()));
+
             if (userRef.exists()) {
                 const userData = userRef.data();
 
@@ -155,7 +158,7 @@ useEffect(() => {
                           setReviews(reviewDatas); // Assign only valid Reviews objects
                           console.log(reviewDatas);
                         }else{
-                          console.log('Empty')
+                          console.log('Empty Reviews')
                         }
                     } catch (error) {
                         console.error('Error fetching profile picture:', error);

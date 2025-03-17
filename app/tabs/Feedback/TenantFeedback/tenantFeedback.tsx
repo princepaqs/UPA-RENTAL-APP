@@ -40,12 +40,14 @@ export default function tenantFeedback() {
             return;
         }
 
-        const uid = await SecureStore.getItemAsync('uid');
+        const senderId = await SecureStore.getItemAsync('uid');
+        const uid = await SecureStore.getItemAsync(''); // unknown path
         const reviewId = generateTransactionID()
 
         const feedbackData = {
             feedbackType: 'Tenant',
             uid,
+            senderId,
             ratings,
             comment,
             createdAt: new Date()
