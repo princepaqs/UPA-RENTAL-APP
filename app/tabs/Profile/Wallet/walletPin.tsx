@@ -86,7 +86,8 @@ export default function LoginPin() {
         return '../../../tabs/Profile/Wallet/TopUp/receiptTransaction';
       case '/Payment/paymentReceipt': 
         payRent(transactionPaymentId, transactionOwnerId, uid, transactionAmount, transactionLeaseStart, transactionLeaseEnd);
-        sendNotification(uid, 'wallet-payment', 'Payment Successful', `Your payment of ₱${transactionAmount} has been successfully processed.`, 'Success', 'Unread')
+        sendNotification(uid, 'wallet-payment', 'Payment Successful', `Your payment of ₱${transactionAmount} has been successfully processed.`, 'Success', 'Unread');
+        sendNotification(transactionOwnerId, 'wallet-payment', 'Payment Successful', `Your tenant's payment of ₱${transactionAmount} has been successfully processed.`, 'Success', 'Unread')
         addWalletTransaction(uid, transactionType, transactionPaymentId, transactionDate, transactionAmount, transactionStatus);
         return '/Payment/paymentReceipt';
       case '/Withdraw/withdrawReceipt': 

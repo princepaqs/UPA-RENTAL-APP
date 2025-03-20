@@ -415,7 +415,7 @@ export const AuthContextProvider = ({ children }: { children: ReactNode }) => {
             });
             
             console.log('No Pin');
-            sendMessage('cvz6NsXRDec8hycylRK6vgKOL8d2', user.uid, 'Hello Juan! Welcome to UPA Support. How can we assist you today? We`re here to help with any questions or issues you may have!');
+            sendMessage('syiHymdlVKYFVGCNBKVW1Rxgba33', user.uid, 'Hello Juan! Welcome to UPA Support. How can we assist you today? We`re here to help with any questions or issues you may have!');
         
             console.log(`Pin has been set.`);
         } else {
@@ -1513,7 +1513,7 @@ export const AuthContextProvider = ({ children }: { children: ReactNode }) => {
 
             if(reportIssueData && uid){
                 await setDoc(doc(db, 'issueReports', reportIssueData.reportId), reportIssueData);
-                sendMessage(uid, 'cvz6NsXRDec8hycylRK6vgKOL8d2', `REPORT AN ISSUE\n\n${reportIssueData.reportId}\n${reportIssueData.fullName || 'Unknown'}\n${reportIssueData.accountId || ''}\n${reportIssueData.issue || 'General'}\n${reportIssueData.issueId || ''}\n${reportIssueData.description || 'No description available'}`);
+                sendMessage(uid, 'syiHymdlVKYFVGCNBKVW1Rxgba33', `REPORT AN ISSUE\n\n${reportIssueData.reportId}\n${reportIssueData.fullName || 'Unknown'}\n${reportIssueData.accountId || ''}\n${reportIssueData.issue || 'General'}\n${reportIssueData.issueId || ''}\n${reportIssueData.description || 'No description available'}`);
                 console.log('Report issue successful');
                 sendNotification(uid, 'report-issue', 'Issue Report Submitted', 'Your issue report has been successfully received. Our team will review it and get back to you shortly.', 'Success', 'Unread')
             }
@@ -1537,7 +1537,7 @@ export const AuthContextProvider = ({ children }: { children: ReactNode }) => {
 
             if(followUpReportData && uid){
                 await setDoc(doc(db, 'followUp', followUpReportData.reportId), followUpReportData)
-                sendMessage(uid, 'cvz6NsXRDec8hycylRK6vgKOL8d2', `FOLLOW UP REPORT\n\n${followUpReportData.reportId}\n${followUpReportData.fullName || 'Unknown'}\n${followUpReportData.accountId || ''}\n${followUpReportData.issue || 'General'}\n${followUpReportData.issueId || ''}\n${followUpReportData.description || 'No description available'}`);
+                sendMessage(uid, 'syiHymdlVKYFVGCNBKVW1Rxgba33', `FOLLOW UP REPORT\n\n${followUpReportData.reportId}\n${followUpReportData.fullName || 'Unknown'}\n${followUpReportData.accountId || ''}\n${followUpReportData.issue || 'General'}\n${followUpReportData.issueId || ''}\n${followUpReportData.description || 'No description available'}`);
                 console.log('Follow-up report successful');
                 sendNotification(uid, 'follow-up-report', 'Follow-up Report Submitted', 'Your follow-up report has been successfully received. Our team will review it and get back to you shortly.', 'Success', 'Unread')
             }

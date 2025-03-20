@@ -139,7 +139,7 @@ export default function MessageDashboard() {
             });
 
             if (isPropertyOwner === 'true') {
-              setMessages(formattedMessages.filter(message => message.userId1 !== 'cvz6NsXRDec8hycylRK6vgKOL8d2' && message.userId2 !== 'cvz6NsXRDec8hycylRK6vgKOL8d2')); // UPA ID
+              setMessages(formattedMessages.filter(message => message.userId1 !== 'syiHymdlVKYFVGCNBKVW1Rxgba33' && message.userId2 !== 'syiHymdlVKYFVGCNBKVW1Rxgba33')); // UPA ID
             } else {
               setMessages(formattedMessages);
             }
@@ -197,7 +197,7 @@ export default function MessageDashboard() {
       message.text.toLowerCase().includes(search.toLowerCase())
     )
     .sort((a, b) => {
-      const priorityId = "cvz6NsXRDec8hycylRK6vgKOL8d2"; // The specific user ID you're prioritizing
+      const priorityId = "syiHymdlVKYFVGCNBKVW1Rxgba33"; // The specific user ID you're prioritizing
 
       // Check if one of the messages belongs to the priority ID
       const isPriorityA = [a.userId1, a.userId2].includes(priorityId);

@@ -221,7 +221,7 @@ export default function paymentReceipt() {
             </Pressable>
             {loading ? ( // Show loading indicator when loading is true
                 <ActivityIndicator size="large" color="#D9534F" />
-            ) : (
+            ) : (receiptData && 
                 <View className='px-6 w-full'>
                     <TouchableOpacity
                         onPress={handleContinue}

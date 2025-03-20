@@ -345,12 +345,14 @@ export default function ApplicationDetails() {
               </View>
             </View>
           </View>
-          <TouchableOpacity
-            className="bg-[#D9534F] rounded-md py-2 px-3"
-            onPress={() => setModalVisible(true)} // Open modal on press
-          >
-            <Text className="text-white text-xs font-bold">Withdraw Application</Text>
-          </TouchableOpacity>
+          {details && (
+  <TouchableOpacity
+    className="bg-[#D9534F] rounded-md py-2 px-3"
+    onPress={() => setModalVisible(true)} // Open modal on press
+  >
+    <Text className="text-white text-xs font-bold">Withdraw Application</Text>
+  </TouchableOpacity>
+)}
         </View>
       </View>
     </View>

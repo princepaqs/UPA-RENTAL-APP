@@ -111,30 +111,30 @@ export default function TenantDetails() {
                           const profilePictureFileName = `${tenantId}-profilepictures`;
                           const profilePictureRef = ref(storage, `profilepictures/${profilePictureFileName}`);
                           profilePictureUrl = await getDownloadURL(profilePictureRef);
+
+                          setRentData({
+                            transactionId: transactionId,
+                            propertyId: rentData.propertyId,
+                            propertyName: propertyData.propertyName,
+                            propertyType: propertyData.propertyType,
+                            propertyAddress: `${propertyData.propertyHomeAddress}, ${propertyData.propertyBarangay}, ${propertyData.propertyCity}, ${propertyData.propertyRegion}`,
+                            propertyLeaseStart: rentData.propertyLeaseStart,
+                            propertyLeaseEnd: rentData.propertyLeaseEnd,
+                            propertyLeaseDuration: rentData.propertyLeaseDuration,
+                            propertyRentAmount: rentData.propertyRentAmount,
+                            propertySecurityDepositAmount: rentData.propertySecurityDepositAmount,
+                            propertySecurityDepositStatus: rentData.propertySecurityDepositStatus,
+                            propertyImage: propertyImage ? { uri: propertyImage } : require('../../../../assets/images/property1.png'),
+                            status: propertyData.status,
+                            tenantId: rentData.tenantId,
+                            tenantFullName: `${userData.firstName} ${userData.middleName} ${userData.lastName}`,
+                            tenantContactNo: userData.phoneNo,
+                            tenantImage: profilePictureUrl ? { uri: profilePictureUrl } : require('../../../../assets/images/profile.png')
+                          })
                         } catch (error) {
                           console.error('Error fetching profile picture:', error);
                         }
                       }
-
-                      setRentData({
-                        transactionId: transactionId,
-                        propertyId: rentData.propertyId,
-                        propertyName: propertyData.propertyName,
-                        propertyType: propertyData.propertyType,
-                        propertyAddress: `${propertyData.propertyHomeAddress}, ${propertyData.propertyBarangay}, ${propertyData.propertyCity}, ${propertyData.propertyRegion}`,
-                        propertyLeaseStart: rentData.propertyLeaseStart,
-                        propertyLeaseEnd: rentData.propertyLeaseEnd,
-                        propertyLeaseDuration: rentData.propertyLeaseDuration,
-                        propertyRentAmount: rentData.propertyRentAmount,
-                        propertySecurityDepositAmount: rentData.propertySecurityDepositAmount,
-                        propertySecurityDepositStatus: rentData.propertySecurityDepositStatus,
-                        propertyImage: propertyImage ? { uri: propertyImage } : require('../../../../assets/images/property1.png'),
-                        status: propertyData.status,
-                        tenantId: rentData.tenantId,
-                        tenantFullName: `${userData.firstName} ${userData.middleName} ${userData.lastName}`,
-                        tenantContactNo: userData.phoneNo,
-                        tenantImage: profilePictureUrl ? { uri: profilePictureUrl } : require('../../../../assets/images/profile.png')
-                      })
                     }
                   }
                 }
@@ -223,7 +223,11 @@ export default function TenantDetails() {
           <View className='mt-6'>
             <View className='flex-row items-center justify-between'>
               <Text className='text-sm font-bold'>Tenant Information</Text>
-              <TouchableOpacity className='flex-row items-center space-x-1' onPress={() => router.push('../../MyLease/ViewContract')}>
+              <TouchableOpacity className='flex-row items-center space-x-1' onPress={async () => {
+                if(rentData){
+                  await SecureStore.setItemAsync('contractId', rentData?.transactionId);
+                  router.push('../../MyLease/ViewContract')
+                }}}>
                 <Ionicons name="eye" size={20} color="#D9534F" />
                 <Text className='text-xs font-semibold text-[#D9534F] '>View Contract</Text>
               </TouchableOpacity>
@@ -246,8 +250,8 @@ export default function TenantDetails() {
               <View className='flex-row space-x-2'>
                 <TouchableOpacity onPress={async () => {
                   router.push('../../Message/msgDetails')
-                  const uid = await SecureStore.getItemAsync('uid');
-                  if (rentData?.tenantId !== uid) {
+                  // const uid = await SecureStore.getItemAsync('uid');
+                  if (rentData) {
                     await SecureStore.setItemAsync('messageRecipientId', rentData?.tenantId ?? '');
                   }
                   }}>
