@@ -309,14 +309,17 @@ const handlePhoneCall = () => {
     <View className='bg-[#B33939]'>
       <View className='h-screen bg-gray-100 mt-14 py-8 rounded-t-2xl'>
       <View className='flex flex-row items-center justify-between px-8 py-3'>
-                <TouchableOpacity onPress={() => router.replace('./PropertyDashboard')}>
+                <TouchableOpacity onPress={() => 
+                  // router.replace('./PropertyDashboard') // test first
+                  router.back()
+                  }>
                 <View className="flex flex-row items-center">
                     <Ionicons name="chevron-back-circle-outline" size={25} color="black" />
                 </View>
                 </TouchableOpacity>
 
                 <View className="flex-1 items-center justify-center pl-5">
-                <Text className='text-lg font-bold text-center'>Details</Text>
+                {/* <Text className='text-lg font-bold text-center'>Property Details</Text> */}
                 </View>
 {/*
                 <View className='flex flex-row items-center gap-3'>

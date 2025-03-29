@@ -220,6 +220,8 @@ export const AuthContextProvider = ({ children }: { children: ReactNode }) => {
             if(!uid){
                 return Alert.alert('Error', 'Error logging out');
             }
+            // sendNotification(uid, 'feedback-property-owner', 'Lease Ended - Share Your Feedback', `Your tenant's lease has ended! We’d love to hear about your experience with the tenant and using the app. Please take a moment to answer a few questions to help us improve our services.`, 'Success', 'Unread')
+            // sendNotification(uid, 'lease-end', 'Lease Ended - Share Your Feedback', 'Your lease has ended! We’d love to hear about your experience staying at the property, interacting with the landlord, and using the app. Please take a moment to answer a few questions to help us improve our services.', 'Success', 'Unread')
 
             await updateDoc(doc(db, 'users', uid), {onlineStatus: 'Offline'});
             // logout logic
@@ -1259,7 +1261,7 @@ export const AuthContextProvider = ({ children }: { children: ReactNode }) => {
                         revenueBalance: newOwnerBalance,
                     };
                     await updateDoc(doc(db, 'wallets', tenantId), setTenantWalletData);
-                    //addRevenue(ownerId, 'Payment' , payment, transactionId);
+                    addRevenue(ownerId, 'Payment' , payment, transactionId);
                     await updateDoc(doc(db, 'wallets', ownerId), setOwnerWalletData);
                     console.log('Rent Paid');
                 }
@@ -1353,8 +1355,28 @@ export const AuthContextProvider = ({ children }: { children: ReactNode }) => {
                     propertyTerminateContractStatus: '',
                     status: 'Rented'
                 });
-            } else{
+            } else if(propertyLeaseDuration === 'Short-term (6 months)'){
                 const paymentDuration = '6';
+                await setDoc(doc(db, 'rentTransactions', transactionId), {
+                    transactionId,
+                    ownerId,
+                    propertyId,
+                    tenantId,
+                    propertyLeaseStart,
+                    propertyLeaseEnd,
+                    propertyLeaseDuration,
+                    propertyRentAmount,
+                    propertyRentDueDay,
+                    propertySecurityDepositAmount,
+                    propertySecurityDepositRefundPeriod,
+                    propertySecurityDepositStatus: 'Held',
+                    propertyAdvancePaymentAmount,
+                    paymentDuration: paymentDuration,
+                    propertyTerminateContractStatus: '',
+                    status: 'Rented'
+                });
+            } else {
+                const paymentDuration = '1';
                 await setDoc(doc(db, 'rentTransactions', transactionId), {
                     transactionId,
                     ownerId,

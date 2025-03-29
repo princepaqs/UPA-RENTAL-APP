@@ -100,6 +100,15 @@ export default function contractQuestion() {
             <Text className='text-xs font-bold mt-2'>Desired Extension Period</Text>
             <View className="w-full px-4 ">
               <CustomCheckbox
+                label="Demo (1 minute)"
+                checked={monthsPeriod}
+                onChange={() => {
+                  setExtensionPeriod('1 minute');
+                  setYearPeriod(false);
+                  setMonthsPeriod(true);
+                }}
+              />
+              <CustomCheckbox
                 label="6 months"
                 checked={monthsPeriod}
                 onChange={() => {

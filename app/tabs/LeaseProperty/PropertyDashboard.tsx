@@ -26,7 +26,7 @@ export default function PropertyDashboard() {
   const [loading, setLoading] = useState(true);
   const inputWidth = useRef(new Animated.Value(40)).current;
   // Count properties with 'approved' status
-const rentedCount = properties.filter(property => property.status === 'Approved').length;
+const rentedCount = properties.filter(property => property.status === 'Occupied' || property.status === 'Rented').length;
 
 // Count properties with 'available' status
 const vacantCount = properties.filter(property => property.status === 'Available').length;

@@ -44,6 +44,8 @@ export default function propertyFeedback() {
         const senderId = await SecureStore.getItemAsync('uid');
         const reviewId = generateTransactionID()
 
+        console.log(uid, senderId, reviewId);
+
         const feedbackData = {
             feedbackType: 'Property',
             uid,
@@ -120,7 +122,7 @@ export default function propertyFeedback() {
         <View className="flex-row space-x-4">
             <TouchableOpacity
                 className="flex-1 items-center border border-gray-400 rounded-xl"
-                onPress={() => router.back()}
+                onPress={() => router.replace('/tabs/Dashboard')}
             >
                 <Text className="py-3 text-xs font-bold">Back</Text>
             </TouchableOpacity>

@@ -85,8 +85,17 @@ export default function setContractDetails() {
       // Check property lease duration and add appropriate months
       if (propertyData?.propertyLeaseDuration === 'Long-term (1 year)') {
         newEndDate.setFullYear(newEndDate.getFullYear() + 1); // Add 1 year
-      } else {
+      } else if(propertyData?.propertyLeaseDuration === 'Short-term (6 months)'){
+        const currentDay = newEndDate.getDate();
         newEndDate.setMonth(newEndDate.getMonth() + 6); // Add 6 months
+
+        // Handle month overflow issue
+        if (newEndDate.getDate() !== currentDay) {
+          newEndDate.setDate(0); // Set to last day of the previous month
+        }
+      } else {
+        // same day
+        newEndDate.setMinutes(newEndDate.getMinutes() + 1);
       }
   
       setEndDate(newEndDate); // Update endDate state

@@ -110,6 +110,7 @@ export default function payDepositeAdvance() {
         const rentRef = await getDoc(doc(db, 'rentTransactions', rentData?.transactionId));
         const userRef = await getDoc(doc(db, 'users', rentData?.ownerId));
         const tenantRef = await getDoc(doc(db, 'users', rentData?.tenantId));
+        console.log(rentData)
         if(propertyRef.exists() && rentRef.exists() && userRef.exists() && tenantRef.exists()){
           const propertyRefData = propertyRef.data();
           const rentRefData = rentRef.data();
@@ -119,7 +120,7 @@ export default function payDepositeAdvance() {
           if(propertyRefData && rentRefData && userRefData && rent && tenantData){
             const paymentAmount = parseInt(rent);
             const paymentFee = 100;
-            setPaymentData({
+            const newPaymentData = {
               transactionId: rentData.transactionId,
               ownerId: rentData.ownerId,
               propertyId: rentData.propertyId,
@@ -129,14 +130,18 @@ export default function payDepositeAdvance() {
               propertyName: propertyRefData.propertyName,
               ownerFullName: `${userRefData.firstName} ${userRefData.middleName} ${userRefData.lastName}`,
               ownerEmail: userRefData.email,
-              //transactionPurpose: string;
               paymentAmount: paymentAmount.toString(),
               billingPeriod: new Date().toLocaleDateString('en-US', { month: '2-digit', year: 'numeric' }),
               paymentFee: paymentFee.toString(),
-              paymentTotal: (paymentAmount + paymentFee).toString()
-            })
+              paymentTotal: (paymentAmount + paymentFee).toString(),
+            };
+            
+            setPaymentData(newPaymentData);
+            console.log("New Payment Data:", newPaymentData);
+            
+          }else{
+            console.log("No data", rent);
           }
-          console.log(paymentData);
         }
       }
     }
@@ -292,7 +297,8 @@ export default function payDepositeAdvance() {
                         <Text className="text-xs">
                           ₱ { 
                             (rentData?.propertyLeaseDuration === 'Long-term (1 year)' && rentData?.paymentDuration == '12') ||
-                            (rentData?.propertyLeaseDuration === 'Short-term (6 months)' && rentData?.paymentDuration == '6')
+                            (rentData?.propertyLeaseDuration === 'Short-term (6 months)' && rentData?.paymentDuration == '6') || 
+                            (rentData?.propertyLeaseDuration === 'Demo (1 minute)' && rentData?.paymentDuration == '1 minute')
                               ? parseInt(rentData.propertyAdvancePaymentAmount).toLocaleString()
                               : '0'
                           }
@@ -303,7 +309,8 @@ export default function payDepositeAdvance() {
                         <Text className="text-xs">
                           ₱ { 
                             (rentData?.propertyLeaseDuration === 'Long-term (1 year)' && rentData?.paymentDuration == '12') ||
-                            (rentData?.propertyLeaseDuration === 'Short-term (6 months)' && rentData?.paymentDuration == '6')
+                            (rentData?.propertyLeaseDuration === 'Short-term (6 months)' && rentData?.paymentDuration == '6') || 
+                            (rentData?.propertyLeaseDuration === 'Demo (1 minute)' && rentData?.paymentDuration == '1 minute')
                               ? parseInt(rentData.propertySecurityDepositAmount).toLocaleString()
                               : '0'
                           }

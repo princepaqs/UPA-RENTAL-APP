@@ -177,15 +177,30 @@ export default function MyLease() {
           // Check if rentalEndDate is today's date
         const today = new Date();
         const formattedToday = `${String(today.getMonth() + 1).padStart(2, '0')}/${String(today.getDate()).padStart(2, '0')}/${today.getFullYear()}`;
-        console.log(formattedToday);
+
+        const [month, day, year] = rentalEndDate.split('/').map(Number);
+
+        // Create a new Date object (Note: month is 0-based in JavaScript)
+        const formattedRentalEndDate = new Date(year, month - 1, day);
+        // add tomorrow
+        // const tomorrow = new Date();
+        // tomorrow.setDate(today.getDate() + 1);
+        // // Format tomorrow's date as MM/DD/YYYY
+        // const formattedTomorrow = `${String(tomorrow.getMonth() + 1).padStart(2, '0')}/${String(tomorrow.getDate()).padStart(2, '0')}/${tomorrow.getFullYear()}`;
+
+        console.log(formattedToday, formattedRentalEndDate);
         // router.replace('../tabs/Feedback/PropertyFeedback/propertyFeedback') // Go to Reviews
         if (rentalEndDate === formattedToday) {
           console.log(`Skipping property ${propertyId} as rentalEndDate (${rentalEndDate}) is today.`);
           sendNotification(ownerId, 'feedback-property-owner', 'Lease Ended - Share Your Feedback', `Your tenant's lease has ended! We’d love to hear about your experience with the tenant and using the app. Please take a moment to answer a few questions to help us improve our services.`, 'Success', 'Unread')
           sendNotification(tenantId, 'lease-end', 'Lease Ended - Share Your Feedback', 'Your lease has ended! We’d love to hear about your experience staying at the property, interacting with the landlord, and using the app. Please take a moment to answer a few questions to help us improve our services.', 'Success', 'Unread')
-          router.replace('../tabs/Feedback/PropertyFeedback/propertyFeedback') // Go to Reviews
+          // router.replace('../tabs/Feedback/PropertyFeedback/propertyFeedback') // Go to Reviews
+          console.log(propertyId, ownerId)
           await SecureStore.setItemAsync('reviewPropertyId', propertyId);
           await SecureStore.setItemAsync('reviewOwnerId', ownerId);
+          await updateDoc(doc(db, 'propertyTransactions', transactionId), {paymentStatus: 'done'});
+          // return; // Skip this lease
+        } else if (today > formattedRentalEndDate) {
           return; // Skip this lease
         }
   
@@ -456,7 +471,8 @@ export default function MyLease() {
                 // Get the lease details and compare as described
                 const isOtherLeaseDuration = 
                 !(data.propertyLeaseDuration === 'Long-term (1 year)' && data.paymentDuration === '12') && 
-                !(data.propertyLeaseDuration === 'Short-term (6 months)' && data.paymentDuration === '6');
+                !(data.propertyLeaseDuration === 'Short-term (6 months)' && data.paymentDuration === '6') &&
+                !(data.propertyLeaseDuration === 'Demo (1 minute)' && data.paymentDuration === '1 minute');
 
                 if (isOtherLeaseDuration && newDueDay && uid) {
                   // Check if there is a payment for the last month
@@ -989,9 +1005,9 @@ export default function MyLease() {
                   {activeTab === 'rent' && (
                 <ScrollView
                 showsVerticalScrollIndicator={false}
-                refreshControl={
-                  <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-                }
+                // refreshControl={
+                //   <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+                // }
                  className='h-full pb-20 space-y-2'
                 >
                   <TouchableOpacity className='w-full items-end' onPress={async () => {
@@ -1002,7 +1018,7 @@ export default function MyLease() {
                   </TouchableOpacity>
 
                   <View className="flex-col  rounded-lg mb-4">
-                  {rentData?.paymentDuration !== '0' ? (
+                  {rentData?.paymentDuration !== '0'  ? (
                       <View className="flex-col items-center bg-white pb-4 rounded-xl shadow-xl">
                         <View className="px-4 flex-row items-center">
                           <View className="flex-col w-1/2">
@@ -1049,7 +1065,8 @@ export default function MyLease() {
                                   <Text className="text-xs">
                                     {(
                                       (rentData?.propertyLeaseDuration === 'Long-term (1 year)' && rentData?.paymentDuration == '12') ||
-                                      (rentData?.propertyLeaseDuration === 'Short-term (6 months)' && rentData?.paymentDuration == '6')
+                                      (rentData?.propertyLeaseDuration === 'Short-term (6 months)' && rentData?.paymentDuration == '6') || 
+                                      (rentData?.propertyLeaseDuration === 'Demo (1 minute)' && rentData?.paymentDuration == '1 minute')
                                     )
                                       ? parseInt(rentData.propertyAdvancePaymentAmount).toLocaleString()
                                       : '0'}
@@ -1060,7 +1077,8 @@ export default function MyLease() {
                                   <Text className="text-xs">
                                     {(
                                       (rentData?.propertyLeaseDuration === 'Long-term (1 year)' && rentData?.paymentDuration == '12') ||
-                                      (rentData?.propertyLeaseDuration === 'Short-term (6 months)' && rentData?.paymentDuration == '6')
+                                      (rentData?.propertyLeaseDuration === 'Short-term (6 months)' && rentData?.paymentDuration == '6') || 
+                                      (rentData?.propertyLeaseDuration === 'Demo (1 minute)' && rentData?.paymentDuration == '1 minute')
                                     )
                                       ? parseInt(rentData.propertySecurityDepositAmount).toLocaleString()
                                       : '0'}
@@ -1078,6 +1096,7 @@ export default function MyLease() {
                       </View> */}
                       </>
                     )}
+                    <Text className="text-xl font-semibold mt-2">Transaction</Text>
                   </View>
 
           
@@ -1085,7 +1104,7 @@ export default function MyLease() {
                   {selectedLeaseData && transactionData?.length > 0 && (
                     <ScrollView showsVerticalScrollIndicator={false} className="h-[300px] w-full pb-20 space-y-2">
                       <View className="mb-4 gap-2">
-                        <Text className="text-xl font-semibold mb-2">Transaction</Text>
+                        
                         {transactionData
                           .filter(
                             (transaction) =>

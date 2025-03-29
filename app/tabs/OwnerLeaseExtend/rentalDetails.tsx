@@ -26,9 +26,9 @@ export default function rentalDetails() {
     const [noPetsAllowed, setNoPetsAllowed] = useState(false);
     const [houseRules, setHouseRules] = useState('');
 
-    const [leaseDuration, setLeaseDuration] = useState("Short-term (6 months)");
+    const [leaseDuration, setLeaseDuration] = useState("Demo (1 minute)");
     const [isLeaseDropdownVisible, setLeaseDropdownVisible] = useState(false);
-    const leaseDurations = ["Short-term (6 months)", "Long-term (1 year)"];
+    const leaseDurations = ["Demo (1 minute)", "Short-term (6 months)", "Long-term (1 year)"];
 
     const monthlyRent = 10000;
     const Rules = "Lorem ipsum dolor sit amet consectetur adipisicing elit. Temporibus, nostrum? A deserunt quod aliquam ab nesciunt modi dolorum! Officiis quod quia nesciunt esse sint cum maiores velit modi laudantium quae!"

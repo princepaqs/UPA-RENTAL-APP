@@ -194,7 +194,30 @@ export default function Notification() {
               color: '#EF5A6F',
           },
       ]);
-  }
+  }else if (notification.type === 'lease-end') {
+    setModalVisible(true);
+    setModalTitle('Feedback!');
+    setModalMessage(
+        'Do you want to give Feedback on Your Experience in the Property and the Owner?'
+    );
+    setModalActions([
+        {
+            label: 'Yes',
+            onPress: () => {
+                handleCloseModal();
+                router.push('./Feedback/PropertyFeedback/propertyFeedback')
+            },
+            color: '#38A169',
+        },
+        {
+            label: 'No',
+            onPress: () => {
+                handleCloseModal();
+            },
+            color: '#EF5A6F',
+        },
+    ]);
+}
   
 
       else if (notification.type === 'lease-extension' && notification.status === 'Approved') {

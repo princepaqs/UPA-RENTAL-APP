@@ -177,37 +177,48 @@ export default function revenue() {
       
       {/* Property Listing */}
       <ScrollView contentContainerStyle={{ flexGrow: 1 }} showsVerticalScrollIndicator={false}>
-        <View className="flex-col space-y-2 px-2 mb-20 flex-wrap">
-          {filteredProperties.map((property) => (
-            <TouchableOpacity key={property.id} onPress={async () => {
-              router.push('./viewRevenue')
-              if(property){
-                console.log(property.transactionId);
-              await SecureStore.setItemAsync('revenueReceiptId', property.transactionId)
-              }
-            }} 
-              className="w-full p-2.5 rounded-xl shadow-md border border-gray-100 bg-white flex flex-row">
-              <View className="w-full flex-col space-y-1" >
-                  <View className='flex-row items-center justify-between'>
-                    <Text className='text-xs font-bold'>{property.type}</Text>
-                    <Text className={`text-xs font-bold ${getColorByType(property.type)}`}>
-                      {formatAmountByType(property.type, property.value)}
-                      </Text>
-                  </View>
-                  <Text className='text-[10px] text-gray-400'>{property.createdAt.toDate().toLocaleDateString('en-US', {
-                    year: 'numeric',
-                    month: 'long',
-                    day: 'numeric',
-                    hour: 'numeric',
-                    minute: 'numeric',
-                    hour12: true
-                  })}
-                  </Text>
-              </View>
-            </TouchableOpacity>
-          ))}
-        </View>
-      </ScrollView>
+  <View className="flex-col space-y-2 px-2 mb-20 flex-wrap">
+    {filteredProperties.length === 0 ? (
+      <View className="w-full flex items-center justify-center mt-10">
+        <Text className="text-gray-400 text-sm">No transactions yet.</Text>
+      </View>
+    ) : (
+      filteredProperties.map((property) => (
+        <TouchableOpacity
+          key={property.id}
+          onPress={async () => {
+            router.push('./viewRevenue');
+            if (property) {
+              console.log(property.transactionId);
+              await SecureStore.setItemAsync('revenueReceiptId', property.transactionId);
+            }
+          }}
+          className="w-full p-2.5 rounded-xl shadow-md border border-gray-100 bg-white flex flex-row"
+        >
+          <View className="w-full flex-col space-y-1">
+            <View className="flex-row items-center justify-between">
+              <Text className="text-xs font-bold">{property.type}</Text>
+              <Text className={`text-xs font-bold ${getColorByType(property.type)}`}>
+                {formatAmountByType(property.type, property.value)}
+              </Text>
+            </View>
+            <Text className="text-[10px] text-gray-400">
+              {property.createdAt.toDate().toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
+                hour: 'numeric',
+                minute: 'numeric',
+                hour12: true,
+              })}
+            </Text>
+          </View>
+        </TouchableOpacity>
+      ))
+    )}
+  </View>
+</ScrollView>
+
     </View>
     </View>
   );

@@ -197,7 +197,10 @@ export default function Payment() {
           const propertyData = propertyDocSnapshot.exists() ? propertyDocSnapshot.data() : null;
           
           // Push combined data into combinedPayments array
-          if (transaction?.paymentDuration !== '6' && transaction?.propertyLeaseDuration === 'Short-term (6 months)' || transaction?.paymentDuration !== '12' && transaction?.propertyLeaseDuration === 'Long-term (1 year)' || transaction.paymentDuration == '0') {
+          if (transaction?.paymentDuration !== '1 minute' && transaction?.propertyLeaseDuration === 'Demo (1 minute)' 
+            || transaction?.paymentDuration !== '6' && transaction?.propertyLeaseDuration === 'Short-term (6 months)' 
+            || transaction?.paymentDuration !== '12' && transaction?.propertyLeaseDuration === 'Long-term (1 year)' 
+            || transaction.paymentDuration == '0') {
             combinedPayments.push({
               transactionId: transaction.transactionId,
               ownerId: transaction.ownerId,
