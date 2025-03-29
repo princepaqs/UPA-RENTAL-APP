@@ -81,22 +81,22 @@ export default function LoginPin() {
     switch(routes){
       case '/TopUp/receiptTransaction': 
         topUpWallet(uid, transactionAmount);
-        sendNotification(uid, 'wallet-topup', 'Top-Up Successful', `Your wallet has been successfully topped up with ₱${transactionAmount}. You can now use the funds for payments and transactions.`, 'Success', 'Unread')
+        sendNotification(uid, 'wallet-topup', 'Top-Up Successful', `Your wallet has been successfully topped up with ₱${transactionAmount}. You can now use the funds for payments and transactions.`, 'Success', 'Unread','','')
         addWalletTransaction(uid, transactionType, '', transactionDate, transactionAmount, '');
         return '../../../tabs/Profile/Wallet/TopUp/receiptTransaction';
       case '/Payment/paymentReceipt': 
         payRent(transactionPaymentId, transactionOwnerId, uid, transactionAmount, transactionLeaseStart, transactionLeaseEnd);
-        sendNotification(uid, 'wallet-payment', 'Payment Successful', `Your payment of ₱${transactionAmount} has been successfully processed.`, 'Success', 'Unread');
-        sendNotification(transactionOwnerId, 'wallet-payment', 'Payment Successful', `Your tenant's payment of ₱${transactionAmount} has been successfully processed.`, 'Success', 'Unread')
+        sendNotification(uid, 'wallet-payment', 'Payment Successful', `Your payment of ₱${transactionAmount} has been successfully processed.`, 'Success', 'Unread','','');
+        sendNotification(transactionOwnerId, 'wallet-payment', 'Payment Successful', `Your tenant's payment of ₱${transactionAmount} has been successfully processed.`, 'Success', 'Unread','','')
         addWalletTransaction(uid, transactionType, transactionPaymentId, transactionDate, transactionAmount, transactionStatus);
         return '/Payment/paymentReceipt';
       case '/Withdraw/withdrawReceipt': 
         withdrawWallet(uid, transactionAmount);
-        sendNotification(uid, 'wallet-withdraw', 'Withdraw Successful', `Your wallet has been successfully withdrawn ₱${transactionAmount}. You can now use the funds for payments and transactions.`, 'Success', 'Unread')
+        sendNotification(uid, 'wallet-withdraw', 'Withdraw Successful', `Your wallet has been successfully withdrawn ₱${transactionAmount}. You can now use the funds for payments and transactions.`, 'Success', 'Unread','','')
         addWalletTransaction(uid, transactionType, '', transactionDate, transactionAmount, '');
         return './Withdraw/withdrawReceipt';
       case '/Transfer/transferReceipt': 
-        sendNotification(uid, 'wallet-withdraw', 'Withdraw Successful', `Your wallet has been successfully withdrawn ₱${transactionAmount}. You can now use the funds for payments and transactions.`, 'Success', 'Unread')
+        sendNotification(uid, 'wallet-withdraw', 'Withdraw Successful', `Your wallet has been successfully withdrawn ₱${transactionAmount}. You can now use the funds for payments and transactions.`, 'Success', 'Unread','','')
         // addWalletTransaction(uid, transactionType, '', transactionDate, transactionAmount, '');
         return './Transfer/transferReceipt';
       default: return 'defaultFallbackRoute';

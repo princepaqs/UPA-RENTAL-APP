@@ -101,7 +101,7 @@ export default function ContractPreview() {
       );
       router.replace('./contractSuccess')
 
-      sendNotification(transactionData? transactionData.tenantId : '', 'approval', 'Application Approved', `Your application for the ${propertyData?.propertyName} at ${propertyData?.propertyAddress} has been approved. Please sign the contract and complete the downpayment and advance payment within 24 hours to secure your lease.`, 'Success', 'Unread');
+      sendNotification(transactionData? transactionData.tenantId : '', 'approval', 'Application Approved', `Your application for the ${propertyData?.propertyName} at ${propertyData?.propertyAddress} has been approved. Please sign the contract and complete the downpayment and advance payment within 24 hours to secure your lease.`, 'Success', 'Unread', '', '');
     }else{
       Alert.alert('Contract', "Please enter your correct fullname!");
       return;

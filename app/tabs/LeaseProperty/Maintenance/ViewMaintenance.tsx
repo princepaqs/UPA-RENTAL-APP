@@ -68,8 +68,8 @@ export default function ViewPropertyDetails() {
     if(maintenance){
         await SecureStore.setItemAsync('prefTime', plannedMoveInDate.toString());
         updateMaintenance(maintenance?.tenantId, maintenance?.id, 'approvedAt', new Date(), 'Approved');
-        sendNotification(maintenance?.tenantId, 'maintenance-approve', 'Maintenance Request Approved', `The maintenance request for ${maintenance.propertyName} has been approved. The maintenance personnel will arrive on ${plannedMoveInDate.toString()} to perform the necessary work.`, 'Success', 'Unread');
-        sendNotification(maintenance?.ownerId, 'maintenance-approve', 'Maintenance Request Approved', `You have approved the maintenance request for ${maintenance.propertyName} at ${maintenance.propertyFullAddress}. The maintenance personnel is scheduled to arrive on ${plannedMoveInDate.toString()} to perform the work.`, 'Success', 'Unread');
+        sendNotification(maintenance?.tenantId, 'maintenance-approve', 'Maintenance Request Approved', `The maintenance request for ${maintenance.propertyName} has been approved. The maintenance personnel will arrive on ${plannedMoveInDate.toString()} to perform the necessary work.`, 'Success', 'Unread', '', '');
+        sendNotification(maintenance?.ownerId, 'maintenance-approve', 'Maintenance Request Approved', `You have approved the maintenance request for ${maintenance.propertyName} at ${maintenance.propertyFullAddress}. The maintenance personnel is scheduled to arrive on ${plannedMoveInDate.toString()} to perform the work.`, 'Success', 'Unread', '', '');
     }
     setApproveModalVisible(false);
   };
@@ -82,16 +82,16 @@ export default function ViewPropertyDetails() {
   const handleStartWork = async () => {
     if(maintenance){
         updateMaintenance(maintenance?.tenantId, maintenance?.id, 'progressAt', new Date(), 'In Progress')
-        sendNotification(maintenance?.tenantId, 'maintenance-inprogress', 'Maintenance In-Progress', 'The maintenance personnel have arrived and started working on your request. ', 'Success', 'Unread');
-        sendNotification(maintenance?.ownerId, 'maintenance-inprogress', 'Maintenance In-Progress', `The maintenance for your property, ${maintenance.propertyName} at ${maintenance.propertyFullAddress} started today. Please ensure that everything is in order and continue monitoring the progress.`, 'Success', 'Unread');
+        sendNotification(maintenance?.tenantId, 'maintenance-inprogress', 'Maintenance In-Progress', 'The maintenance personnel have arrived and started working on your request. ', 'Success', 'Unread', '', '');
+        sendNotification(maintenance?.ownerId, 'maintenance-inprogress', 'Maintenance In-Progress', `The maintenance for your property, ${maintenance.propertyName} at ${maintenance.propertyFullAddress} started today. Please ensure that everything is in order and continue monitoring the progress.`, 'Success', 'Unread', '', '');
     }
   }
 
   const handleComplete = async () => {
     if(maintenance){
         updateMaintenance(maintenance?.tenantId, maintenance?.id, 'completedAt', new Date(), 'Completed')
-        sendNotification(maintenance?.tenantId, 'maintenance-completed', 'Maintenance Completed', `Your maintenance request has been successfully completed. Please send again if something doesn't seem to work right. Thank you.`, 'Success', 'Unread');
-        sendNotification(maintenance?.tenantId, 'maintenance-completed', 'Maintenance Completed', `You have successfully completed the maintenance for ${maintenance.propertyName} at ${maintenance.propertyFullAddress}.`, 'Success', 'Unread');
+        sendNotification(maintenance?.tenantId, 'maintenance-completed', 'Maintenance Completed', `Your maintenance request has been successfully completed. Please send again if something doesn't seem to work right. Thank you.`, 'Success', 'Unread', '', '');
+        sendNotification(maintenance?.tenantId, 'maintenance-completed', 'Maintenance Completed', `You have successfully completed the maintenance for ${maintenance.propertyName} at ${maintenance.propertyFullAddress}.`, 'Success', 'Unread', '', '');
     }
   }
 
@@ -295,14 +295,14 @@ export default function ViewPropertyDetails() {
                             'Maintenance Scheduled Today', 
                             'Your scheduled maintenance is today. The maintenance personnel will arrive as planned. Please ensure the property is accessible.', 
                             'Success', 
-                            'Unread');
+                            'Unread', '', '');
                         sendNotification(
                             ownerId,
                             'maintenance-today',
                             'Maintenance Scheduled - Today',
                             `Today is the scheduled maintenance day for your property, ${propertyData.propertyName} at ${propertyData.propertyFullAddress}. Please ensure you go to the property to complete the necessary maintenance tasks.`,
                             'Success',
-                            'Unread'
+                            'Unread', '', ''
                         );
                     } else if (
                         preferredDate.toDateString() === tomorrow.toDateString()
@@ -313,7 +313,7 @@ export default function ViewPropertyDetails() {
                             'Maintenance Scheduled - Tomorrow',
                             `Reminder: The scheduled maintenance for your property, ${propertyData.propertyName} at ${propertyData.propertyFullAddress}, is tomorrow. Please ensure you have taken the necessary actions and provided access for the maintenance team.`,
                             'Success',
-                            'Unread'
+                            'Unread', '', ''
                         );
                     }
                 });

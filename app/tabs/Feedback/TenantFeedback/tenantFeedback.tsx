@@ -41,7 +41,7 @@ export default function tenantFeedback() {
         }
 
         const senderId = await SecureStore.getItemAsync('uid');
-        const uid = await SecureStore.getItemAsync(''); // unknown path
+        const uid = await SecureStore.getItemAsync('reviewOwnerId'); // unknown path
         const reviewId = generateTransactionID()
 
         const feedbackData = {

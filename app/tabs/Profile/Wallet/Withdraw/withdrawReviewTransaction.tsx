@@ -49,7 +49,7 @@ export default function WithdrawReviewTransaction() {
         Alert.alert('Error', 'Wallet transaction failed.')
         const tenantId = await SecureStore.getItemAsync('uid');
         if(tenantId){
-            sendNotification(tenantId, 'wallet-withdraw-failed', 'Withdraw Unsuccessful', `Your wallet withdraw attempt of ₱${transactionData.total.toString()} was unsuccessful. Please check your payment details and try again.`, 'Rejected', 'Unread');
+            sendNotification(tenantId, 'wallet-withdraw-failed', 'Withdraw Unsuccessful', `Your wallet withdraw attempt of ₱${transactionData.total.toString()} was unsuccessful. Please check your payment details and try again.`, 'Rejected', 'Unread','','');
         }
       }
     } catch (error) {

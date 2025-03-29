@@ -104,7 +104,7 @@ export default function ReviewTransaction() {
                 Alert.alert('Error', 'Wallet transaction failed.')
                 const tenantId = await SecureStore.getItemAsync('uid');
                 if(tenantId){
-                    sendNotification(tenantId, 'wallet-topup-failed', 'Top-Up Unsuccessful', `Your wallet top-up attempt of ₱${transactionData.total.toString()} was unsuccessful. Please check your payment details and try again.`, 'Rejected', 'Unread');
+                    sendNotification(tenantId, 'wallet-topup-failed', 'Top-Up Unsuccessful', `Your wallet top-up attempt of ₱${transactionData.total.toString()} was unsuccessful. Please check your payment details and try again.`, 'Rejected', 'Unread','','');
                 }
             }
         } catch (error) {

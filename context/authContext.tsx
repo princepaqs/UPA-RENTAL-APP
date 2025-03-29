@@ -53,7 +53,7 @@ interface AuthContextType {
     withdrawMaintenance: (uid: string, maintenanceId: string) => Promise<void>;
     updateMaintenance: (uid: string, maintenanceId: string, timeType: string, time: Date, status: string) => Promise<void>;
     sendMessage: (userId1: string, userId2: string, text: string) => Promise<void>;
-    sendNotification: (uid: string, type: string, title: string, message: string, status: string, notifStatus: string) => Promise<void>;
+    sendNotification: (uid: string, type: string, title: string, message: string, status: string, notifStatus: string, receipientId: string, propertyId: string) => Promise<void>;
     completeOnboarding: () => void; // Function to mark onboarding as completed
     
 }
@@ -903,7 +903,7 @@ export const AuthContextProvider = ({ children }: { children: ReactNode }) => {
     
             // Save property document to Firestore under the user's UID
             await setDoc(doc(db, 'properties', uid, 'propertyId', propertyId), propertyDocument)
-            sendNotification(uid, 'property-add', 'Property Added Successfully', `Your property ${propertyName} has been successfully added to the listings.`, 'Success', 'Unread');
+            sendNotification(uid, 'property-add', 'Property Added Successfully', `Your property ${propertyName} has been successfully added to the listings.`, 'Success', 'Unread', '', '');
 
             // Save status of property
             //await setDoc(doc(db, 'transaction', propertyId, 'status', ownerId), propertyStatuses);
@@ -942,7 +942,7 @@ export const AuthContextProvider = ({ children }: { children: ReactNode }) => {
 
         } catch (error) {
             console.error("Error adding property:", error);
-            sendNotification(uid, 'property-add', 'Property Listing Unsuccessful', `There was an issue adding your property. Please check the details and try again.`, 'Rejected', 'Unread');
+            sendNotification(uid, 'property-add', 'Property Listing Unsuccessful', `There was an issue adding your property. Please check the details and try again.`, 'Rejected', 'Unread', '', '');
 
         }
     };
@@ -1016,10 +1016,10 @@ export const AuthContextProvider = ({ children }: { children: ReactNode }) => {
                         propertyHouseRules 
                     });
                     Alert.alert('Success', 'Successfully updated property.');
-                    sendNotification(ownerId, 'property-edit', 'Property Details Updated', `The details for ${propertyName} have been successfully updated.`, 'Success', 'Unread');
+                    sendNotification(ownerId, 'property-edit', 'Property Details Updated', `The details for ${propertyName} have been successfully updated.`, 'Success', 'Unread', '', '');
                 } else {
                     Alert.alert('Error', 'Error updating property.');
-                    sendNotification(ownerId, 'property-edit', 'Property Update Failed', `The details for ${propertyName} could not be updated. Please try again.`, 'Rejected', 'Unread');
+                    sendNotification(ownerId, 'property-edit', 'Property Update Failed', `The details for ${propertyName} could not be updated. Please try again.`, 'Rejected', 'Unread', '', '');
                 }
 
             } else {
@@ -1078,10 +1078,10 @@ export const AuthContextProvider = ({ children }: { children: ReactNode }) => {
                     });
                     Alert.alert('Success', 'Successfully updated property with all details.');
                     router.replace('../ViewPropertyDetails');
-                    sendNotification(ownerId, 'property-edit', 'Property Details Updated', `The details for ${propertyName} have been successfully updated.`, 'Success', 'Unread');
+                    sendNotification(ownerId, 'property-edit', 'Property Details Updated', `The details for ${propertyName} have been successfully updated.`, 'Success', 'Unread', '', '');
                 } else {
                     Alert.alert('Error', 'Error updating property.');
-                    sendNotification(ownerId, 'property-edit', 'Property Update Failed', `The details for ${propertyName} could not be updated. Please try again.`, 'Rejected', 'Unread');
+                    sendNotification(ownerId, 'property-edit', 'Property Update Failed', `The details for ${propertyName} could not be updated. Please try again.`, 'Rejected', 'Unread', '', '');
                 }
             }
 
@@ -1121,14 +1121,14 @@ export const AuthContextProvider = ({ children }: { children: ReactNode }) => {
         try {
             if(!propertyId || !ownerId) {
                 Alert.alert('Error', 'Error deleting property.');
-                sendNotification(ownerId, 'property-delete', 'Property Successfully Deleted', `The property has been successfully deleted from your listings.`, 'Success', 'Unread');
+                sendNotification(ownerId, 'property-delete', 'Property Successfully Deleted', `The property has been successfully deleted from your listings.`, 'Success', 'Unread', '', '');
             }
 
             await deleteDoc(doc(db, 'properties', ownerId, 'propertyId', propertyId));
             router.replace('../PropertyDashboard');
         } catch (error) {
             Alert.alert('Error Test', `${error}`);
-            sendNotification(ownerId, 'property-delete', 'Property Deletion Failed', `The property could not be deleted due to an ongoing contract or transaction. Please resolve the active agreements before attempting to delete the property.`, 'Rejected', 'Unread');
+            sendNotification(ownerId, 'property-delete', 'Property Deletion Failed', `The property could not be deleted due to an ongoing contract or transaction. Please resolve the active agreements before attempting to delete the property.`, 'Rejected', 'Unread', '', '');
         }
     }
 
@@ -1210,7 +1210,7 @@ export const AuthContextProvider = ({ children }: { children: ReactNode }) => {
     
                 console.log('Transaction created successfully.');
 
-                sendNotification(tenantId, 'approval', 'Rent Application', `Your application has been successfully submitted. The property owner will review your application and notify you of their decision soon.`, 'Success', 'Unread');
+                sendNotification(tenantId, 'approval', 'Rent Application', `Your application has been successfully submitted. The property owner will review your application and notify you of their decision soon.`, 'Success', 'Unread', '', '');
             } catch (error) {
                 console.error('Error creating transaction:', error);
             }
@@ -1301,7 +1301,7 @@ export const AuthContextProvider = ({ children }: { children: ReactNode }) => {
         try {
           // Approve the transaction by updating its status in 'propertyTransactions'
           if (transactionId) {
-            await updateDoc(doc(db, 'propertyTransactions', transactionId), { rentalStartDate: propertyLeaseStart, rentalEndDate: propertyLeaseEnd, status: 'Waiting Signature & Payment', propertyTerminatePerion: '' });
+            await updateDoc(doc(db, 'propertyTransactions', transactionId), { rentalStartDate: propertyLeaseStart, rentalEndDate: propertyLeaseEnd, status: 'Waiting Signature & Payment', propertyTerminatePeriod: '' });
             await updateDoc(doc(db, 'properties', ownerId, 'propertyId', propertyId), { status: 'Rented' });
       
             // Add the contract details into a new collection named 'contracts' with the transactionId as the document ID
@@ -1537,7 +1537,7 @@ export const AuthContextProvider = ({ children }: { children: ReactNode }) => {
                 await setDoc(doc(db, 'issueReports', reportIssueData.reportId), reportIssueData);
                 sendMessage(uid, 'syiHymdlVKYFVGCNBKVW1Rxgba33', `REPORT AN ISSUE\n\n${reportIssueData.reportId}\n${reportIssueData.fullName || 'Unknown'}\n${reportIssueData.accountId || ''}\n${reportIssueData.issue || 'General'}\n${reportIssueData.issueId || ''}\n${reportIssueData.description || 'No description available'}`);
                 console.log('Report issue successful');
-                sendNotification(uid, 'report-issue', 'Issue Report Submitted', 'Your issue report has been successfully received. Our team will review it and get back to you shortly.', 'Success', 'Unread')
+                sendNotification(uid, 'report-issue', 'Issue Report Submitted', 'Your issue report has been successfully received. Our team will review it and get back to you shortly.', 'Success', 'Unread', '', '')
             }
         } catch (error) {
             console.log('Report issue failed');
@@ -1561,7 +1561,7 @@ export const AuthContextProvider = ({ children }: { children: ReactNode }) => {
                 await setDoc(doc(db, 'followUp', followUpReportData.reportId), followUpReportData)
                 sendMessage(uid, 'syiHymdlVKYFVGCNBKVW1Rxgba33', `FOLLOW UP REPORT\n\n${followUpReportData.reportId}\n${followUpReportData.fullName || 'Unknown'}\n${followUpReportData.accountId || ''}\n${followUpReportData.issue || 'General'}\n${followUpReportData.issueId || ''}\n${followUpReportData.description || 'No description available'}`);
                 console.log('Follow-up report successful');
-                sendNotification(uid, 'follow-up-report', 'Follow-up Report Submitted', 'Your follow-up report has been successfully received. Our team will review it and get back to you shortly.', 'Success', 'Unread')
+                sendNotification(uid, 'follow-up-report', 'Follow-up Report Submitted', 'Your follow-up report has been successfully received. Our team will review it and get back to you shortly.', 'Success', 'Unread', '', '')
             }
         } catch (error) {
             console.log('Follow-up report failed');
@@ -1736,7 +1736,9 @@ export const AuthContextProvider = ({ children }: { children: ReactNode }) => {
         title: string,
         message: string,
         status: string,
-        notifStatus: string
+        notifStatus: string,
+        receipientId: string,
+        propertyId: string,
     ) => {
         const notificationId = generateTransactionID();
     
@@ -1754,7 +1756,9 @@ export const AuthContextProvider = ({ children }: { children: ReactNode }) => {
             title,
             message,
             status,
-            notifStatus, // Read/Unread
+            notifStatus, // Read/Unread,'
+            receipientId,
+            propertyId,
             createdAt: new Date(), // Firestore automatically converts JS Date to Timestamp
         };
     
@@ -1764,7 +1768,7 @@ export const AuthContextProvider = ({ children }: { children: ReactNode }) => {
                 doc(db, 'notifications', uid, 'notificationId', notificationId), // Adjust collection path as needed
                 notificationData
             );
-            console.log('Notification sent successfully:', notificationData);
+            // console.log('Notification sent successfully:', notificationData);
         } catch (error) {
             Alert.alert('Error', `Failed to send notification`);
             console.error('Error sending notification:', error);

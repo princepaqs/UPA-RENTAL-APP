@@ -1,7 +1,10 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, Text, TextInput, ScrollView, TouchableOpacity, StyleSheet, Alert, ActivityIndicator } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
+import * as SecureStore from 'expo-secure-store';
+import { doc, getDoc, updateDoc } from 'firebase/firestore';
+import { db } from '@/_dbconfig/dbconfig';
 
 // Define the type for CustomCheckbox props
 interface CustomCheckboxProps {
@@ -20,6 +23,19 @@ const CustomCheckbox: React.FC<CustomCheckboxProps> = ({ label, checked, onChang
   </TouchableOpacity>
 );
 
+interface ContractData {
+  propertyId: string;
+  uid: string;
+  tenantId: string;
+  propertyHomeAddress: string;
+  propertyType: string;
+  ownerFullName: string;
+  tenantFullName: string;
+  transactionId: string;
+  rentalStartDate: string;
+  rentalEndDate: string;
+}
+
 export default function setTerms() {
   const router = useRouter();
   const [petPolicy, setPetPolicy] = useState('');
@@ -28,7 +44,69 @@ export default function setTerms() {
   const [noPetsAllowed, setNoPetsAllowed] = useState(false);
   const [acceptTerms, setAcceptTerms] = useState(false);
   const [loading, setLoading] = useState(false); // Loading state
+  const [contractData, setContractData] = useState<ContractData | null>(null);
 
+  useEffect(() => {
+        const fetchPropertyDetails = async() => {
+          try {
+            const uid = await SecureStore.getItemAsync('uid');
+            const propertyId = await SecureStore.getItemAsync('extensionPropertyId');
+            const tenantId = await SecureStore.getItemAsync('extensionTenantId');
+            console.log(uid, propertyId, tenantId);
+      
+            if(!uid || !propertyId || !tenantId) {
+              return
+            }
+      
+            const propertyRef = await getDoc(doc(db, 'properties', uid, 'propertyId', propertyId))
+            const tenantRef = await getDoc(doc(db, 'users', tenantId))
+            const ownerRef = await getDoc(doc(db, 'users', uid))
+      
+            if(!propertyRef.exists() || !tenantRef.exists() || !ownerRef.exists()){
+              return;
+            }
+      
+            const propertyData = propertyRef.data();
+            const tenantData = tenantRef.data();
+            const ownerData = ownerRef.data();
+            const transactionId = `${uid}-${propertyId}-${tenantId}`;
+            if(!propertyData || !tenantData || !ownerData || !transactionId) {
+              return;
+            }
+      
+            const transactionRef = await getDoc(doc(db, 'propertyTransactions', transactionId))
+            
+            if(!transactionRef.exists()){
+              return;
+            }
+      
+            const transactionData = transactionRef.data();
+      
+            if(!transactionData) {
+              return;
+            }
+      
+            const contractDetails = {
+              propertyId,
+              uid,
+              tenantId,
+              propertyHomeAddress: `${propertyData.propertyHomeAddress}, ${propertyData.propertyBarangay}, ${propertyData.propertyCity}, ${propertyData.propertyRegion}`,
+              propertyType: propertyData.propertyType,
+              ownerFullName: `${ownerData.firstName} ${ownerData.middleName} ${ownerData.lastName}`,
+              tenantFullName: `${tenantData.firstName} ${tenantData.middleName} ${tenantData.lastName}`,
+              transactionId,
+              rentalStartDate: transactionData.rentalStartDate,
+              rentalEndDate: transactionData.rentalEndDate,
+            }
+  
+            setContractData(contractDetails);
+          } catch (error) {
+            
+          }
+        }
+      
+        fetchPropertyDetails()
+      }, []);
 
   const handleContinue = async () => {
 
@@ -42,8 +120,12 @@ export default function setTerms() {
       } else {
         setLoading(true); // Start loading
         
-          setTimeout(() => {
-            router.replace('../Notification')
+          setTimeout(async () => {
+            if(contractData){
+              console.log(contractData)
+              await updateDoc(doc(db, 'properties', contractData?.uid, 'propertyId', contractData?.propertyId), {status: 'Available'}) // for demo purposes only
+              router.replace('../Notification')
+            }
             setLoading(false);
           }, 1500);
       }

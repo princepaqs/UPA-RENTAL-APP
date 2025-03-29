@@ -17,7 +17,7 @@ interface Revenue {
   id: string;
   transactionId: string;
   type: string;
-  value: number;
+  value: string;
   createdAt: Timestamp;
 }
 
@@ -42,7 +42,7 @@ export default function revenue() {
     const filtered = revenueData.filter(revenue =>
       revenue.id.toLowerCase().includes(text.toLowerCase()) || 
       revenue.type.toLowerCase().includes(text.toLowerCase()) ||
-      revenue.value.toString().toLowerCase().includes(text.toLowerCase())
+      revenue.value.toLowerCase().includes(text.toLowerCase())
     );
     setFilteredProperties(filtered);
   };
@@ -50,7 +50,7 @@ export default function revenue() {
     // Function to determine color based on transaction type
     const getColorByType = (type: string) => {
       switch (type) {
-        case 'Transfer':
+        case 'Transfer Revenue':
           return 'text-red-500';
         default:
           return 'text-green-500';
@@ -58,9 +58,9 @@ export default function revenue() {
     };
   
     // Function to determine the prefix (whether "+" or "-") based on type
-    const formatAmountByType = (type: string, amount: number) => {
-      const formattedAmount = `Php ${amount.toLocaleString()}`;
-      return type === 'Transfer' ? `-${formattedAmount}` : `+${formattedAmount}`;
+    const formatAmountByType = (type: string, amount: string) => {
+      const formattedAmount = `Php ${amount}`;
+      return type === 'Transfer Revenue' ? `-${formattedAmount}` : `+${formattedAmount}`;
     };
 
     useEffect(() => {
@@ -85,13 +85,14 @@ export default function revenue() {
               (snapshot) => {
                 const revenues = snapshot.docs.map((doc) => {
                   const data = doc.data();
+                  console.log("This is data:", data)
                   return {
                     id: doc.id,
                     uid: data.uid,
-                    type: data.paymentPurpose || '',
-                    transactionId: data.TransactionID || '',
-                    value: data.amount || 0,
-                    createdAt: data.dateTime || Timestamp.now(),
+                    type: data.type || 'Test',
+                    transactionId: data.transactionId || 'Test',
+                    value: data.value || "0",
+                    createdAt: data.createdAt || Timestamp.now(),
                   };
                 });
     
@@ -183,27 +184,27 @@ export default function revenue() {
         <Text className="text-gray-400 text-sm">No transactions yet.</Text>
       </View>
     ) : (
-      filteredProperties.map((property) => (
+      filteredProperties.map((revenue) => (
         <TouchableOpacity
-          key={property.id}
+          key={revenue.id}
           onPress={async () => {
             router.push('./viewRevenue');
-            if (property) {
-              console.log(property.transactionId);
-              await SecureStore.setItemAsync('revenueReceiptId', property.transactionId);
+            if (revenue) {
+              console.log(revenue.transactionId);
+              await SecureStore.setItemAsync('revenueReceiptId', revenue.transactionId);
             }
           }}
           className="w-full p-2.5 rounded-xl shadow-md border border-gray-100 bg-white flex flex-row"
         >
           <View className="w-full flex-col space-y-1">
             <View className="flex-row items-center justify-between">
-              <Text className="text-xs font-bold">{property.type}</Text>
-              <Text className={`text-xs font-bold ${getColorByType(property.type)}`}>
-                {formatAmountByType(property.type, property.value)}
+              <Text className="text-xs font-bold">{revenue.type}</Text>
+              <Text className={`text-xs font-bold ${getColorByType(revenue.type)}`}>
+                {formatAmountByType(revenue.type, revenue.value)}
               </Text>
             </View>
             <Text className="text-[10px] text-gray-400">
-              {property.createdAt.toDate().toLocaleDateString('en-US', {
+              {revenue.createdAt.toDate().toLocaleDateString('en-US', {
                 year: 'numeric',
                 month: 'long',
                 day: 'numeric',

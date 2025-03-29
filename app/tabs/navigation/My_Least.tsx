@@ -171,7 +171,7 @@ export default function MyLease() {
         const newLeases: MultipleLease[] = []; // Collect lease data in a new array
   
         const fetchLease = async (transactionDoc: any) => {
-          const { transactionId, ownerId, propertyId, moveInDate, rentalStartDate, rentalEndDate, paymentStatus, createdAt } = transactionDoc.data();
+        const { transactionId, ownerId, propertyId, moveInDate, rentalStartDate, rentalEndDate, paymentStatus, createdAt } = transactionDoc.data();
           
           // Check if rentalEndDate is today's date
           // Check if rentalEndDate is today's date
@@ -180,28 +180,49 @@ export default function MyLease() {
 
         const [month, day, year] = rentalEndDate.split('/').map(Number);
 
+        const userTransactionsRef = await getDoc(doc(db, 'users', tenantId));
+        
+        if(!userTransactionsRef.exists()){
+          return;
+        }
+
+        const userData = userTransactionsRef.data();
+
+        const fullName = `${userData.firstName} ${userData.middleName} ${userData.lastName}`;
+
+        const propertyTransactionRef = await getDoc(doc(db, 'properties', ownerId, 'propertyId', propertyId));
+
+        if(!propertyTransactionRef.exists()){
+          return;
+        }
+
+        const propertyData = propertyTransactionRef.data();
+
+        const fullAddress = `${propertyData.propertyHomeAddress}, ${propertyData.propertyBarangay}, ${propertyData.propertyCity},  ${propertyData.propertyRegion}`;
+
         // Create a new Date object (Note: month is 0-based in JavaScript)
         const formattedRentalEndDate = new Date(year, month - 1, day);
-        // add tomorrow
-        // const tomorrow = new Date();
-        // tomorrow.setDate(today.getDate() + 1);
-        // // Format tomorrow's date as MM/DD/YYYY
-        // const formattedTomorrow = `${String(tomorrow.getMonth() + 1).padStart(2, '0')}/${String(tomorrow.getDate()).padStart(2, '0')}/${tomorrow.getFullYear()}`;
 
+        // 2 weeks before end date
+        const twoWeeksBeforeEndDate = new Date(year, month - 1, day - 14);
+        // console.log("Two weeks: AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA", twoWeeksBeforeEndDate);
         console.log(formattedToday, formattedRentalEndDate);
         // router.replace('../tabs/Feedback/PropertyFeedback/propertyFeedback') // Go to Reviews
         if (rentalEndDate === formattedToday) {
           console.log(`Skipping property ${propertyId} as rentalEndDate (${rentalEndDate}) is today.`);
-          sendNotification(ownerId, 'feedback-property-owner', 'Lease Ended - Share Your Feedback', `Your tenant's lease has ended! We’d love to hear about your experience with the tenant and using the app. Please take a moment to answer a few questions to help us improve our services.`, 'Success', 'Unread')
-          sendNotification(tenantId, 'lease-end', 'Lease Ended - Share Your Feedback', 'Your lease has ended! We’d love to hear about your experience staying at the property, interacting with the landlord, and using the app. Please take a moment to answer a few questions to help us improve our services.', 'Success', 'Unread')
-          // router.replace('../tabs/Feedback/PropertyFeedback/propertyFeedback') // Go to Reviews
+          // sendNotification(ownerId, 'feedback-property-owner', 'Lease Ended - Share Your Feedback', `Your tenant ${fullName}'s lease has ended! We’d love to hear about your experience with the tenant and using the app. Please take a moment to answer a few questions to help us improve our services.`, 'Success', 'Unread', tenantId, propertyId)
+          sendNotification(tenantId, 'lease-extension', 'Lease Extension', "Your lease is set to expire in 2 weeks. Would you like to extend your contract? Click here to let us know if you wish to continue staying at the property, and we’ll guide you through the next steps!", 'Urgent', 'Unread', tenantId, propertyId)
+        // router.replace('../tabs/Feedback/PropertyFeedback/propertyFeedback') // Go to Reviews
           console.log(propertyId, ownerId)
           await SecureStore.setItemAsync('reviewPropertyId', propertyId);
           await SecureStore.setItemAsync('reviewOwnerId', ownerId);
+          await SecureStore.setItemAsync('fullAddress', fullAddress);
           await updateDoc(doc(db, 'propertyTransactions', transactionId), {paymentStatus: 'done'});
           // return; // Skip this lease
         } else if (today > formattedRentalEndDate) {
           return; // Skip this lease
+        } else if (today === twoWeeksBeforeEndDate ) {
+          sendNotification(tenantId, 'lease-extension', 'Lease Extension', "Your lease is set to expire in 2 weeks. Would you like to extend your contract? Click here to let us know if you wish to continue staying at the property, and we’ll guide you through the next steps!", 'Urgent', 'Unread', tenantId, propertyId)
         }
   
         if (ownerId && propertyId && rentalStartDate) {
@@ -381,8 +402,8 @@ export default function MyLease() {
           // Sort transactions by date in ascending order (oldest → newest)
           transactions.sort((b, a) => a.dateObject.getTime() - b.dateObject.getTime());
     
-          console.log(transactions.length);
-          console.log(transactions);
+          // console.log(transactions.length);
+          // console.log(transactions);
           setTransactionData(transactions as TransactionData[]);
         }
       } catch (error) {
@@ -426,7 +447,7 @@ export default function MyLease() {
       try {
         const uid = await SecureStore.getItemAsync('uid');
         const transactionId = `${selectedLeaseData?.ownerId}-${selectedLeaseData?.propertyId}-${uid}`;
-        console.log('Test', transactionId);
+        // console.log('Test', transactionId);
   
         if (transactionId) {
           // Get the collection reference for payment transactions
@@ -460,7 +481,7 @@ export default function MyLease() {
                 // Create the Date object with parsed values
                 const leaseStartDate = new Date(year, month - 1, dueDay); // Month is zero-indexed in JavaScript Date
 
-                console.log(leaseStartDate);
+                // console.log(leaseStartDate);
 
                 // Step to calculate newDueDay based on rentDueDay
                 const today = new Date();
@@ -708,19 +729,19 @@ export default function MyLease() {
     // Check the conditions
     if (today.getTime() === threeDaysBefore.getTime() && uid) {
       sendNotification(uid, 'approval', 
-        `Rent Due on ${dateString}`, `Reminder: Your rent is due on ${dateString}. Please ensure timely payment to avoid any issues.`, 'Urgent', 'Unread')
+        `Rent Due on ${dateString}`, `Reminder: Your rent is due on ${dateString}. Please ensure timely payment to avoid any issues.`, 'Urgent', 'Unread', '', '')
       console.log('Today is 3 days before the target date.');
     } else if (today.getTime() === targetDate.getTime() && uid) {
       sendNotification(uid, 'approval', 
-        `Rent Due on ${dateString}`, `Reminder: Your rent is due today. Please complete your payment to avoid any issues.`, 'Urgent', 'Unread')
+        `Rent Due on ${dateString}`, `Reminder: Your rent is due today. Please complete your payment to avoid any issues.`, 'Urgent', 'Unread', '', '')
       console.log('Today is the target date.');
     } else if (today.getTime() > targetDate.getTime() && uid) {
       sendNotification(uid, 'approval', 
-        `Rent Due on ${dateString}`, `Your rent payment was due yesterday and has not been received. Please complete the payment as soon as possible to avoid late fees.`, 'Urgent', 'Unread')
+        `Rent Due on ${dateString}`, `Your rent payment was due yesterday and has not been received. Please complete the payment as soon as possible to avoid late fees.`, 'Urgent', 'Unread', '', '')
       console.log('Today exceeds the target date.');
     } else if (today.getTime() < threeDaysBefore.getTime() && uid) {
       sendNotification(uid, 'approval', 
-        `Rent Due on ${dateString}`, `Reminder: Your rent was due on ${dateString}, and payment has not been received. Please make your payment immediately to avoid further action.`, 'Urgent', 'Unread')
+        `Rent Due on ${dateString}`, `Reminder: Your rent was due on ${dateString}, and payment has not been received. Please make your payment immediately to avoid further action.`, 'Urgent', 'Unread', '', '')
       console.log('Error: Today is more than 3 days before the target date.');
     } else {
       console.log('Today is either more or less than the target date.');

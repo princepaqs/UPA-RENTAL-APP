@@ -44,7 +44,7 @@ export default function Profile() {
   
     const total = ratings.reduce((sum, rating) => sum + rating, 0); // Sum all the ratings
     console.log('Total', total);
-    const finalRating = total / 4; // Divide the average by 4
+    const finalRating = total / 6; // Divide the average by 4
   
     return finalRating;
   };
@@ -186,8 +186,11 @@ export default function Profile() {
 
   // Function to calculate the average rating
   const calculateAverageRating = () => {
-    const totalRating = review.reduce((sum, review) => sum + review.ratings, 0); // Sum of all ratings
-    return (totalRating).toFixed(1); // Calculate average and round to 1 decimal place
+    const totalRating = review.reduce((sum, review) => (sum + review.ratings), 0); // Sum of all ratings
+    console.log("Length", review.length);
+    console.log(totalRating / review.length)
+    console.log(totalRating)
+    return (totalRating / 6).toFixed(1); // Calculate average and round to 1 decimal place
   };
 
   const handleCopyAccountId = (accountId: string | null) => {

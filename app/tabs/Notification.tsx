@@ -10,6 +10,7 @@ import * as SecureStore from 'expo-secure-store';
 import { getDownloadURL, ref } from 'firebase/storage'; 
 import { db, storage } from '../../_dbconfig/dbconfig'; 
 import { onSnapshot, collection, getDocs, query, where, doc, getDoc, updateDoc } from 'firebase/firestore';
+import { useAuth } from '@/context/authContext';
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList, 'Dashboard'>;
 
@@ -23,6 +24,8 @@ type NotificationItem = {
   message: string;
   type: string; // Restricting the type to specific values
   status: string;
+  receipientId: string;
+  propertyId: string;
 };
 
 // Explicitly typing notificationsData as NotificationItem[]
@@ -41,12 +44,14 @@ export default function Notification() {
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
   const [roleStatus, setRoleStatus] = useState('');
   const [role, setRole] = useState('');
-  const propertyAddress = 'Caloocan City';
+  const [propertyAddress, setPropertyAddress] = useState('');
   const navigation = useNavigation<NavigationProp>();
+  const { sendNotification } = useAuth();
 
   useEffect(() => {
     const fetchNotifications = async () => {
       const uid = await SecureStore.getItemAsync('uid');
+      const property = await SecureStore.getItemAsync('fullAddress');
       if (uid) {
         try {
           setUID(uid);
@@ -74,6 +79,8 @@ export default function Notification() {
                 message: data.message,
                 type: data.type,
                 status: data.status,
+                receipientId: data.receipientId,
+                propertyId: data.propertyId
               });
             });
   
@@ -89,9 +96,10 @@ export default function Notification() {
             
 
   
-            console.log(fetchedNotifications);
+            // console.log(fetchedNotifications);
             // Update the notifications state with the real-time data
             setNotifications(fetchedNotifications);
+            if(property)setPropertyAddress(property);
           });
   
           // Optionally, return the unsubscribe function to stop listening when the component unmounts
@@ -132,19 +140,20 @@ export default function Notification() {
       setModalTitle('Lease Extension Request');
       setModalMessage(`Do you wish to extend your lease at ${propertyAddress}?`);
       setModalActions([
-        { label: 'No', onPress: accountStatus !== 'Owner' 
-          ? handleNo 
-          : () => { 
-              handleCloseModal(); 
-              router.replace('./OwnerLeaseAvailability/setRentalDetails'); 
-            }, color: '#EF5A6F' },
-
-        { label: 'Yes', onPress: accountStatus !== 'Owner' 
-          ? handleYes 
-          : () => { 
-              handleCloseModal(); 
-              router.replace('./OwnerLeaseExtend/rentalDetails'); 
-            }, color: '#38A169' },
+        { label: 'Yes', onPress: 
+          // role !== 'Owner' ? 
+          handleYes 
+          // : () => { 
+          //     handleCloseModal(); 
+          //     router.replace('./OwnerLeaseExtend/rentalDetails'); 
+          //   }
+          , color: '#38A169' },
+        { label: 'No', onPress: handleNo 
+          // : () => { 
+          //     handleCloseModal(); 
+          //     router.replace('./OwnerLeaseAvailability/setRentalDetails'); 
+          //   }
+            , color: '#EF5A6F' },
       ]);
     } else if (notification.type === 'feedback-upa'){
       setModalVisible(true);
@@ -178,11 +187,16 @@ export default function Notification() {
       setModalActions([
           {
               label: 'Yes',
-              onPress: () => {
-                  handleCloseModal();
-                  role === 'Tenant'
-                      ? router.push('./Feedback/PropertyFeedback/propertyFeedback')
-                      : router.push('./Feedback/TenantFeedback/tenantFeedback');
+              onPress: async () => { // Use async since SecureStore is asynchronous
+                handleCloseModal();
+          
+                if (notification.receipientId !== '' && notification) { // Use 'recipientId' instead of 'receipientId' if it's a typo
+                  router.push('./Feedback/TenantFeedback/tenantFeedback');
+                  await SecureStore.setItemAsync('reviewPropertyId', notification.propertyId);
+                  await SecureStore.setItemAsync('reviewOwnerId', notification.receipientId);
+                } else {
+                  router.push('./Feedback/TenantFeedback/tenantFeedback');
+                }
               },
               color: '#38A169',
           },
@@ -220,9 +234,27 @@ export default function Notification() {
 }
   
 
-      else if (notification.type === 'lease-extension' && notification.status === 'Approved') {
-        navigation.navigate('Dashboard', { screen: 'My_Least' });
-
+    else if (notification.type === 'lease-extension-owner' && notification.status === 'Urgent') {
+      // navigation.navigate('Dashboard', { screen: 'My_Least' });
+      setModalVisible(true);
+      setModalTitle('Lease Extension Request');
+      setModalMessage(`Do you wish to extend the tenant's lease at ${propertyAddress}?`);
+      setModalActions([
+        { label: 'Yes', onPress: async() => { 
+              await SecureStore.setItemAsync('extensionPropertyId', notification.propertyId)
+              await SecureStore.setItemAsync('extensionTenantId', notification.receipientId)
+              handleCloseModal(); 
+              router.replace('./OwnerLeaseExtend/rentalDetails'); 
+            }
+          , color: '#38A169' },
+        { label: 'No', onPress: 
+            () => { 
+              handleNo();
+              handleCloseModal(); 
+              router.replace('./OwnerLeaseAvailability/setRentalDetails'); 
+            }
+            , color: '#EF5A6F' },
+      ]);
     } 
     else if ((notification.type === 'account-registration' || notification.type === 'account-registration-owner') && notification.status === 'Rejected') {
       setModalVisible(true); // Show the modal
@@ -279,8 +311,17 @@ export default function Notification() {
     setModalTitle('Lease Extension Request');
     setModalMessage(`Your request to extend the lease at ${propertyAddress} has been received. Your request will be reviewed by the property owner shortly.`);
     setModalActions([
-      { label: 'Confirm', onPress: handleCloseModal, color: '#EF5A6F' },
-      { label: 'Cancel', onPress: handleCloseModal, color: '#333333' },
+      { label: 'Confirm', onPress: async () => {
+        const ownerId = await SecureStore.getItemAsync('reviewOwnerId') || '';
+        const fullAddress = await SecureStore.getItemAsync('fullAddress') || '';
+        const propertyId = await SecureStore.getItemAsync('reviewPropertyId') || '';
+        if(!ownerId || !fullAddress || !propertyId){
+          return
+        }
+        sendNotification(ownerId, 'lease-extension-owner', 'Lease Extension', `Your tenant at ${fullAddress} has requesting a lease-extension. We’d love to hear about your decision on extending the tenant at the property.`, 'Urgent', 'Unread', uid, propertyId)
+        handleCloseModal();
+      }, color: '#EF5A6F' },
+      // { label: 'Cancel', onPress: handleCloseModal, color: '#333333' },
     ]);
   };
 
@@ -288,8 +329,18 @@ export default function Notification() {
     setModalTitle('Lease Extension Request');
     setModalMessage(`Thank you for letting us know. You have chosen not to extend your lease at ${propertyAddress}. We’ll provide further instructions for lease end preparations.`);
     setModalActions([
-      { label: 'Confirm', onPress: handleCloseModal, color: '#EF5A6F' },
-      { label: 'Cancel', onPress: handleCloseModal, color: '#333333' },
+      { label: 'Confirm', onPress: async () => {
+        handleCloseModal()
+        const tenantId = await SecureStore.getItemAsync('uid');
+        const fullAddress = await SecureStore.getItemAsync('fullAddress');
+        const propertyId = await SecureStore.getItemAsync('reviewPropertyId');
+        if(!tenantId || !fullAddress || !propertyId){
+          return
+        }
+        sendNotification(tenantId, 'lease-end', 'Lease Ended - Share Your Feedback', `Your lease at ${fullAddress} has ended! We’d love to hear about your experience staying at the property, interacting with the landlord, and using the app. Please take a moment to answer a few questions to help us improve our services.`, 'Success', 'Unread', tenantId, propertyId)
+        
+      }, color: '#EF5A6F' },
+      // { label: 'Cancel', onPress: handleCloseModal, color: '#333333' },
     ]);
   };
 

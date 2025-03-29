@@ -38,13 +38,13 @@ export default function ReviewTransaction() {
     };
 
     // Calculate total after fees
-    const total = amount + fees;
+    const value = amount + fees;
     const transactionData = {
-        transactionID: generateTransactionID(),
-        dateTime: getCurrentDateTime(),
+        transactionId: generateTransactionID(),
+        createdAt: getCurrentDateTime(),
         type,
         amount,
-        total : total,
+        value,
     };
 
     const handleContinue = async () => {
@@ -76,11 +76,11 @@ export default function ReviewTransaction() {
                     <View className='px-6 pt-10 mb-6'>
                         <Text className='text-sm font-bold px-4'>Transfer Details</Text>
                         <View className='bg-white flex flex-col space-y-2 p-5 rounded-xl my-2'>
-                            <Text className='text-sm text-gray-500'>Transaction ID: {transactionData.transactionID}</Text>
-                            <Text className='text-sm text-gray-500'>Date Time: {transactionData.dateTime}</Text>
-                            <Text className='text-sm text-gray-500'>Transfer Amount: ₱ {amount.toLocaleString()}</Text>
+                            <Text className='text-sm text-gray-500'>Transaction ID: {transactionData.transactionId}</Text>
+                            <Text className='text-sm text-gray-500'>Date Time: {transactionData.createdAt}</Text>
+                            <Text className='text-sm text-gray-500'>Transfer Amount: ₱ {value.toLocaleString()}</Text>
                             <Text className='text-sm text-gray-500'>Fees: ₱ {fees}</Text>
-                            <Text className='text-sm text-gray-500 font-bold'>TOTAL: ₱ {total.toLocaleString()}</Text>
+                            <Text className='text-sm text-gray-500 font-bold'>TOTAL: ₱ {value.toLocaleString()}</Text>
                         </View>
                     </View>
 
