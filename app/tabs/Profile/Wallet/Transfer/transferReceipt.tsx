@@ -68,7 +68,7 @@ export default function TransferReceipt() {
             // Set the updated balance back into the database
             await updateDoc(senderWalletRef, { balance: senderUpdatedBalance });
             await updateDoc(receiverWalletRef, { balance: receiverUpdatedBalance });
-            sendNotification(senderId, 'wallet-transfer', 'Funds Transfer Successful', `Your funds have been successfully transferred to ${transferData?.receiptName}'s account.`, 'Success', 'Unread')
+            sendNotification(senderId, 'wallet-transfer', 'Funds Transfer Successful', `Your funds have been successfully transferred to ${transferData?.receiptName}'s account.`, 'Success', 'Unread','','')
 
             console.log(`Wallet updated: ${senderId} has new balance of ${senderUpdatedBalance}`);
             console.log(`Wallet updated: ${receiverId} has new balance of ${receiverUpdatedBalance}`);

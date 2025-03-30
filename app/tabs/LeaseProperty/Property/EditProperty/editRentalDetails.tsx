@@ -7,7 +7,7 @@ import * as SecureStore from 'expo-secure-store';
 export default function AddNewProperty() {
   const router = useRouter();
   const [monthlyRentPrice, setMonthlyRentPrice] = useState("");
-  const [leaseDuration, setLeaseDuration] = useState("Short-term (6 months)");
+  const [leaseDuration, setLeaseDuration] = useState("Demo (1 minute)"); // please back to 6 months
   const [securityDepositMonths, setSecurityDepositMonths] = useState("1 month");
   const [securityDepositAmount, setSecurityDepositAmount] = useState("");
   const [advancePaymentAmount, setAdvancePaymentAmount] = useState("");
@@ -16,7 +16,7 @@ export default function AddNewProperty() {
   const [isLeaseDropdownVisible, setLeaseDropdownVisible] = useState(false);
   const [isSecurityDropdownVisible, setSecurityDropdownVisible] = useState(false);
 
-  const leaseDurations = ["Short-term (6 months)", "Long-term (1 year)"];
+  const leaseDurations = ["Demo (1 minute)", "Short-term (6 months)", "Long-term (1 year)"];
   const securityDepositOptions = ["1 month", "2 months"];
 
   // Function to calculate deposit based on months and rent

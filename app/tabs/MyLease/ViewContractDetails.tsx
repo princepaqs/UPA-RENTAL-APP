@@ -47,6 +47,7 @@ export default function ReceivedContract() {
   const [formatDate, setFormatDate] = useState<string>('');
   
 
+
   const handleDownload = async () => {
     // Define the file name and path
     const fileName = `Contract_${contractData?.propertyName}.txt`;
@@ -134,7 +135,6 @@ Date: ${formatDate}
       Alert.alert('Error', 'Failed to download the contract.');
     }
   };
-
 // const handleDownload = async () => {
 //   const fileName = `Contract_${contractData?.propertyName}.pdf`;
 
@@ -428,10 +428,10 @@ Date: ${formatDate}
             <Text className="text-sm font-semibold mb-1">Date: <Text className="font-normal">{formatDate}</Text></Text>
 
             <View className=' items-center justify-center flex-row my-5 space-x-4 px-4'>
-              <TouchableOpacity onPress={() => router.replace('./TerminateContract/terminateContract')} className="w-1/2 flex-row items-center space-x-1 justify-center border rounded-xl py-3">
+              {/* <TouchableOpacity onPress={() => router.replace('./TerminateContract/terminateContract')} className="w-1/2 flex-row items-center space-x-1 justify-center border rounded-xl py-3">
                 <Feather name="x-circle" size={20} color="black" />
                 <Text className="text-black text-center text-xs font-bold">Terminate Contract</Text>
-              </TouchableOpacity>
+              </TouchableOpacity> */}
               <TouchableOpacity onPress={handleDownload} className="w-1/2 flex-row items-center space-x-1 justify-center bg-[#B33939] rounded-xl py-3">
               <Feather name="download" size={20} color="white" />
                 <Text className="text-white text-center text-xs font-bold">Download Contract</Text>

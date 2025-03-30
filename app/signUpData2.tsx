@@ -51,9 +51,11 @@ const toggleConfirmPasswordVisibility = () => setConfirmPasswordVisible(!confirm
 
 // Function to validate password requirements
 const isPasswordValid = (password: string) => {
-  return /^(?=.*[0-9])(?=.*[!@#$%^&*])[A-Za-z\d!@#$%^&*]{8,}$/.test(password);
+  return /^(?=.*[0-9])(?=.*[!@#$%^&*])[A-Za-z\d!@#$%^&*\.]{8,}$/.test(password);
 };
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+
 
 
   useEffect(() => {
@@ -108,6 +110,22 @@ const isPasswordValid = (password: string) => {
     setPasswordVisible(!passwordVisible);
   };
 
+  const [password, setPassword] = useState('');
+  const [passwordError, setPasswordError] = useState('');
+
+  const validatePassword = (password: string) => {
+    // Regular expression: At least 8 characters, 1 special character, and 1 number
+    // const passwordRegex = /^(?=.*[0-9])(?=.*[!@#$%^&*])(?=.{8,})/;
+    const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)(?=.*[!@#$%^&*\.]).{8,}$/;
+
+    if (!passwordRegex.test(password)) {
+      setPasswordError('Password must have at least 8 characters, 1 special character, and 1 number.');
+    } else {
+      setPasswordError(''); // Clear error if password is valid
+    }
+  };
+
+
   const handleContinue = async () => {
     setLoading(true);
 
@@ -129,15 +147,27 @@ const isPasswordValid = (password: string) => {
       return;
     }
 
-    // Password length validation
-    if (password.length < 8 || password.length > 16) {
-      Alert.alert('Invalid Password', 'Password must be between 8 and 16 characters and contains 1 or more special characters.');
+    // Password length and complexity validation
+    const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,16}$/;
+
+    if (!passwordRegex.test(password)) {
+      Alert.alert(
+        'Invalid Password',
+        'Password must be 8-16 characters long and include at least one letter, one number, and one special character.'
+      );
+      setLoading(false);
+      return;
+    }
+
+
+    if (!confirmPassword){
+      Alert.alert('Confirm Password', 'Confirm password is required.');
       setLoading(false);
       return;
     }
 
     if (password !== confirmPassword){
-      Alert.alert('Invalid Password', 'Password is not correct.');
+      Alert.alert('Invalid Password', 'Password do not match.');
       setLoading(false);
       return;
     }
@@ -237,15 +267,23 @@ const isPasswordValid = (password: string) => {
                   if (!filteredValue.startsWith('09')) {
                     filteredValue = '09' + filteredValue.slice(2); // Ensure it starts with "09"
                   }
+                  if (filteredValue.length < 11) {
+                    setError('Phone number must be exactly 11 digits.');
+                  } else {
+                    setError(''); // Clear error if valid
+                  }
                   setPhoneNumber(filteredValue); // Update state
                   phoneRef.current = filteredValue; // Update reference
                 }}
                 className='px-8 py-1 bg-gray-100 rounded-xl text-xs'
                 placeholder='Phone Number'
                 placeholderTextColor={'gray'}
-                keyboardType='phone-pad'
+                keyboardType='numeric'
                 maxLength={11}
               />
+              {error !== '' && (
+                <Text className="text-red-500 text-xs mt-1 px-2">{error}</Text>
+              )}
             </View>
 
 
@@ -289,7 +327,7 @@ const isPasswordValid = (password: string) => {
             </View>
 
            {/* Password */}
-            <View className='pt-2'>
+            {/* <View className='pt-2'>
               <Text className='px-2 pb-1 text-xs font-semibold'>Password</Text>
               <Text className='px-2 pb-1 text-xs text-gray-500'>
                 At least 8 characters, 1 special character, and 1 number
@@ -308,7 +346,35 @@ const isPasswordValid = (password: string) => {
                   <Feather name={passwordVisible ? 'eye' : 'eye-off'} size={15} color="gray" />
                 </TouchableOpacity>
               </View>
+            </View> */}
+            {/* Password */}
+            <View className="pt-2">
+              <Text className="px-2 pb-1 text-xs font-semibold">Password</Text>
+              <Text className="px-2 pb-1 text-xs text-gray-500">
+                At least 8 characters, 1 special character, and 1 number
+              </Text>
+              <View className="flex flex-row px-8 py-1 items-center bg-gray-100 rounded-xl">
+                <TextInput
+                  onChangeText={(value) => {
+                    passwordRef.current = value;
+                    setPassword(value); // Update state
+                    validatePassword(value); // Check password validity
+                  }}
+                  style={{ flex: 1, fontSize: 12, color: 'black' }}
+                  placeholder="Password"
+                  secureTextEntry={!passwordVisible}
+                  maxLength={16}
+                />
+                <TouchableOpacity onPress={togglePasswordVisibility}>
+                  <Feather name={passwordVisible ? 'eye' : 'eye-off'} size={15} color="gray" />
+                </TouchableOpacity>
+              </View>
+              {/* Error Message */}
+              {passwordError !== '' && (
+                <Text className="text-red-500 text-xs mt-1 px-2">{passwordError}</Text>
+              )}
             </View>
+
 
             {/* Confirm Password */}
             <View className='pt-2'>
@@ -375,6 +441,8 @@ const isPasswordValid = (password: string) => {
                       <TouchableOpacity
                         onPress={() => {
                           setSelectedLocation(item.code);
+                          setSelectedCity(''); // Clear the selected city
+                          setSelectedBarangay(''); // Clear the selected barangay
                           setShowLocationModal(false);
                           userSelectedRegion(item.name);
                         }}
@@ -418,6 +486,7 @@ const isPasswordValid = (password: string) => {
                       <TouchableOpacity
                         onPress={() => {
                           setSelectedCity(item.code);
+                          setSelectedBarangay(''); // Clear the selected barangay
                           setShowCityModal(false);
                           userSelectedCity(item.name);
                         }}

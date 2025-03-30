@@ -24,6 +24,7 @@ interface Property {
   propertyType: string;
   noOfBedrooms: string;
   noOfBathrooms: string;
+  noOfTenants: string;
   furnishing: string;
   propertyWaterFee: string;
   propertyElectricFee: string;
@@ -241,8 +242,8 @@ const handlePhoneCall = () => {
       console.log(propertyId);
       // Fetch reviews
       const reviewQuery = query(
-        collection(db, 'reviews', propertyId, 'reviewId'),
-        where('feedbackType', '!=', 'UPA')
+        collection(db, 'reviews', ownerId, 'reviewId'),
+        where('feedbackType', '==', 'Property')
       );
       const reviewSnapshot = await getDocs(reviewQuery);
 
@@ -251,10 +252,10 @@ const handlePhoneCall = () => {
           await Promise.all(
             reviewSnapshot.docs.map(async (docu) => {
               const data = docu.data();
-              const userRef = doc(db, 'users', data.uid);
+              const userRef = doc(db, 'users', data.senderId);
               const userDoc = await getDoc(userRef);
 
-              if (userDoc.exists()) {
+              if (userDoc.exists() && propertyId === data.propertyId) {
                 const userData = userDoc.data();
                 const profilePicture = await getUserImageUrl(userDoc.id);
                 const starReview = await getRating(data.ratings);
@@ -262,7 +263,7 @@ const handlePhoneCall = () => {
 
                 return {
                   id: docu.id,
-                  uid: data.uid,  
+                  uid: data.senderId,  
                   name: `${userData.firstName} ${userData.middleName || ''} ${userData.lastName}`,
                   profilePicture: profilePicture
                     ? { uri: profilePicture }
@@ -312,6 +313,7 @@ const handlePhoneCall = () => {
             propertyType: 'Condo',
             noOfBedrooms: data.noOfBedrooms,
             noOfBathrooms: data.noOfBathrooms,
+            noOfTenants: data.noOfTenants,
             furnishing: data.furnishing,
             propertyWaterFee: data.propertyWaterFee,
             propertyElectricFee: data.propertyElectricFee,
@@ -409,12 +411,17 @@ const handlePhoneCall = () => {
   const images = propertyData?.images || []; // Fallback to an empty array
 
   useEffect(() => {
+    fetchPropertyData();
+  }, [])
+
+  useEffect(() => {
+    
     const totalRating = review.reduce((acc, tenant) => acc + tenant.ratings, 0);
     const avgRating = review.length > 0 ? totalRating / review.length : 0;
     setAverageRating(avgRating);
     getDetails(); // Fetch the property ID when component mounts
-    fetchPropertyData();
-  }, []);
+    
+  }, [review]);
   
   const [refreshing, setRefreshing] = useState(false);
   const onRefresh = async () => {
@@ -501,7 +508,7 @@ const handlePhoneCall = () => {
             <View className='gap-3 flex flex-row items-center justify-start border-gray-200'>
               <Feather name='map-pin' size={15} color="black" />
               <Text className={`text-xs font-normal ${propertyData ? '' : 'bg-gray-200 w-1/2 rounded-xl'}`}>
-                {propertyData ? `${propertyData.barangay}, ${propertyData.city}, ${propertyData.region}` : ''}
+                {propertyData && (userData?.accountStatus !== 'In-review' || 'Pending') ? `${propertyData.homeAddress}, ${propertyData.barangay}, ${propertyData.city}, ${propertyData.region}` : ''}
               </Text>
             </View>
           </View>
@@ -528,7 +535,9 @@ const handlePhoneCall = () => {
               {ownerData?.firstName} {ownerData?.middleName} {ownerData?.lastName}
             </Text>
             <View className='flex flex-row space-x-2'>
-              <TouchableOpacity onPress={() => router.push('./Message/msgDetails')}>
+              <TouchableOpacity onPress={async () => {
+                router.push('./Message/msgDetails')
+                await SecureStore.setItemAsync('messageRecipientId', ownerData?.id || '')}}>
                 <AntDesign name="message1" size={18} color="gray" />
               </TouchableOpacity>
               <TouchableOpacity onPress={handlePhoneCall}>
@@ -566,7 +575,17 @@ const handlePhoneCall = () => {
               <MaterialCommunityIcons name="bathtub-outline" size={20} color="black" />
               <Text className={`text-sm text-[#6B6A6A] ${propertyData ? '' : 'bg-gray-200 w-1/2 rounded-xl'}`}>
                 {propertyData ? 
-                  `${propertyData.noOfBedrooms} ${parseInt(propertyData.noOfBathrooms) > 1 ? 'Bathrooms' : 'Bathroom'}` 
+                  `${propertyData.noOfBathrooms} ${parseInt(propertyData.noOfBathrooms) > 1 ? 'Bathrooms' : 'Bathroom'}` 
+                  : ''
+                }
+              </Text>
+            </View>
+
+            <View className='flex flex-row items-center gap-4 py-2'>
+              <MaterialIcons name="bed" size={20} color="black" />
+              <Text className={`text-sm text-[#6B6A6A] ${propertyData ? '' : 'bg-gray-200 w-1/2 rounded-xl'}`}>
+                {propertyData ? 
+                  `${propertyData.noOfTenants} ${parseInt(propertyData.noOfTenants) > 1 ? 'Tenants' : 'Tenant'}` 
                   : ''
                 }
               </Text>
@@ -606,7 +625,7 @@ const handlePhoneCall = () => {
               ) : (
                 <View className='flex flex-row items-center justify-between'>
                   <Text className='text-sm text-[#6B6A6A]'>
-                    Deposit Month
+                    Security Deposit Month
                   </Text>
                   <Text className='text-sm text-[#6B6A6A]'>
                     
@@ -621,7 +640,7 @@ const handlePhoneCall = () => {
               ) : (
                 <View className='flex flex-row items-center justify-between'>
                   <Text className='text-sm text-[#6B6A6A]'>
-                    Deposit Amount
+                    Security Deposit Amount
                   </Text>
                   <Text className='text-sm text-[#6B6A6A]'>      
                     ₱{parseInt(propertyData?.propertySecurityDepositAmount).toLocaleString()}
@@ -738,7 +757,7 @@ const handlePhoneCall = () => {
                     className='flex flex-col p-2 items-start border rounded-lg max-w-xs space-y-2' // Added max width to the card
                   >
                     <View className='flex flex-row items-center space-x-1'>
-                      <Image source={require("../../assets/images/profile.png")} className='w-8 h-8 rounded-full' />
+                      <Image source={rev.profilePicture || require("../../assets/images/profile.png")} className='w-8 h-8 rounded-full' />
 
                       <View className='flex flex-col'>
                         <View className='flex flex-row'>

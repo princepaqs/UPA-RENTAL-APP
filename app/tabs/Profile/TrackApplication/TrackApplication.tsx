@@ -158,7 +158,7 @@ export default function TrackApplication() {
       <View className='h-screen bg-gray-100 px-6 mt-14 rounded-t-2xl'>
         <View className='flex flex-row items-center justify-between px-6 pt-8 mb-10'>
           
-          <TouchableOpacity onPress={() => router.back()}>
+          <TouchableOpacity onPress={() => router.replace('../../Dashboard')}>
             <View className="flex flex-row items-center">
                 <Ionicons name="chevron-back-circle-outline" size={25} color="black" />
             </View>

@@ -48,8 +48,28 @@ export default function ReportIssue() {
   // Function to confirm submission
   const confirmSubmission = () => {
     setConfirmationModalVisible(false);
-    if(!user || !issueType || !transactionID || !description){
-      Alert.alert("Report Issue", "Please fill all fields.")
+    if(!user || !issueType){
+      Alert.alert("Report Issue", "Please select an issue.")
+      return
+    }
+
+    if(!user || !transactionID && issueType === "Payment Issue"){
+      Alert.alert("Report Issue", "Transaction ID is required.")
+      return
+    }
+
+    if(!user || !transactionID && issueType === "Maintenance Request"){
+      Alert.alert("Report Issue", "Maintenance ID is required.")
+      return
+    }
+
+    if(!user || !transactionID && issueType === "Lease Agreement Issue"){
+      Alert.alert("Report Issue", "Application ID is required.")
+      return
+    }
+
+    if(!user || !description){
+      Alert.alert("Report Issue", "Detailed description is required.")
       return
     }
 
@@ -59,7 +79,7 @@ export default function ReportIssue() {
 
       router.back();
     }
-    Alert.alert("Report Issue", "Your report is submitted")
+    Alert.alert("Report Issue", "Your report has been successfully submitted. It will be reviewed and handled promptly.")
   };
 
   // Function to handle the selection of the issue type
@@ -197,6 +217,7 @@ export default function ReportIssue() {
                 onChangeText={setDescription}
                 multiline
                 numberOfLines={4}
+                maxLength={1000}
                 style={{ textAlignVertical: 'top' }} // Ensures multiline input aligns from the top
               />
             </View>

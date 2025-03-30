@@ -2,14 +2,17 @@ import { View, Text, Image, TextInput, ScrollView, TouchableOpacity, RefreshCont
 import React, { useState, useEffect } from 'react';
 import { AntDesign, EvilIcons, Feather, FontAwesome, FontAwesome5, FontAwesome6, Ionicons, MaterialCommunityIcons, MaterialIcons, Octicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import { collection, getDocs, query, where } from 'firebase/firestore';
-import { db, storage } from '../../../_dbconfig/dbconfig';
+import { collection, doc, getDocs, query, where } from 'firebase/firestore';
+import { db, firebaseConfig, storage } from '../../../_dbconfig/dbconfig';
 import { getDownloadURL, ref } from "firebase/storage";
 import * as SecureStore from 'expo-secure-store';
 import LoadingModal from '@/components/LoadingModal';
+import ErrorModal from '@/components/ErrorModal';
 import { useAuth } from '../../../context/authContext';
 import { useFilter } from '../FilterContext'; // Import your Firestore configuration
 import { onSnapshot } from 'firebase/firestore'; // Import Firestore functions
+import { initializeApp } from 'firebase/app';
+import { getAuth } from 'firebase/auth';
 
 interface Property {
   propertyId: string;
@@ -30,7 +33,9 @@ interface Property {
 
 const Explore = () => {
   const router = useRouter();
-  const { addFavorite, removeFavorite } = useAuth();
+  const { addFavorite, removeFavorite, logout, listenForLogout } = useAuth();
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
   
   const [favorites, setFavorites] = useState<{ [key: string]: boolean }>({});
   const [searchQuery, setSearchQuery] = useState<string>('');
@@ -38,7 +43,19 @@ const Explore = () => {
   const [loading, setLoading] = useState(true);
   const [properties, setProperties] = useState<Property[]>([]);
   const [refreshing, setRefreshing] = useState(false);
+  const [modalVisible, setModalVisible] = useState(false);
+  const [modalMessage, setModalMessage] = useState('');
 
+  const showErrorModal = (message: string) => {
+    setModalMessage(message);
+    setModalVisible(true);
+  };
+
+  const closeModal = () => {
+    setModalVisible(false);
+    setModalMessage('');
+    logout();
+  };
 
   const { filters } = useFilter();
   // Debugging
@@ -104,7 +121,7 @@ const Explore = () => {
   );
 });
 
-console.log(filteredProperties);
+// console.log(filteredProperties);
 
 
   
@@ -201,9 +218,11 @@ console.log(filteredProperties);
     
         const unsubscribe = onSnapshot(favoritesRef, (favoritesSnapshot) => {
           const favoritesList: { [key: string]: boolean } = {};
+          listenForLogout();
           favoritesSnapshot.forEach(doc => {
             const data = doc.data();
             const key = `${data.ownerId}_${data.propertyId}`;
+
             favoritesList[key] = true; // Mark as favorite
           });
           setFavorites(favoritesList); // Update favorites state
@@ -381,13 +400,14 @@ console.log(filteredProperties);
   useEffect(() => {
     console.log('fetching data')
     fetchPropertyData();
+    listenForLogout();
     console.log('Test Explore')
   }, []);
 
   return (
     <View className='h-screen bg-[#F6F6F6]'>
       <LoadingModal visible={loading} />
-
+      <ErrorModal visible={modalVisible} message={modalMessage} onClose={closeModal} />
       <View className='px-8 pt-5 pb-2 flex flex-row items-center'>
         <View className='flex flex-row items-center bg-[#ECECEC] rounded-full flex-1'>
           <TextInput
@@ -504,7 +524,11 @@ console.log(filteredProperties);
                 </View>
               ))
             ) : (
-              <></>
+              <View className="flex-1 justify-center items-center">
+        <Text className="text-center text-gray-500 mt-4">
+          No properties available. You can add properties by being a Landlord. Check out now.
+        </Text>
+      </View>
             )}
           </View>
         </ScrollView>

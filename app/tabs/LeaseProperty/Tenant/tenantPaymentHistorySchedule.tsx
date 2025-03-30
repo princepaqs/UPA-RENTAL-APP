@@ -84,7 +84,9 @@ export default function tenantPaymentHistorySchedule() {
                             const paidMonths = data.paymentDuration;
     
                             const isLongTerm = data.propertyLeaseDuration === "Long-term (1 year)";
-                            const maxLeaseMonths = isLongTerm ? 12 : 6;
+                            const isShortTerm = data.propertyLeaseDuration === "Short-term (6 months)";
+                            const maxLeaseMonths = isLongTerm ? 12 : isShortTerm ? 6 : 1;
+                            // const maxLeaseMinutes = maxLeaseMonths === 0 ? 1 : 0; // If not months, set to 1 minute
                             const remainingMonths = maxLeaseMonths - paidMonths;
     
                             const startMonth = leaseStart.getMonth();

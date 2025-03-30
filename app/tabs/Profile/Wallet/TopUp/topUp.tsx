@@ -47,9 +47,8 @@ export default function TopUp() {
                   setWalletBalance(currentBalance);
               }
             }
-          } catch (error) {
-            
-          }
+            } catch (error) {
+        }
     /*
       try {
           // Check if the walletData.json file exists
@@ -71,7 +70,7 @@ export default function TopUp() {
       } catch (error) {
           console.error('Error loading wallet data:', error);
       }*/
-  };
+    };
 
     const handleContinue = async () => {
         const numericAmount = Number(amount);

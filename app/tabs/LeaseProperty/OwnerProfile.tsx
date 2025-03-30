@@ -6,6 +6,7 @@ import * as SecureStore from 'expo-secure-store';
 import { collection, getDocs, query, where, doc, getDoc, Timestamp } from 'firebase/firestore';
 import { getDownloadURL, ref } from 'firebase/storage'; // Firebase Storage import
 import { db, storage } from '../../../_dbconfig/dbconfig'; // Import your Firebase config
+import { useAuth } from '@/context/authContext';
 
 interface Reviews {
   id: string;
@@ -19,6 +20,7 @@ interface Reviews {
 
 export default function Profile() {
   const router = useRouter();
+    const { sendNotification, listenForLogout } = useAuth();
   const [fullName, setFullName] = useState<string | null>(null);
   const [profilePicUrl, setProfilePicUrl] = useState<string | null>(null);
   const [email, setEmail] = useState<string | null>(null);
@@ -52,7 +54,7 @@ export default function Profile() {
 
     const total = ratings.reduce((sum, rating) => sum + rating, 0); // Sum all the ratings
     console.log('Total', total);
-    const finalRating = total / 4; // Divide the average by 4
+    const finalRating = total / 6; // Divide the average by 4
 
     return finalRating;
   };
@@ -79,9 +81,10 @@ useEffect(() => {
     const fetchUserData = async () => {
         const ownerId = await SecureStore.getItemAsync('userId');
         setAccountID(ownerId);
-
+          
         if (ownerId) {
             const userRef = await getDoc(doc(db, 'users', ownerId?.toString()));
+
             if (userRef.exists()) {
                 const userData = userRef.data();
 
@@ -120,7 +123,7 @@ useEffect(() => {
                             await Promise.all(
                               reviewSnapshot.docs.map(async (docu) => {
                                 const data = docu.data();
-                                const userRef = doc(db, 'users', data.uid);
+                                const userRef = doc(db, 'users', data.senderId);
                                 const userDoc = await getDoc(userRef);
                   
                                 if (userDoc.exists()) {
@@ -155,7 +158,7 @@ useEffect(() => {
                           setReviews(reviewDatas); // Assign only valid Reviews objects
                           console.log(reviewDatas);
                         }else{
-                          console.log('Empty')
+                          console.log('Empty Reviews')
                         }
                     } catch (error) {
                         console.error('Error fetching profile picture:', error);
@@ -200,7 +203,7 @@ useEffect(() => {
   // Function to calculate the average rating
   const calculateAverageRating = () => {
     const totalRating = review.reduce((sum, review) => sum + review.ratings, 0); // Sum of all ratings
-    return (totalRating / review.length).toFixed(1); // Calculate average and round to 1 decimal place
+    return (totalRating / 6).toFixed(1); // Calculate average and round to 1 decimal place
   };
 
   const handleCopyAccountId = (accountId: string | null) => {

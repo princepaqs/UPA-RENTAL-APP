@@ -8,7 +8,7 @@ export default function success() {
   const Fullname = useRef("");
 
   const handleReturn = () => {
-    router.back();
+    router.replace('./dashboard');
   }
 
   const [isDetailsVisible, setIsDetailsVisible] = useState(false); 

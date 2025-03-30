@@ -16,12 +16,12 @@ interface Receipt {
     uid: string,
     name: string;
     email: string;
-    paymentPurpose: string;
-    amount: number;
-    TransactionID: string;
-    dateTime: Date;
-    fee: number;
-    total: number;
+    type: string;
+    amount: string;
+    transactionId: string;
+    createdAt: Date;
+    fee: string;
+    value: string;
 }
 
 export default function ReceiptTransaction() {
@@ -36,17 +36,18 @@ export default function ReceiptTransaction() {
                 setLoading(false);
                 if(topUp){
                     //await setDoc(doc(db, 'revenues', topUp.uid, 'revenueId', topUp.TransactionID), topUp);
-                    if(topUp.total){
-                        console.log(topUp.total, topUp.uid)
+                    
+                    if(topUp.value){
+                        console.log(topUp.value, topUp.uid)
                         const walletRef = await getDoc(doc(db, 'wallets', topUp.uid));
                         if(walletRef.exists()){
                             const walletData = walletRef.data();
                             if(walletData){
-                                const newRevenueBalance = walletData.revenueBalance - topUp.total;
-                                const newWalletBalance = walletData.balance + topUp.total;
+                                const newRevenueBalance = walletData.revenueBalance - parseInt(topUp.value);
+                                const newWalletBalance = walletData.balance + topUp.value;
                                 console.log(newRevenueBalance , newWalletBalance);
                                 await updateDoc(doc(db, 'wallets', topUp.uid), {balance: newWalletBalance, revenueBalance: newRevenueBalance});
-                                await setDoc(doc(db, 'revenues', topUp.uid, 'revenueId', topUp.TransactionID), topUp);
+                                await setDoc(doc(db, 'revenues', topUp.uid, 'revenueId', topUp.transactionId), topUp);
                             }
                         }
                     }
@@ -74,19 +75,19 @@ export default function ReceiptTransaction() {
                     const transactionId = generateTransactionID();
                     const transferAmount = getAmount();
                     const fee = 15;
-                    const total = transferAmount ? transferAmount + fee : 0;
+                    const value = transferAmount ? transferAmount + fee : 0;
                     if(userData && transferAmount){
                         setData({
                             refNo: refNumber,
-                            TransactionID: transactionId,
+                            transactionId: transactionId,
                             uid,
                             name: `${userData.firstName} ${userData.middleName} ${userData.lastName}`,
                             email: userData.email,
-                            paymentPurpose: 'Transfer Revenue',
-                            amount: transferAmount,
-                            dateTime: new Date(),
-                            fee,
-                            total,
+                            type: 'Transfer Revenue',
+                            amount: transferAmount.toString(),
+                            createdAt: new Date(),
+                            fee: fee.toString(),
+                            value: value.toString(),
                         })
                     }
                 }
@@ -107,7 +108,7 @@ export default function ReceiptTransaction() {
     // }
 
     const fees = 15
-    const total = topUp ? topUp.amount + fees : 0;
+    const total = topUp ? parseInt(topUp.amount) + fees : 0;
 
     const handleDownload = async () => {
         try {
@@ -168,10 +169,10 @@ export default function ReceiptTransaction() {
                                 </View>
                                 <View className="flex-col w-1/2 space-y-2">
                                     <Text className="text-xs text-[#6C6C6C]">{topUp?.refNo}</Text>
-                                    <Text className="text-xs text-[#6C6C6C]">{topUp?.TransactionID}</Text>
+                                    <Text className="text-xs text-[#6C6C6C]">{topUp?.transactionId}</Text>
                                     <Text className="text-xs text-[#6C6C6C]">
-                                        {topUp?.dateTime
-                                            ? topUp.dateTime.toLocaleString() // Format the Date object
+                                        {topUp?.createdAt
+                                            ? topUp.createdAt.toLocaleString() // Format the Date object
                                             : new Date().toLocaleString()}
                                     </Text>
                                 </View>
@@ -194,7 +195,7 @@ export default function ReceiptTransaction() {
                                     <Text className='text-xs text-[#6C6C6C] font-bold'>Amount: ₱ </Text>
                                 </View>
                                 <View className='flex-col w-1/2 space-y-2'>
-                                    <Text className='text-xs text-[#6C6C6C]'>{topUp?.paymentPurpose}</Text>
+                                    <Text className='text-xs text-[#6C6C6C]'>{topUp?.type}</Text>
                                     <Text className='text-xs text-[#6C6C6C]'>₱ {topUp?.amount.toLocaleString()}</Text>
                                 </View>
                             </View> 

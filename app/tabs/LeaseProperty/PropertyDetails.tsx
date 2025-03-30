@@ -4,7 +4,7 @@ import { Entypo, EvilIcons, Feather, FontAwesome6, Ionicons, MaterialIcons } fro
 import { useRouter } from 'expo-router';
 import MapView, { Marker } from 'react-native-maps';
 import { AirbnbRating } from 'react-native-ratings';
-import { collection, getDocs, query, where, doc, getDoc } from 'firebase/firestore';
+import { collection, getDocs, query, where, doc, getDoc, Timestamp } from 'firebase/firestore';
 import { db, storage } from '../../../_dbconfig/dbconfig';
 import { getDownloadURL, ref } from "firebase/storage";
 import * as SecureStore from 'expo-secure-store';
@@ -24,6 +24,7 @@ interface Property {
   propertyName: string;
   propertyType: string;
   noOfBedrooms: string;
+  noOfTenants: string;
   noOfBathrooms: string;
   furnishing: string;
   propertyWaterFee: string;
@@ -64,6 +65,16 @@ interface User {
   role: string;
 }
 
+interface Reviews {
+  id: string;
+  uid: string;
+  name: string;
+  profilePicture: { uri: string } | number;
+  ratings: number;
+  comment: string;
+  createdAt: string;
+}
+
 export default function Tenants() {
   const router = useRouter();
   const [searchText, setSearchText] = useState('');
@@ -74,6 +85,7 @@ export default function Tenants() {
   const [propertyData, setPropertyData] = useState<Property | null>(null);
   const [ownerData, setOwnerData] = useState<Owner | null>(null);
   const [userData, setUserData] = useState<User | null>(null);
+  const [review, setReviews] = useState<Reviews[]>([]);
   const [moveInDateModalVisible, setMoveInDateModalVisible] = useState(false);
   const [rentConfirmationModalVisible, setRentConfirmationModalVisible] = useState(false);
   const [plannedMoveInDate, setPlannedMoveInDate] = useState(new Date()); // Change to Date object
@@ -164,10 +176,37 @@ const handlePhoneCall = () => {
     fetchUserRole();
   }, []);
 
+  const getRating = async (ratings: number[]) => {
+      if (ratings.length === 0) return 0; // Handle the case where there are no ratings
+    
+      const total = ratings.reduce((sum, rating) => sum + rating, 0); // Sum all the ratings
+      console.log('Total', total);
+      const finalRating = total / 4; // Divide the average by 4
+    
+      return finalRating;
+    };
+  
+    const convertStringDateTime = async (dateTime: Timestamp) => {
+      // Convert Firestore Timestamp to a JavaScript Date object
+      const date = new Date(dateTime.seconds * 1000 + dateTime.nanoseconds / 1000000);
+    
+      // Format the date into MM/DD/YYYY HH:mm
+      const formattedDate = date.toLocaleString('en-US', {
+        month: '2-digit',
+        day: '2-digit',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: true, // Use 24-hour format. Change to true for AM/PM
+      });
+    
+      return formattedDate;
+    };
+
   // Calculate the average rating and fetch the property ID
   useEffect(() => {
-    const totalRating = tenants.reduce((acc, tenant) => acc + tenant.rating, 0);
-    const avgRating = tenants.length > 0 ? totalRating / tenants.length : 0;
+    const totalRating = review.reduce((acc, tenant) => acc + tenant.ratings, 0);
+    const avgRating = review.length > 0 ? totalRating / tenants.length : 0;
     setAverageRating(avgRating);
     getDetails(); // Fetch the property ID when component mounts
 
@@ -203,6 +242,50 @@ const handlePhoneCall = () => {
         }
       }
 
+      const reviewQuery = query(
+              collection(db, 'reviews', ownerId, 'reviewId'),
+              where('feedbackType', '==', 'Property')
+            );
+            const reviewSnapshot = await getDocs(reviewQuery);
+      
+            if (!reviewSnapshot.empty) {
+              const reviewDatas: Reviews[] = (
+                await Promise.all(
+                  reviewSnapshot.docs.map(async (docu) => {
+                    const data = docu.data();
+                    const userRef = doc(db, 'users', data.senderId);
+                    const userDoc = await getDoc(userRef);
+      
+                    if (userDoc.exists() && propertyId === data.propertyId) {
+                      const userData = userDoc.data();
+                      const profilePicture = await getUserImageUrl(userDoc.id);
+                      const starReview = await getRating(data.ratings);
+                      const dateString = await convertStringDateTime(data.createdAt);
+      
+                      return {
+                        id: docu.id,
+                        uid: data.senderId,  
+                        name: `${userData.firstName} ${userData.middleName || ''} ${userData.lastName}`,
+                        profilePicture: profilePicture
+                          ? { uri: profilePicture }
+                          : require('../../../assets/images/profile.png'),
+                        ratings: starReview,
+                        comment: data.comment || '',
+                        createdAt: dateString || '',
+                      };
+                    }
+                    console.log('No data')
+                    return null; // Return null if no user data
+                  })
+                )
+              ).filter((review): review is Reviews => review !== null); // Type guard to remove null
+      
+              setReviews(reviewDatas); // Assign only valid Reviews objects
+              console.log(reviewDatas);
+            }else{
+              console.log('Empty ratings');
+            }
+
       const propertyRef = doc(db, 'properties', ownerId, 'propertyId', propertyId);
       const propertySnapshot = await getDoc(propertyRef);
 
@@ -230,6 +313,7 @@ const handlePhoneCall = () => {
             propertyName: data.propertyName,
             propertyType: 'Condo',
             noOfBedrooms: data.noOfBedrooms,
+            noOfTenants: data.noOfTenants,
             noOfBathrooms: data.noOfBathrooms,
             furnishing: data.furnishing,
             propertyWaterFee: data.propertyWaterFee,
@@ -307,14 +391,17 @@ const handlePhoneCall = () => {
     <View className='bg-[#B33939]'>
       <View className='h-screen bg-gray-100 mt-14 py-8 rounded-t-2xl'>
       <View className='flex flex-row items-center justify-between px-8 py-3'>
-                <TouchableOpacity onPress={() => router.back()}>
+                <TouchableOpacity onPress={() => 
+                  // router.replace('./PropertyDashboard') // test first
+                  router.back()
+                  }>
                 <View className="flex flex-row items-center">
                     <Ionicons name="chevron-back-circle-outline" size={25} color="black" />
                 </View>
                 </TouchableOpacity>
 
                 <View className="flex-1 items-center justify-center pl-5">
-                <Text className='text-lg font-bold text-center'>Details</Text>
+                {/* <Text className='text-lg font-bold text-center'>Property Details</Text> */}
                 </View>
 {/*
                 <View className='flex flex-row items-center gap-3'>
@@ -390,7 +477,7 @@ const handlePhoneCall = () => {
             <View className='gap-3 flex flex-row items-center justify-start pb-5 border-b border-gray-200'>
               <Feather name='map-pin' size={15} color="black" />
               <Text className={`text-xs font-normal ${propertyData ? '' : 'bg-gray-200 w-1/2 rounded-xl'}`}>
-                {propertyData ? `${propertyData.barangay}, ${propertyData.city}, ${propertyData.region}` : ''}
+                {propertyData ? `${propertyData.homeAddress}, ${propertyData.barangay}, ${propertyData.city}, ${propertyData.region}` : ''}
               </Text>
             </View>
           </View>
@@ -399,7 +486,14 @@ const handlePhoneCall = () => {
           {/* Profile */}
           <View className='px-8'>
             <View className='py-4 flex flex-row items-center gap-2 border-b border-gray-200'>
-              <TouchableOpacity className='flex flex-row space-x-2' onPress={() => router.push('./LeaseProperty/OwnerProfile')}>
+              <TouchableOpacity className='flex flex-row space-x-2' 
+              onPress={() => {
+                if (ownerData?.id !== userData?.uid) {
+                  router.push('./OwnerProfile');
+                }
+              }}
+              disabled={ownerData?.id === userData?.uid}
+              >
               <Image
                 className='w-[40px] h-[40px] rounded-full'
                 source={ownerData?.profilePicture || require('../../../assets/images/profile.png')}
@@ -448,6 +542,16 @@ const handlePhoneCall = () => {
               <Text className={`text-sm text-[#6B6A6A] ${propertyData ? '' : 'bg-gray-200 w-1/2 rounded-xl'}`}>
                 {propertyData ? 
                   `${propertyData.noOfBathrooms} ${parseInt(propertyData.noOfBathrooms) > 1 ? 'Bathrooms' : 'Bathroom'}` 
+                  : ''
+                }
+              </Text>
+            </View>
+
+            <View className='flex flex-row items-center gap-4 py-2'>
+              <Feather name='home' size={20} color='black' />
+              <Text className={`text-sm text-[#6B6A6A] ${propertyData ? '' : 'bg-gray-200 w-1/2 rounded-xl'}`}>
+                {propertyData ? 
+                  `${propertyData.noOfTenants} ${parseInt(propertyData.noOfTenants) > 1 ? 'Tenants' : 'Tenant'}` 
                   : ''
                 }
               </Text>
@@ -556,7 +660,7 @@ const handlePhoneCall = () => {
               ) : (
                 <View className='flex flex-row items-center justify-between'>
                   <Text className='text-sm text-[#6B6A6A]'>
-                    Deposit Month
+                    Security Deposit Month
                   </Text>
                   <Text className='text-sm text-[#6B6A6A]'>
                     
@@ -571,7 +675,7 @@ const handlePhoneCall = () => {
               ) : (
                 <View className='flex flex-row items-center justify-between'>
                   <Text className='text-sm text-[#6B6A6A]'>
-                    Deposit Amount
+                    Security Deposit Amount
                   </Text>
                   <Text className='text-sm text-[#6B6A6A]'>      
                     ₱{parseInt(propertyData?.propertySecurityDepositAmount).toLocaleString()}
@@ -670,61 +774,63 @@ const handlePhoneCall = () => {
               {/* Display average rating */}
               <View className='flex-1 flex-col px-8 pb-5'>
                 <Text className='text-lg font-bold pb-5'>Review & Rating</Text>
-                {/* <AirbnbRating 
+                <AirbnbRating 
                   count={5} 
                   defaultRating={averageRating} 
                   size={20} 
                   isDisabled 
                   showRating={false}
-                /> */}
+                />
               </View>
 
              {/* Display tenants' reviews */}
             <ScrollView horizontal showsHorizontalScrollIndicator={false}>
               <View className='px-4 flex flex-row space-x-3'>
-                {filteredTenants.map(tenant => (
+                {review.map(rev => (
                   <View 
-                    key={tenant.id} 
+                    key={rev.id} 
                     className='flex flex-col p-2 items-start border rounded-lg max-w-xs space-y-2' // Added max width to the card
                   >
                     <View className='flex flex-row items-center space-x-1'>
-                      <Image source={require("../../../assets/images/profile.png")} className='w-8 h-8 rounded-full' />
+                      <Image source={rev.profilePicture || require("../../../assets/images/profile.png")} className='w-8 h-8 rounded-full' />
 
                       <View className='flex flex-col'>
                         <View className='flex flex-row'>
-                          <Text className='text-sm font-bold'>{tenant.name}</Text>
+                          <Text className='text-sm font-bold'>{rev.name}</Text>
                           <View className='flex flex-row items-center'>
-                            {/* <AirbnbRating 
+                            <AirbnbRating 
                               count={5} 
-                              defaultRating={tenant.rating} 
+                              defaultRating={rev.ratings} 
                               size={15} 
                               isDisabled 
                               showRating={false} 
-                            /> */}
+                            />
                           </View>
                         </View>
-                        <Text className='text-xs text-gray-300'>{tenant.date}</Text>
+                        <Text className='text-xs text-gray-300'>{rev.createdAt}</Text>
 
                       </View>
                     </View>
                     <View className=''>
-                                  {/* Limit reviews to two lines */}
-                                  <Text 
-                          className='text-sm' // Ensure the text also respects width limits
-                        >
-                          {tenant.reviews.slice(0, showMore ? tenant.reviews.length : 1).map((reviews, index) => (
-                              <Text key={index} className="text-xs">{reviews}</Text>
-                            ))}
-                            {!showMore && tenant.reviews.length > 2 && (
-                              <TouchableOpacity onPress={() => setShowMore(true)}>
-                                <Text className="text-xs text-blue-500">Show More</Text>
-                              </TouchableOpacity>
-                            )}
-                            {showMore && (
-                              <TouchableOpacity onPress={() => setShowMore(false)}>
-                                <Text className="text-xs text-blue-500">Show Less</Text>
-                              </TouchableOpacity>
-                            )}
+                    {/* Limit reviews to two lines */}
+                      <Text className='text-sm'>
+                          {
+                            rev.comment.length > 0 && (
+                              <>
+                                <Text className="text-xs">
+                                  {rev.comment.slice(0, showMore ? rev.comment.length : 45)}
+                                  {rev.comment.length > 45 && !showMore && "..."}
+                                </Text>
+                                {rev.comment.length > 45 && (
+                                  <TouchableOpacity onPress={() => setShowMore(!showMore)}>
+                                    <Text className="text-xs text-blue-500">
+                                      {showMore ? "Show Less" : "Show More"}
+                                    </Text>
+                                  </TouchableOpacity>
+                                )}
+                              </>
+                            )
+                          }
                         </Text>
                     </View>
                   </View>

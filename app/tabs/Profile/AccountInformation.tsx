@@ -402,7 +402,11 @@ export default function AccountInformation({ user }: { user: User }) {
 
   const handleUpdateInformation = () => {
         if(isAnyFieldEditing){
-          setShowConfirmModal(true);
+          if (phoneNumber?.length === 11 && profession) {
+            setShowConfirmModal(true);
+          } else if (!phoneNumber || !profession || !selectedSalary || !profileImage) {
+            Alert.alert('Error', 'Please complete all necessary details.');
+          }
         }
         else {
           console.log("Please Input fields")
@@ -578,7 +582,7 @@ const pickImage = async (source: string) => {
                 <Text className='text-sm pl-2 font-semibold'>Phone Number</Text>
                 
                 {/* Display error message if phone number is invalid */}
-                {phoneNumber && !phoneNumber.startsWith('09') && (
+                {phoneNumber && !phoneNumber.startsWith('09') || !phoneNumber && (
                     <Text className='text-red-500 text-xs pl-2'>Invalid number</Text>
                 )}
                 
@@ -588,12 +592,13 @@ const pickImage = async (source: string) => {
                         value={phoneNumber ?? ''}
                         onChangeText={(text) => {
                             // Limit the input to 11 characters and set phone number
-                            if (text.length <= 11) {
-                                setPhoneNumber(text);
+                            const validatedText = text.replace(/[^0-9]/g, '');
+                            if (/^09\d{0,9}$/.test(validatedText) && validatedText.length <= 11) {
+                              setPhoneNumber(validatedText);
                             }
                         }}
                         editable={isEditingPhone}
-                        keyboardType='phone-pad'
+                        keyboardType='numeric'
                         maxLength={11} // Limits the length to 11 characters
                     />
                     <TouchableOpacity onPress={() => handleEditField('phone')}>

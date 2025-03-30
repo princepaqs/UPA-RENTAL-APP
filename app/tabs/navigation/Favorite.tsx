@@ -25,7 +25,7 @@ interface Property {
 
 export default function Favorite() {
   const router = useRouter();
-  const { addFavorite, removeFavorite } = useAuth();
+  const { addFavorite, removeFavorite, listenForLogout } = useAuth();
   
   const [favorites, setFavorites] = useState<{ [key: string]: boolean }>({});
   const [refreshing, setRefreshing] = useState(false);
@@ -62,6 +62,7 @@ const toggleFavorite = async (ownerId: string, propertyId: string) => {
       await removeFavorite(ownerId, propertyId); // If it's already a favorite, remove it
   } else {
       await addFavorite(ownerId, propertyId); // If it's not a favorite, add it
+      console.log(ownerId, propertyId);
   }
 
   // Update the local favorites state
@@ -88,6 +89,7 @@ const fetchFavoriteData = async () => {
       // Fetch properties with real-time updates
       const propertiesWithImages = await Promise.all(data.map(async (item) => {
         const propertiesRef = doc(db, 'properties', item.ownerId, 'propertyId', item.propertyId);
+        console.log(item.ownerId, item.propertyId);
 
         return new Promise<Property | null>((resolve) => {
           const unsub = onSnapshot(propertiesRef, async (propertiesSnapshot) => {
@@ -96,6 +98,7 @@ const fetchFavoriteData = async () => {
               const firstImageUri = propertyData.images && propertyData.images.length > 0
                 ? await getPropertyImageUrl(item.propertyId, propertyData.images[0])
                 : null;
+                console.log(propertyData);
 
               // Check if this property is a favorite
               const isFavorite = data.some(fav => fav.propertyId === item.propertyId && fav.tenantId === tenantId && fav.ownerId === item.ownerId);
@@ -131,12 +134,24 @@ const fetchFavoriteData = async () => {
   }
 };
 
+useEffect(() => {
+  const fetchData = async () => {
+    try {
+      await fetchFavoriteData(); // Awaiting ensures proper handling of async operations
+    } catch (error) {
+      console.error("Error in fetchFavoriteData:", error);
+    }
+  };
 
+  fetchData(); // Call the async function
+  listenForLogout(); // Ensure logout listener runs
 
+  // Clean up function (optional)
+  return () => {
+    console.log("Component unmounted, cleanup if necessary");
+  };
+}, []);
 
-  useEffect(() => {
-    fetchFavoriteData();
-  }, []);
 
   const newMessage = 1;
   const newNotification = 1;

@@ -4,13 +4,15 @@ import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, se
 import { initializeApp } from '@firebase/app';
 import { firebaseConfig } from "@/_dbconfig/dbconfig";
 import * as SecureStore from 'expo-secure-store';
-import { getDoc, setDoc, doc, getDocs, collection, updateDoc, deleteDoc, query, where } from 'firebase/firestore'; // For saving data in Firestore (optional)
+import { getDoc, setDoc, doc, getDocs, collection, updateDoc, deleteDoc, query, where, onSnapshot } from 'firebase/firestore'; // For saving data in Firestore (optional)
 import { db } from '../_dbconfig/dbconfig'; // Import Firestore instance
 import { ref, uploadBytes, getDownloadURL, deleteObject, listAll } from 'firebase/storage'; // Import Firebase storage functions
 import { storage } from '../_dbconfig/dbconfig'; // Import the storage from firebaseConfig
 import { Alert } from "react-native";
 import ErrorModal from '../components/ErrorModal';
 import React from "react";
+import * as Device from 'expo-device';
+import * as Application from 'expo-application';
 
 // Define the shape of the context
 interface AuthContextType {
@@ -19,6 +21,7 @@ interface AuthContextType {
     onboardingCompleted: boolean; // Add a flag to track if onboarding has been completed
     login: (email: string, password: string) => Promise<void>;
     logout: () => Promise<void>;
+    listenForLogout: () => Promise<void>;
     register: (email: string, password: string, username: string) => Promise<void>;
     setPin: (pin: string) => Promise<void>;
     editUser: (uid: string, phoneNo: string, profession: string, salary: string, email: string, profilePictureUrl: string) => Promise<void>;
@@ -45,11 +48,12 @@ interface AuthContextType {
     reportProperty: (ownerId: string, propertyId: string, tenantId: string, reportPropertyStep1: string, reportPropertyStep2: string, reportPropertyStep3: string) => Promise<void>;
     reportProfile: (ownerId: string, tenantId: string, reportPropertyStep1: string, reportPropertyStep2: string) => Promise<void>;
     reportIssue: (fullName: string, accountId: string, issue: string, issueId: string, description: string) => Promise<void>;
+    followUpReport: (fullName: string, accountId: string, issue: string, issueId: string, description: string) => Promise<void>;
     maintenanceRequest: (uid: string, ownerId: string, propertyId: string, fullName: string, time: string, issueType: string, images: string, description: string) => Promise<void>;
     withdrawMaintenance: (uid: string, maintenanceId: string) => Promise<void>;
     updateMaintenance: (uid: string, maintenanceId: string, timeType: string, time: Date, status: string) => Promise<void>;
     sendMessage: (userId1: string, userId2: string, text: string) => Promise<void>;
-    sendNotification: (uid: string, type: string, title: string, message: string, status: string, notifStatus: string) => Promise<void>;
+    sendNotification: (uid: string, type: string, title: string, message: string, status: string, notifStatus: string, receipientId: string, propertyId: string) => Promise<void>;
     completeOnboarding: () => void; // Function to mark onboarding as completed
     
 }
@@ -88,22 +92,66 @@ export const AuthContextProvider = ({ children }: { children: ReactNode }) => {
         try {
             const userCredential = await signInWithEmailAndPassword(auth, email, password);
             const user = userCredential.user;
+            // const token = 
 
             await SecureStore.setItemAsync('uid', user.uid);
             const userDocRef = doc(db, 'users', user.uid);
             const userDocSnap = await getDoc(userDocRef);
+            await SecureStore.deleteItemAsync('isPropertyOwner');
 
             if (userDocSnap.exists()) {
                 const userData = userDocSnap.data();
                 const fullname = `${userData.firstName} ${userData.lastName}`;
+                const joinedDate = userData.createdAt.toDate();
+                const convertedDate = joinedDate.toLocaleString("en-US", { month: "long", year: "numeric" });
                 const accountStatus = userData?.accountStatus || '';
+                const uLog = userData.userLoginTime;
+
+
+
                 await SecureStore.setItemAsync('accountStatus', accountStatus);
+
+                const deviceType = Device.deviceType === Device.DeviceType.PHONE ? 'Mobile' : 'Tablet';
+                const deviceName = Device.modelName || 'Unknown Device';
+                const deviceId = Application.getAndroidId() || 'Unknown Device ID';
+
+                const userDeviceType = userData?.deviceType;
+                const userDeviceName = userData?.deviceName;
+                const userDeviceId = userData?.deviceId;
+
                 
                 const isVerified = user.emailVerified;
                 if (!isVerified) {
                     await sendEmailVerification(user);
                     router.replace('../LoginEmailVerify');
                     return;
+                }
+
+                if (uLog) {
+                    let lastLoginTime;
+      
+                    if (uLog.toMillis) {
+                      // If uLog is a Firestore Timestamp object
+                      lastLoginTime = uLog.toMillis();
+                    } else if (typeof uLog === 'number') {
+                      // If uLog is a Unix timestamp (in milliseconds)
+                      lastLoginTime = uLog;
+                    } else if (typeof uLog === 'string') {
+                      // If uLog is stored as a string (e.g., ISO 8601 date)
+                      lastLoginTime = new Date(uLog).getTime();
+                    }
+      
+                    //console.log(lastLoginTime, token, email, password);
+      
+                    const oneHourInMs = (3600000 * 24) * 30; // one month
+      
+                    if (userData?.onlineStatus === 'Online' && userDeviceType !== deviceType && userDeviceName !== deviceName && userDeviceId !== deviceId && Date.now() - lastLoginTime < oneHourInMs){
+                      console.log('Multiple device login detected. Signing out...try again');
+                      await SecureStore.setItemAsync('multipleDeviceLogin', 'true');
+                    //   logout(); // To prevent logging in on another device unless logged out or session timed out
+                    //   router.replace('../signIn');
+                      throw new Error("multiple-device-login");
+                    }
                 }
 
                 const hasPin = userData?.userPin;
@@ -116,9 +164,17 @@ export const AuthContextProvider = ({ children }: { children: ReactNode }) => {
                     await SecureStore.setItemAsync('email', email);
                     await SecureStore.setItemAsync('password', password);
                     await SecureStore.setItemAsync('fullName', fullname);
+                    await SecureStore.setItemAsync('joinedDate', convertedDate);
                     await SecureStore.setItemAsync('accountId', userData.accountId);
 
-                    await updateDoc(doc(db, 'users', user.uid), {userLoginTime: Date.now(), onlineStatus: 'Online'});
+                    // await updateDoc(doc(db, 'users', user.uid), {userLoginTime: Date.now(), onlineStatus: 'Online'});
+                    await updateDoc(doc(db, 'users', user.uid), {
+                        userLoginTime: Date.now(),
+                        onlineStatus: 'Online',
+                        deviceType: deviceType,
+                        deviceName: deviceName,
+                        deviceId: deviceId
+                    });
                     if(usePassword === 'true'){
                         router.replace('../tabs/Dashboard');
                         await SecureStore.deleteItemAsync('usePassword');
@@ -130,13 +186,12 @@ export const AuthContextProvider = ({ children }: { children: ReactNode }) => {
                         //setIsAuthenticated(true); // this is where auto logged begins
                         //router.replace('../routes/userRoutes');
                     }
-                    
                 }
             } else {
                 showErrorModal("No such user document in Firestore!");
             }
-        } catch (error) {
-            console.log(error)
+        } catch (error: any) {
+            console.log(error, error.code, error.message);
             const firebaseError = error as { code: string; message: string };
             if (firebaseError.code === 'auth/invalid-email') {
                 showErrorModal('The email address is not valid.');
@@ -147,8 +202,13 @@ export const AuthContextProvider = ({ children }: { children: ReactNode }) => {
             } else if (firebaseError.code === 'auth/invalid-credential') {
                 router.replace('../signIn');
                 showErrorModal('Invalid credentials provided. Please check your email and password.');
+            } else if (error.code === 'auth/too-many-requests') {
+                showErrorModal('Account temporarily locked. Please try again later.');
+            } else if (firebaseError.code === 'multiple-device-login' || error.message === 'multiple-device-login') {
+                showErrorModal('You have been logged out because you logged in on another device.');
+                logout();
             } else {
-                showErrorModal('No internet connection');
+                showErrorModal(error.message);
             }
         }
     };
@@ -160,6 +220,8 @@ export const AuthContextProvider = ({ children }: { children: ReactNode }) => {
             if(!uid){
                 return Alert.alert('Error', 'Error logging out');
             }
+            // sendNotification(uid, 'feedback-property-owner', 'Lease Ended - Share Your Feedback', `Your tenant's lease has ended! We’d love to hear about your experience with the tenant and using the app. Please take a moment to answer a few questions to help us improve our services.`, 'Success', 'Unread')
+            // sendNotification(uid, 'lease-end', 'Lease Ended - Share Your Feedback', 'Your lease has ended! We’d love to hear about your experience staying at the property, interacting with the landlord, and using the app. Please take a moment to answer a few questions to help us improve our services.', 'Success', 'Unread')
 
             await updateDoc(doc(db, 'users', uid), {onlineStatus: 'Offline'});
             // logout logic
@@ -167,10 +229,29 @@ export const AuthContextProvider = ({ children }: { children: ReactNode }) => {
             await SecureStore.deleteItemAsync('token');
             //setIsAuthenticated(false);
             auth.signOut();
-            router.replace('../signIn')
+            router.replace('../signIn');
         } catch (error) {
             console.error(error);
         }
+    };
+
+    const listenForLogout = async () => {
+        const uid = await SecureStore.getItemAsync('uid');
+        const isMultiple = await SecureStore.getItemAsync('multipleDeviceLogin');
+        if (!uid) return;
+      
+        const userDocRef = doc(db, 'users', uid);
+        onSnapshot(userDocRef, (docSnap) => {
+          if (docSnap.exists() && docSnap.data().onlineStatus === 'Offline' && isMultiple === 'true') {
+            auth.signOut();
+            // showErrorModal('You have been logged out because you logged in on another device.');
+            SecureStore.deleteItemAsync('password');
+            SecureStore.deleteItemAsync('token');
+            SecureStore.deleteItemAsync('multipleDeviceLogin');
+            logout();
+            console.log("LOGOUT")
+          }
+        });
     };
 
     //let sequence = 1;
@@ -223,6 +304,7 @@ export const AuthContextProvider = ({ children }: { children: ReactNode }) => {
         const proofOfIncomeURL = await SecureStore.getItemAsync('proofOfIncomeURL') || '';
         const userPin = '';
         const userLoginTime = '';
+        const onlineStatus = 'Offline';
 
 
         // add an email verification that will be sent to user's email
@@ -294,6 +376,7 @@ export const AuthContextProvider = ({ children }: { children: ReactNode }) => {
             nbiClearanceStatus: 'Pending',
             govtIdStatus: 'Pending',
             proofOfIncomeStatus: 'Pending',
+            onlineStatus,
             createdAt: new Date(),
         };
 
@@ -334,7 +417,7 @@ export const AuthContextProvider = ({ children }: { children: ReactNode }) => {
             });
             
             console.log('No Pin');
-            sendMessage('cvz6NsXRDec8hycylRK6vgKOL8d2', user.uid, 'Hello Juan! Welcome to UPA Support. How can we assist you today? We`re here to help with any questions or issues you may have!');
+            sendMessage('syiHymdlVKYFVGCNBKVW1Rxgba33', user.uid, 'Hello Juan! Welcome to UPA Support. How can we assist you today? We`re here to help with any questions or issues you may have!');
         
             console.log(`Pin has been set.`);
         } else {
@@ -358,11 +441,30 @@ export const AuthContextProvider = ({ children }: { children: ReactNode }) => {
     }
 
     const withdrawWallet = async (tenantId: string, value: string) => {
-        if(tenantId){
+        if(tenantId && value){
             try{
-
+                console.log('TenantId : ', tenantId, 'Withdraw value : ', value);
+                // Get wallet data using the tenantId
+                const walletRef = doc(db, 'wallets', tenantId);
+                const walletSnap = await getDoc(walletRef);
+    
+                if (walletSnap.exists()) {
+                    const walletData = walletSnap.data();
+                    const currentBalance = walletData.balance || 0;
+    
+                    // Parse balance and value to integers
+                    const updatedBalance = parseInt(currentBalance) - parseInt(value);
+    
+                    // Set the updated balance back into the database
+                    await setDoc(walletRef, { ...walletData, balance: updatedBalance });
+    
+                    console.log(`Wallet updated: ${tenantId} has new balance of ${updatedBalance}`);
+                } else {
+                    // Handle if wallet does not exist for the tenant
+                    console.error(`No wallet found for tenantId: ${tenantId}`);
+                }
             }catch(error){
-
+                console.error('Error topping up wallet:', error);
             }
         }
     }
@@ -801,7 +903,7 @@ export const AuthContextProvider = ({ children }: { children: ReactNode }) => {
     
             // Save property document to Firestore under the user's UID
             await setDoc(doc(db, 'properties', uid, 'propertyId', propertyId), propertyDocument)
-            sendNotification(uid, 'property-add', 'Property Added Successfully', `Your property ${propertyName} has been successfully added to the listings.`, 'Success', 'Unread');
+            sendNotification(uid, 'property-add', 'Property Added Successfully', `Your property ${propertyName} has been successfully added to the listings.`, 'Success', 'Unread', '', '');
 
             // Save status of property
             //await setDoc(doc(db, 'transaction', propertyId, 'status', ownerId), propertyStatuses);
@@ -840,7 +942,7 @@ export const AuthContextProvider = ({ children }: { children: ReactNode }) => {
 
         } catch (error) {
             console.error("Error adding property:", error);
-            sendNotification(uid, 'property-add', 'Property Listing Unsuccessful', `There was an issue adding your property. Please check the details and try again.`, 'Rejected', 'Unread');
+            sendNotification(uid, 'property-add', 'Property Listing Unsuccessful', `There was an issue adding your property. Please check the details and try again.`, 'Rejected', 'Unread', '', '');
 
         }
     };
@@ -876,6 +978,28 @@ export const AuthContextProvider = ({ children }: { children: ReactNode }) => {
             const propertyPetPolicy = await SecureStore.getItemAsync('editpropertyPetPolicy');
             const propertyHouseRules = await SecureStore.getItemAsync('editpropertyHouseRules');
 
+            console.log(ownerId, propertyId);
+                console.log(propertyPetPolicy, propertyHouseRules);
+                console.log("propertyName:", propertyName);
+                console.log("propertyType:", propertyType);
+                console.log("noOfBedrooms:", noOfBedrooms);
+                console.log("noOfBathrooms:", noOfBathrooms);
+                console.log("noOfTenants:", noOfTenants);
+                console.log("furnishing:", furnishing);
+                console.log("images:", images);
+                console.log("propertyHomeAddress:", propertyHomeAddress);
+                console.log("propertyRegion:", propertyRegion);
+                console.log("propertyCity:", propertyCity);
+                console.log("propertyBarangay:", propertyBarangay);
+                console.log("propertyZipCode:", propertyZipCode);
+                console.log("propertyLatitude:", propertyLatitude);
+                console.log("propertyLongitude:", propertyLongitude);
+                console.log("propertyMonthlyRent:", propertyMonthlyRent);
+                console.log("propertyLeaseDuration:", propertyLeaseDuration);
+                console.log("propertySecurityDepositMonth:", propertySecurityDepositMonth);
+                console.log("propertySecurityDepositAmount:", propertySecurityDepositAmount);
+                console.log("propertyAdvancePaymentAmount:", propertyAdvancePaymentAmount);
+
             if (!propertyName && !propertyType && !noOfBedrooms && !noOfBathrooms && !noOfTenants && 
                 !furnishing && images.length === 0 && !propertyHomeAddress && !propertyRegion && 
                 !propertyCity && !propertyBarangay && !propertyZipCode && !propertyLatitude && 
@@ -884,8 +1008,7 @@ export const AuthContextProvider = ({ children }: { children: ReactNode }) => {
                 !propertyAdvancePaymentAmount) {
 
                 // Handle missing data, for example, show an alert, set defaults, or navigate
-                console.log(ownerId, propertyId);
-                console.log(propertyPetPolicy, propertyHouseRules);
+                
 
                 if (ownerId && propertyId) {
                     await updateDoc(doc(db, 'properties', ownerId, 'properties', propertyId), { 
@@ -893,10 +1016,10 @@ export const AuthContextProvider = ({ children }: { children: ReactNode }) => {
                         propertyHouseRules 
                     });
                     Alert.alert('Success', 'Successfully updated property.');
-                    sendNotification(ownerId, 'property-edit', 'Property Details Updated', `The details for ${propertyName} have been successfully updated.`, 'Success', 'Unread');
+                    sendNotification(ownerId, 'property-edit', 'Property Details Updated', `The details for ${propertyName} have been successfully updated.`, 'Success', 'Unread', '', '');
                 } else {
                     Alert.alert('Error', 'Error updating property.');
-                    sendNotification(ownerId, 'property-edit', 'Property Update Failed', `The details for ${propertyName} could not be updated. Please try again.`, 'Rejected', 'Unread');
+                    sendNotification(ownerId, 'property-edit', 'Property Update Failed', `The details for ${propertyName} could not be updated. Please try again.`, 'Rejected', 'Unread', '', '');
                 }
 
             } else {
@@ -930,7 +1053,7 @@ export const AuthContextProvider = ({ children }: { children: ReactNode }) => {
                         uploadedImageUrls.push(imageUrl);
                     }
 
-                    await updateDoc(doc(db, 'properties', ownerId, 'properties', propertyId), { 
+                    await updateDoc(doc(db, 'properties', ownerId, 'propertyId', propertyId), { 
                         propertyName, 
                         propertyType, 
                         noOfBedrooms, 
@@ -954,10 +1077,11 @@ export const AuthContextProvider = ({ children }: { children: ReactNode }) => {
                         propertyHouseRules
                     });
                     Alert.alert('Success', 'Successfully updated property with all details.');
-                    sendNotification(ownerId, 'property-edit', 'Property Details Updated', `The details for ${propertyName} have been successfully updated.`, 'Success', 'Unread');
+                    router.replace('../ViewPropertyDetails');
+                    sendNotification(ownerId, 'property-edit', 'Property Details Updated', `The details for ${propertyName} have been successfully updated.`, 'Success', 'Unread', '', '');
                 } else {
                     Alert.alert('Error', 'Error updating property.');
-                    sendNotification(ownerId, 'property-edit', 'Property Update Failed', `The details for ${propertyName} could not be updated. Please try again.`, 'Rejected', 'Unread');
+                    sendNotification(ownerId, 'property-edit', 'Property Update Failed', `The details for ${propertyName} could not be updated. Please try again.`, 'Rejected', 'Unread', '', '');
                 }
             }
 
@@ -997,13 +1121,14 @@ export const AuthContextProvider = ({ children }: { children: ReactNode }) => {
         try {
             if(!propertyId || !ownerId) {
                 Alert.alert('Error', 'Error deleting property.');
-                sendNotification(ownerId, 'property-delete', 'Property Successfully Deleted', `The property has been successfully deleted from your listings.`, 'Success', 'Unread');
+                sendNotification(ownerId, 'property-delete', 'Property Successfully Deleted', `The property has been successfully deleted from your listings.`, 'Success', 'Unread', '', '');
             }
 
             await deleteDoc(doc(db, 'properties', ownerId, 'propertyId', propertyId));
+            router.replace('../PropertyDashboard');
         } catch (error) {
-            Alert.alert('Error', `${error}`);
-            sendNotification(ownerId, 'property-delete', 'Property Deletion Failed', `The property could not be deleted due to an ongoing contract or transaction. Please resolve the active agreements before attempting to delete the property.`, 'Rejected', 'Unread');
+            Alert.alert('Error Test', `${error}`);
+            sendNotification(ownerId, 'property-delete', 'Property Deletion Failed', `The property could not be deleted due to an ongoing contract or transaction. Please resolve the active agreements before attempting to delete the property.`, 'Rejected', 'Unread', '', '');
         }
     }
 
@@ -1085,7 +1210,7 @@ export const AuthContextProvider = ({ children }: { children: ReactNode }) => {
     
                 console.log('Transaction created successfully.');
 
-                sendNotification(tenantId, 'approval', 'Rent Application', `Your application has been successfully submitted. The property owner will review your application and notify you of their decision soon.`, 'Success', 'Unread');
+                sendNotification(tenantId, 'approval', 'Rent Application', `Your application has been successfully submitted. The property owner will review your application and notify you of their decision soon.`, 'Success', 'Unread', '', '');
             } catch (error) {
                 console.error('Error creating transaction:', error);
             }
@@ -1136,7 +1261,7 @@ export const AuthContextProvider = ({ children }: { children: ReactNode }) => {
                         revenueBalance: newOwnerBalance,
                     };
                     await updateDoc(doc(db, 'wallets', tenantId), setTenantWalletData);
-                    //addRevenue(ownerId, 'Payment' , payment, transactionId);
+                    addRevenue(ownerId, 'Payment' , payment, transactionId);
                     await updateDoc(doc(db, 'wallets', ownerId), setOwnerWalletData);
                     console.log('Rent Paid');
                 }
@@ -1176,7 +1301,7 @@ export const AuthContextProvider = ({ children }: { children: ReactNode }) => {
         try {
           // Approve the transaction by updating its status in 'propertyTransactions'
           if (transactionId) {
-            await updateDoc(doc(db, 'propertyTransactions', transactionId), { rentalStartDate: propertyLeaseStart, rentalEndDate: propertyLeaseEnd, status: 'Waiting Signature & Payment', propertyTerminatePerion: '' });
+            await updateDoc(doc(db, 'propertyTransactions', transactionId), { rentalStartDate: propertyLeaseStart, rentalEndDate: propertyLeaseEnd, status: 'Waiting Signature & Payment', propertyTerminatePeriod: '' });
             await updateDoc(doc(db, 'properties', ownerId, 'propertyId', propertyId), { status: 'Rented' });
       
             // Add the contract details into a new collection named 'contracts' with the transactionId as the document ID
@@ -1230,8 +1355,28 @@ export const AuthContextProvider = ({ children }: { children: ReactNode }) => {
                     propertyTerminateContractStatus: '',
                     status: 'Rented'
                 });
-            } else{
+            } else if(propertyLeaseDuration === 'Short-term (6 months)'){
                 const paymentDuration = '6';
+                await setDoc(doc(db, 'rentTransactions', transactionId), {
+                    transactionId,
+                    ownerId,
+                    propertyId,
+                    tenantId,
+                    propertyLeaseStart,
+                    propertyLeaseEnd,
+                    propertyLeaseDuration,
+                    propertyRentAmount,
+                    propertyRentDueDay,
+                    propertySecurityDepositAmount,
+                    propertySecurityDepositRefundPeriod,
+                    propertySecurityDepositStatus: 'Held',
+                    propertyAdvancePaymentAmount,
+                    paymentDuration: paymentDuration,
+                    propertyTerminateContractStatus: '',
+                    status: 'Rented'
+                });
+            } else {
+                const paymentDuration = '1';
                 await setDoc(doc(db, 'rentTransactions', transactionId), {
                     transactionId,
                     ownerId,
@@ -1338,6 +1483,7 @@ export const AuthContextProvider = ({ children }: { children: ReactNode }) => {
                 reportPropertyStep1,
                 reportPropertyStep2,
                 reportPropertyStep3,
+                status: 'Pending',
                 createdAt: new Date()
             }
 
@@ -1359,6 +1505,7 @@ export const AuthContextProvider = ({ children }: { children: ReactNode }) => {
                 tenantId,
                 reportPropertyStep1,
                 reportPropertyStep2,
+                status: 'Pending',
                 createdAt: new Date()
             }
 
@@ -1377,6 +1524,7 @@ export const AuthContextProvider = ({ children }: { children: ReactNode }) => {
         try {
             const uid = await SecureStore.getItemAsync('uid')
             const reportIssueData = {
+                createdAt: new Date(),
                 reportId: generateTransactionID(),
                 fullName,
                 accountId,
@@ -1386,12 +1534,37 @@ export const AuthContextProvider = ({ children }: { children: ReactNode }) => {
             }
 
             if(reportIssueData && uid){
-                await setDoc(doc(db, 'issueReports', reportIssueData.reportId), reportIssueData)
+                await setDoc(doc(db, 'issueReports', reportIssueData.reportId), reportIssueData);
+                sendMessage(uid, 'syiHymdlVKYFVGCNBKVW1Rxgba33', `REPORT AN ISSUE\n\n${reportIssueData.reportId}\n${reportIssueData.fullName || 'Unknown'}\n${reportIssueData.accountId || ''}\n${reportIssueData.issue || 'General'}\n${reportIssueData.issueId || ''}\n${reportIssueData.description || 'No description available'}`);
                 console.log('Report issue successful');
-                sendNotification(uid, 'report-issue', 'Issue Report Submitted', 'Your issue report has been successfully received. Our team will review it and get back to you shortly.', 'Success', 'Unread')
+                sendNotification(uid, 'report-issue', 'Issue Report Submitted', 'Your issue report has been successfully received. Our team will review it and get back to you shortly.', 'Success', 'Unread', '', '')
             }
         } catch (error) {
             console.log('Report issue failed');
+        }
+    }
+
+    const followUpReport = async (fullName: string, accountId: string, issue: string, issueId: string, description: string) => {
+        try {
+            const uid = await SecureStore.getItemAsync('uid')
+            const followUpReportData = {
+                createdAt: new Date(),
+                reportId: generateTransactionID(),
+                fullName,
+                accountId,
+                issue,
+                issueId,
+                description
+            }
+
+            if(followUpReportData && uid){
+                await setDoc(doc(db, 'followUp', followUpReportData.reportId), followUpReportData)
+                sendMessage(uid, 'syiHymdlVKYFVGCNBKVW1Rxgba33', `FOLLOW UP REPORT\n\n${followUpReportData.reportId}\n${followUpReportData.fullName || 'Unknown'}\n${followUpReportData.accountId || ''}\n${followUpReportData.issue || 'General'}\n${followUpReportData.issueId || ''}\n${followUpReportData.description || 'No description available'}`);
+                console.log('Follow-up report successful');
+                sendNotification(uid, 'follow-up-report', 'Follow-up Report Submitted', 'Your follow-up report has been successfully received. Our team will review it and get back to you shortly.', 'Success', 'Unread', '', '')
+            }
+        } catch (error) {
+            console.log('Follow-up report failed');
         }
     }
 
@@ -1563,7 +1736,9 @@ export const AuthContextProvider = ({ children }: { children: ReactNode }) => {
         title: string,
         message: string,
         status: string,
-        notifStatus: string
+        notifStatus: string,
+        receipientId: string,
+        propertyId: string,
     ) => {
         const notificationId = generateTransactionID();
     
@@ -1581,7 +1756,9 @@ export const AuthContextProvider = ({ children }: { children: ReactNode }) => {
             title,
             message,
             status,
-            notifStatus, // Read/Unread
+            notifStatus, // Read/Unread,'
+            receipientId,
+            propertyId,
             createdAt: new Date(), // Firestore automatically converts JS Date to Timestamp
         };
     
@@ -1591,7 +1768,7 @@ export const AuthContextProvider = ({ children }: { children: ReactNode }) => {
                 doc(db, 'notifications', uid, 'notificationId', notificationId), // Adjust collection path as needed
                 notificationData
             );
-            console.log('Notification sent successfully:', notificationData);
+            // console.log('Notification sent successfully:', notificationData);
         } catch (error) {
             Alert.alert('Error', `Failed to send notification`);
             console.error('Error sending notification:', error);
@@ -1608,8 +1785,8 @@ export const AuthContextProvider = ({ children }: { children: ReactNode }) => {
         <AuthContext.Provider value={{ user, isAuthenticated, onboardingCompleted, login, register, logout, setPin, editUser, removeUser, 
             withdrawWallet, topUpWallet, addWalletTransaction, upgradeRole, resetPassword, addProperty, editProperty, deleteProperty, 
             completeOnboarding, rentProperty, withdrawRent, payRent, approveTenant, rejectTenant, addFavorite, removeFavorite, 
-            reportProperty, reportProfile, reportIssue, maintenanceRequest, withdrawMaintenance, updateMaintenance, 
-            sendMessage, sendNotification }}>
+            reportProperty, reportProfile, reportIssue, followUpReport, maintenanceRequest, withdrawMaintenance, updateMaintenance, 
+            sendMessage, sendNotification, listenForLogout }}>
             {children}
             <ErrorModal visible={modalVisible} message={modalMessage} onClose={closeModal} />
         </AuthContext.Provider>

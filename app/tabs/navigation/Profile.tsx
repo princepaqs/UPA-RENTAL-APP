@@ -19,7 +19,7 @@ const dummyData = {
 
 export default function Profile() {
   const router = useRouter();
-  const { logout } = useAuth();
+  const { logout, listenForLogout } = useAuth();
   const [fullName, setFullName] = useState<string | null>(null);
   const [profilePicUrl, setProfilePicUrl] = useState<string | null>(null);
   const [accountId, setAccountId] = useState<string | null>(null);
@@ -81,6 +81,7 @@ export default function Profile() {
 
   useEffect(() => {
     fetchUserData();
+    listenForLogout();
   }, []);
 
   const handleCopyAccountId = (accountId: string | null) => {
@@ -152,7 +153,10 @@ export default function Profile() {
           {(role === 'Owner' && accountStatus === 'Approved') ? (
             <TouchableOpacity
             className='px-8' 
-            onPress={() => handleNavigate('../tabs/LeaseProperty/PropertyDashboard')}
+            onPress={async () => {
+              handleNavigate('../tabs/LeaseProperty/PropertyDashboard')
+              await SecureStore.setItemAsync('isPropertyOwner', 'true');
+            }}
           >
             <View className='py-4'>
               <View className='p-3 flex flex-row items-center rounded-2xl bg-[#EF5A6F] shadow-md'>
@@ -297,7 +301,7 @@ export default function Profile() {
               </TouchableOpacity>
 
               <TouchableOpacity className='flex flex-row items-center bg-white p-2 border border-gray-100 rounded-lg shadow-md'
-
+                onPress={() => handleNavigate('../tabs/Profile/FAQ')}
               >
                 <AntDesign name="questioncircleo" size={20} color="gray" />
                 <Text className='text-sm font-normal ml-3'>FAQ</Text>
@@ -312,7 +316,7 @@ export default function Profile() {
                 <Text className='text-sm text-white font-semibold'>Logout</Text>
               </TouchableOpacity>
               <View className='items-center justify-center mt-4'>
-                <Text className='text-xs font-bold text-gray-400'>v2.0.3</Text>
+                <Text className='text-xs font-bold text-gray-400'>v2.1.1</Text>
               </View>
           </View>
           

@@ -41,10 +41,13 @@ export default function ownerFeedback() {
             return;
         }
 
-        const uid = await SecureStore.getItemAsync('reviewOwnerId') || 'test';
+        const uid = await SecureStore.getItemAsync('reviewOwnerId') || 'test ';
+        const senderId = await SecureStore.getItemAsync('uid') || 'test';
         const reviewId = generateTransactionID()
 
         const feedbackData = {
+            feedbackType: 'Owner',
+            senderId,
             uid,
             ratings,
             comment,

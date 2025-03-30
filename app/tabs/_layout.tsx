@@ -508,6 +508,13 @@ export default function _layout() {
           header: ()=> <HomeHeader/>
         }}
       />
+
+      <Stack.Screen
+        name='MyLease/ViewContractDetails'
+        options={{
+          header: ()=> <HomeHeader/>
+        }}
+      />
  
       <Stack.Screen
         name='MyLease/ReceivedContract'
@@ -591,6 +598,13 @@ export default function _layout() {
           header: ()=> <HomeHeader/>
         }}
       />
+
+      <Stack.Screen
+        name='Profile/FAQ'
+        options={{
+          header: ()=> <HomeHeader/>
+        }}
+      />
       
 
       <Stack.Screen
@@ -616,6 +630,13 @@ export default function _layout() {
 
       <Stack.Screen
         name='Profile/changePinSetNew'
+        options={{
+          header: ()=> <HomeHeader/>
+        }}
+      />
+
+      <Stack.Screen
+        name='Profile/changePinConfirm'
         options={{
           header: ()=> <HomeHeader/>
         }}

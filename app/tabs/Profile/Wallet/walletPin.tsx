@@ -18,7 +18,7 @@ const numberPadKeys = [
 ];
 
 const MAX_ATTEMPTS = 3; // Max failed attempts allowed
-const TIMEOUT_DURATION = 10 * 1000; // Timeout in milliseconds (10 seconds)
+const TIMEOUT_DURATION = 10 * 1000 * 60 * 10; // Timeout in milliseconds (10 seconds)
 const IDLE_DURATION = 60 * 1000;
 
 export default function LoginPin() {
@@ -33,7 +33,7 @@ export default function LoginPin() {
   const [timeoutEnd, setTimeoutEnd] = useState<number | null>(null);
   const [password, setPassword] = useState('');
   const [passwordConfirmModalVisible, setPasswordConfirmModalVisible] = useState<boolean>(false)
-  const { topUpWallet, payRent, addWalletTransaction, sendNotification } = useAuth();
+  const { topUpWallet, withdrawWallet, payRent, addWalletTransaction, sendNotification } = useAuth();
 
   const userPin = async (pin: string) => {
     setLoading(true);
@@ -75,31 +75,43 @@ export default function LoginPin() {
     if(!transactionType || !transactionPaymentId || !transactionOwnerId || !transactionDate || !transactionLeaseStart || !transactionLeaseEnd || !transactionAmount || !transactionStatus){
       Alert.alert('Error', 'Missing fields')
       return routes = '';
+    } else if (transactionType === 'Transfer') {
+      return routes = '/Transfer/transferReceipt';
     }
     switch(routes){
       case '/TopUp/receiptTransaction': 
         topUpWallet(uid, transactionAmount);
-        sendNotification(uid, 'wallet-topup', 'Top-Up Successful', `Your wallet has been successfully topped up with ₱${transactionAmount}. You can now use the funds for payments and transactions.`, 'Success', 'Unread')
+        sendNotification(uid, 'wallet-topup', 'Top-Up Successful', `Your wallet has been successfully topped up with ₱${transactionAmount}. You can now use the funds for payments and transactions.`, 'Success', 'Unread','','')
         addWalletTransaction(uid, transactionType, '', transactionDate, transactionAmount, '');
-        return '/TopUp/receiptTransaction';
+        return '../../../tabs/Profile/Wallet/TopUp/receiptTransaction';
       case '/Payment/paymentReceipt': 
         payRent(transactionPaymentId, transactionOwnerId, uid, transactionAmount, transactionLeaseStart, transactionLeaseEnd);
-        sendNotification(uid, 'wallet-payment', 'Payment Successful', `Your payment of ₱${transactionAmount} has been successfully processed.`, 'Success', 'Unread')
+        sendNotification(uid, 'wallet-payment', 'Payment Successful', `Your payment of ₱${transactionAmount} has been successfully processed.`, 'Success', 'Unread','','');
+        sendNotification(transactionOwnerId, 'wallet-payment', 'Payment Successful', `Your tenant's payment of ₱${transactionAmount} has been successfully processed.`, 'Success', 'Unread','','')
         addWalletTransaction(uid, transactionType, transactionPaymentId, transactionDate, transactionAmount, transactionStatus);
         return '/Payment/paymentReceipt';
+      case '/Withdraw/withdrawReceipt': 
+        withdrawWallet(uid, transactionAmount);
+        sendNotification(uid, 'wallet-withdraw', 'Withdraw Successful', `Your wallet has been successfully withdrawn ₱${transactionAmount}. You can now use the funds for payments and transactions.`, 'Success', 'Unread','','')
+        addWalletTransaction(uid, transactionType, '', transactionDate, transactionAmount, '');
+        return './Withdraw/withdrawReceipt';
+      case '/Transfer/transferReceipt': 
+        sendNotification(uid, 'wallet-withdraw', 'Withdraw Successful', `Your wallet has been successfully withdrawn ₱${transactionAmount}. You can now use the funds for payments and transactions.`, 'Success', 'Unread','','')
+        // addWalletTransaction(uid, transactionType, '', transactionDate, transactionAmount, '');
+        return './Transfer/transferReceipt';
       default: return 'defaultFallbackRoute';
     }
   }  
 
   const pushRoute = async (tenantId: string) => {
     const routes = await SecureStore.getItemAsync('routes') || '';
-          const route = await checkRoute(tenantId, routes);
-          console.log(route);
-          if (route) {
-            router.replace(`./${route}`); // Replace only if route is valid
-          } else {
-            console.error('Invalid route returned from checkRoute');
-          }
+    const route = await checkRoute(tenantId, routes);
+    console.log(route);
+    if (route) {
+      router.replace(`./${route}`); // Replace only if route is valid
+    } else {
+      console.error('Invalid route returned from checkRoute');
+    }
   }
 
   const validatePassword = async (inputPassword: string): Promise<boolean> => {
@@ -230,7 +242,7 @@ export default function LoginPin() {
         {/* Timeout Message */}
         {isTimeout && (
           <Text className='text-center text-red-500 mt-4'>
-            Too many attempts. Try again in {Math.ceil((timeoutEnd! - Date.now()) / 1000)} seconds.
+            Too many attempts. Try again in {Math.ceil((timeoutEnd! - Date.now()) / 60000)} minutes.
           </Text>
         )}
 

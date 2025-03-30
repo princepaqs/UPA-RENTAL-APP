@@ -171,7 +171,7 @@ export default function paymentReview() {
             });
             const tenantId = await SecureStore.getItemAsync('uid');
             if(tenantId){
-                sendNotification(tenantId, 'wallet-topup-failed', 'Top-Up Unsuccessful', `Your payment of ₱${rentData?.propertyRentAmount} was not processed. Please check your payment details and try again.`, 'Rejected', 'Unread');
+                sendNotification(tenantId, 'wallet-topup-failed', 'Top-Up Unsuccessful', `Your payment of ₱${rentData?.propertyRentAmount} was not processed. Please check your payment details and try again.`, 'Rejected', 'Unread','','');
             }
           }
           

@@ -25,7 +25,7 @@ interface User {
 }
 
 const MsgDetails: React.FC = () => {
-  const { id } = useLocalSearchParams();
+  // const { id } = useLocalSearchParams();
   const [messages, setMessages] = useState<Message[]>([]);
   const [user, setUser] = useState<User | null>(null);
   const [newMessage, setNewMessage] = useState('');
@@ -108,15 +108,18 @@ const MsgDetails: React.FC = () => {
     if (newMessage.trim()) {
       const messageRecipientId = await SecureStore.getItemAsync('messageRecipientId');
       const messageSenderId = await SecureStore.getItemAsync('uid');
-    
-      if (messageSenderId && messageRecipientId) {
-        sendMessage(messageSenderId, messageRecipientId, newMessage);
       
+      if (messageSenderId && messageRecipientId) {
+        // Truncate the message if it exceeds 500 characters
+        const truncatedMessage = newMessage.length > 500 ? newMessage.substring(0, 500) : newMessage;
+
+        sendMessage(messageSenderId, messageRecipientId, truncatedMessage);
+        
         const newMessageObject: Message = {
           messageId: `${Date.now()}`,
           userId1: messageSenderId,
           userId2: messageRecipientId,
-          text: newMessage,
+          text: truncatedMessage,
           createdAt: Timestamp.now(),
           time: Timestamp.now().toString(),
           status: 'Unread'
@@ -270,7 +273,7 @@ const MsgDetails: React.FC = () => {
       
       {/* Conditional Message Input Section */}
       {messages.some(
-        message => message.userId1 === 'cvz6NsXRDec8hycylRK6vgKOL8d2' || message.userId2 === 'cvz6NsXRDec8hycylRK6vgKOL8d2'
+        message => message.userId1 === 'syiHymdlVKYFVGCNBKVW1Rxgba33' || message.userId2 === 'syiHymdlVKYFVGCNBKVW1Rxgba33'
       ) ? (
         <View className="w-screen absolute bottom-0 flex-row items-center justify-center py-8 space-x-4">
           {hasReport > 0 ? (
@@ -291,6 +294,7 @@ const MsgDetails: React.FC = () => {
             value={newMessage}
             onChangeText={setNewMessage}
             multiline
+            maxLength={500}
             onContentSizeChange={(event) => setInputHeight(event.nativeEvent.contentSize.height)}
             style={{ height: Math.min(inputHeight, 140), maxHeight: 120 }}
           />

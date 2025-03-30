@@ -114,7 +114,7 @@ interface TransactionData {
 
 export default function MyLease() {
   const router = useRouter();
-  const { sendNotification } = useAuth();
+  const { sendNotification, listenForLogout } = useAuth();
   const [activeTab, setActiveTab] = useState('rent'); // State to toggle between "rent" and "contract"
   const [leaseDataMap, setLeaseDataMap] = useState<Record<string, LeaseData>>({});
   const [selectedLeaseId, setSelectedLeaseId] = useState<string | null>(null);
@@ -171,21 +171,59 @@ export default function MyLease() {
         const newLeases: MultipleLease[] = []; // Collect lease data in a new array
   
         const fetchLease = async (transactionDoc: any) => {
-          const { transactionId, ownerId, propertyId, moveInDate, rentalStartDate, rentalEndDate, paymentStatus, createdAt } = transactionDoc.data();
+        const { transactionId, ownerId, propertyId, moveInDate, rentalStartDate, rentalEndDate, paymentStatus, createdAt } = transactionDoc.data();
           
           // Check if rentalEndDate is today's date
           // Check if rentalEndDate is today's date
         const today = new Date();
         const formattedToday = `${String(today.getMonth() + 1).padStart(2, '0')}/${String(today.getDate()).padStart(2, '0')}/${today.getFullYear()}`;
-        console.log(formattedToday);
+
+        const [month, day, year] = rentalEndDate.split('/').map(Number);
+
+        const userTransactionsRef = await getDoc(doc(db, 'users', tenantId));
+        
+        if(!userTransactionsRef.exists()){
+          return;
+        }
+
+        const userData = userTransactionsRef.data();
+
+        const fullName = `${userData.firstName} ${userData.middleName} ${userData.lastName}`;
+
+        const propertyTransactionRef = await getDoc(doc(db, 'properties', ownerId, 'propertyId', propertyId));
+
+        if(!propertyTransactionRef.exists()){
+          return;
+        }
+
+        const propertyData = propertyTransactionRef.data();
+
+        const fullAddress = `${propertyData.propertyHomeAddress}, ${propertyData.propertyBarangay}, ${propertyData.propertyCity},  ${propertyData.propertyRegion}`;
+
+        // Create a new Date object (Note: month is 0-based in JavaScript)
+        const formattedRentalEndDate = new Date(year, month - 1, day);
+
+        // 2 weeks before end date
+        const twoWeeksBeforeEndDate = new Date(year, month - 1, day - 14);
+        // console.log("Two weeks: AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA", twoWeeksBeforeEndDate);
+        console.log(formattedToday, formattedRentalEndDate);
         // router.replace('../tabs/Feedback/PropertyFeedback/propertyFeedback') // Go to Reviews
         if (rentalEndDate === formattedToday) {
           console.log(`Skipping property ${propertyId} as rentalEndDate (${rentalEndDate}) is today.`);
-          sendNotification(tenantId, 'lease-end', 'Lease Ended - Share Your Feedback', 'Your lease has ended! We’d love to hear about your experience staying at the property, interacting with the landlord, and using the app. Please take a moment to answer a few questions to help us improve our services.', 'Success', 'Unread')
-          router.replace('../tabs/Feedback/PropertyFeedback/propertyFeedback') // Go to Reviews
+          // sendNotification(ownerId, 'feedback-property-owner', 'Lease Ended - Share Your Feedback', `Your tenant ${fullName}'s lease has ended! We’d love to hear about your experience with the tenant and using the app. Please take a moment to answer a few questions to help us improve our services.`, 'Success', 'Unread', tenantId, propertyId)
+          sendNotification(tenantId, 'lease-extension', 'Lease Extension', "Your lease is set to expire in 2 weeks. Would you like to extend your contract? Click here to let us know if you wish to continue staying at the property, and we’ll guide you through the next steps!", 'Urgent', 'Unread', tenantId, propertyId)
+        // router.replace('../tabs/Feedback/PropertyFeedback/propertyFeedback') // Go to Reviews
+          console.log(propertyId, ownerId)
           await SecureStore.setItemAsync('reviewPropertyId', propertyId);
           await SecureStore.setItemAsync('reviewOwnerId', ownerId);
+          await SecureStore.setItemAsync('fullAddress', fullAddress);
+          await updateDoc(doc(db, 'propertyTransactions', transactionId), {paymentStatus: 'done'});
+          await updateDoc(doc(db, 'contracts', transactionId), {status: 'done'});
+          // return; // Skip this lease
+        } else if (today > formattedRentalEndDate) {
           return; // Skip this lease
+        } else if (today === twoWeeksBeforeEndDate ) {
+          sendNotification(tenantId, 'lease-extension', 'Lease Extension', "Your lease is set to expire in 2 weeks. Would you like to extend your contract? Click here to let us know if you wish to continue staying at the property, and we’ll guide you through the next steps!", 'Urgent', 'Unread', tenantId, propertyId)
         }
   
         if (ownerId && propertyId && rentalStartDate) {
@@ -266,6 +304,7 @@ export default function MyLease() {
 
    useEffect(() => {
     fetchLeaseData();
+    listenForLogout();
    }, [])
 
   const totalLeaseData = totalLease;
@@ -323,32 +362,55 @@ export default function MyLease() {
   };
 
   const loadWalletTransactions = async () => {
-    try {
-      const uid = await SecureStore.getItemAsync('uid');
-  
-      if (uid) {
-        const transactionsQuery = query(collection(db, 'walletTransactions', uid, 'walletId'), where('uid', '==', uid));
-        const querySnapshot = await getDocs(transactionsQuery);
-  
-        const transactions = querySnapshot.docs.map(doc => {
-          const data = doc.data();
-          
-          return {
-            uid: data.uid,
-            transactionId: doc.id,
-            transactionType: data.transactionType,
-            paymentTransactionId: data.paymentTransactionId,
-            dateTime: data.date,
-            value: parseInt(data.value),  // Ensure the value is correctly retrieved
-          };
-        });
-  
-        setTransactionData(transactions as TransactionData[]);
+      try {
+        const uid = await SecureStore.getItemAsync('uid');
+    
+        if (uid) {
+          const transactionsQuery = query(
+            collection(db, 'walletTransactions', uid, 'walletId'),
+            where('uid', '==', uid)
+          );
+          const querySnapshot = await getDocs(transactionsQuery);
+          console.log("test123")
+          const transactions = querySnapshot.docs.map((doc) => {
+        const data = doc.data();
+        let formattedDate: Date | null = null;
+
+        // Check if date is in "MM/DD/YYYY, hh:mm:ss AM/PM" format
+        if (/^\d{2}\/\d{2}\/\d{4}, \d{1,2}:\d{2}(:\d{2})? [APM]{2}$/.test(data.date)) {
+          const [datePart, timePart] = data.date.split(", ");
+          const [month, day, year] = datePart.split("/").map(Number);
+          const [time, meridian] = timePart.split(" ");
+          let [hours, minutes] = time.split(":").map(Number);
+
+          if (meridian === "PM" && hours !== 12) hours += 12;
+          if (meridian === "AM" && hours === 12) hours = 0;
+
+          formattedDate = new Date(year, month - 1, day, hours, minutes);
+        }
+
+        return {
+          uid: data.uid,
+          transactionId: doc.id,
+          transactionType: data.transactionType,
+          paymentTransactionId: data.paymentTransactionId,
+          dateTime: data.date,
+          value: parseInt(data.value),
+          dateObject: formattedDate || new Date(0), // Default to epoch if parsing fails
+        };
+      });
+    
+          // Sort transactions by date in ascending order (oldest → newest)
+          transactions.sort((b, a) => a.dateObject.getTime() - b.dateObject.getTime());
+    
+          // console.log(transactions.length);
+          // console.log(transactions);
+          setTransactionData(transactions as TransactionData[]);
+        }
+      } catch (error) {
+        console.error("Error loading transactions:", error);
       }
-    } catch (error) {
-      console.error("Error loading transactions:", error); // Log any errors that occur
-    }
-  };
+    };
   
   const [isLeaseVisible, setIsLeaseVisible] = useState(true); // Step 1: State for visibility
  
@@ -386,7 +448,7 @@ export default function MyLease() {
       try {
         const uid = await SecureStore.getItemAsync('uid');
         const transactionId = `${selectedLeaseData?.ownerId}-${selectedLeaseData?.propertyId}-${uid}`;
-        console.log('Test', transactionId);
+        // console.log('Test', transactionId);
   
         if (transactionId) {
           // Get the collection reference for payment transactions
@@ -420,7 +482,7 @@ export default function MyLease() {
                 // Create the Date object with parsed values
                 const leaseStartDate = new Date(year, month - 1, dueDay); // Month is zero-indexed in JavaScript Date
 
-                console.log(leaseStartDate);
+                // console.log(leaseStartDate);
 
                 // Step to calculate newDueDay based on rentDueDay
                 const today = new Date();
@@ -431,7 +493,8 @@ export default function MyLease() {
                 // Get the lease details and compare as described
                 const isOtherLeaseDuration = 
                 !(data.propertyLeaseDuration === 'Long-term (1 year)' && data.paymentDuration === '12') && 
-                !(data.propertyLeaseDuration === 'Short-term (6 months)' && data.paymentDuration === '6');
+                !(data.propertyLeaseDuration === 'Short-term (6 months)' && data.paymentDuration === '6') &&
+                !(data.propertyLeaseDuration === 'Demo (1 minute)' && data.paymentDuration === '1 minute');
 
                 if (isOtherLeaseDuration && newDueDay && uid) {
                   // Check if there is a payment for the last month
@@ -667,19 +730,19 @@ export default function MyLease() {
     // Check the conditions
     if (today.getTime() === threeDaysBefore.getTime() && uid) {
       sendNotification(uid, 'approval', 
-        `Rent Due on ${dateString}`, `Reminder: Your rent is due on ${dateString}. Please ensure timely payment to avoid any issues.`, 'Urgent', 'Unread')
+        `Rent Due on ${dateString}`, `Reminder: Your rent is due on ${dateString}. Please ensure timely payment to avoid any issues.`, 'Urgent', 'Unread', '', '')
       console.log('Today is 3 days before the target date.');
     } else if (today.getTime() === targetDate.getTime() && uid) {
       sendNotification(uid, 'approval', 
-        `Rent Due on ${dateString}`, `Reminder: Your rent is due today. Please complete your payment to avoid any issues.`, 'Urgent', 'Unread')
+        `Rent Due on ${dateString}`, `Reminder: Your rent is due today. Please complete your payment to avoid any issues.`, 'Urgent', 'Unread', '', '')
       console.log('Today is the target date.');
     } else if (today.getTime() > targetDate.getTime() && uid) {
       sendNotification(uid, 'approval', 
-        `Rent Due on ${dateString}`, `Your rent payment was due yesterday and has not been received. Please complete the payment as soon as possible to avoid late fees.`, 'Urgent', 'Unread')
+        `Rent Due on ${dateString}`, `Your rent payment was due yesterday and has not been received. Please complete the payment as soon as possible to avoid late fees.`, 'Urgent', 'Unread', '', '')
       console.log('Today exceeds the target date.');
     } else if (today.getTime() < threeDaysBefore.getTime() && uid) {
       sendNotification(uid, 'approval', 
-        `Rent Due on ${dateString}`, `Reminder: Your rent was due on ${dateString}, and payment has not been received. Please make your payment immediately to avoid further action.`, 'Urgent', 'Unread')
+        `Rent Due on ${dateString}`, `Reminder: Your rent was due on ${dateString}, and payment has not been received. Please make your payment immediately to avoid further action.`, 'Urgent', 'Unread', '', '')
       console.log('Error: Today is more than 3 days before the target date.');
     } else {
       console.log('Today is either more or less than the target date.');
@@ -964,9 +1027,9 @@ export default function MyLease() {
                   {activeTab === 'rent' && (
                 <ScrollView
                 showsVerticalScrollIndicator={false}
-                refreshControl={
-                  <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-                }
+                // refreshControl={
+                //   <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+                // }
                  className='h-full pb-20 space-y-2'
                 >
                   <TouchableOpacity className='w-full items-end' onPress={async () => {
@@ -975,9 +1038,9 @@ export default function MyLease() {
                     }}>
                     <Text className='text-xs text-[#D9534F]'>Payment History & Schedule</Text>
                   </TouchableOpacity>
+
                   <View className="flex-col  rounded-lg mb-4">
-                    
-                  {rentData?.paymentDuration !== '0' && (
+                  {rentData?.paymentDuration !== '0'  ? (
                       <View className="flex-col items-center bg-white pb-4 rounded-xl shadow-xl">
                         <View className="px-4 flex-row items-center">
                           <View className="flex-col w-1/2">
@@ -1024,7 +1087,8 @@ export default function MyLease() {
                                   <Text className="text-xs">
                                     {(
                                       (rentData?.propertyLeaseDuration === 'Long-term (1 year)' && rentData?.paymentDuration == '12') ||
-                                      (rentData?.propertyLeaseDuration === 'Short-term (6 months)' && rentData?.paymentDuration == '6')
+                                      (rentData?.propertyLeaseDuration === 'Short-term (6 months)' && rentData?.paymentDuration == '6') || 
+                                      (rentData?.propertyLeaseDuration === 'Demo (1 minute)' && rentData?.paymentDuration == '1 minute')
                                     )
                                       ? parseInt(rentData.propertyAdvancePaymentAmount).toLocaleString()
                                       : '0'}
@@ -1035,7 +1099,8 @@ export default function MyLease() {
                                   <Text className="text-xs">
                                     {(
                                       (rentData?.propertyLeaseDuration === 'Long-term (1 year)' && rentData?.paymentDuration == '12') ||
-                                      (rentData?.propertyLeaseDuration === 'Short-term (6 months)' && rentData?.paymentDuration == '6')
+                                      (rentData?.propertyLeaseDuration === 'Short-term (6 months)' && rentData?.paymentDuration == '6') || 
+                                      (rentData?.propertyLeaseDuration === 'Demo (1 minute)' && rentData?.paymentDuration == '1 minute')
                                     )
                                       ? parseInt(rentData.propertySecurityDepositAmount).toLocaleString()
                                       : '0'}
@@ -1046,7 +1111,14 @@ export default function MyLease() {
                           )}
                         </View>
                       </View>
+                    ) : (
+                      <>
+                      {/* <View className="flex-row items-center">
+                        <Text className="text-gray-500 text-xs">Your payment ended.</Text>
+                      </View> */}
+                      </>
                     )}
+                    <Text className="text-xl font-semibold mt-2">Transaction</Text>
                   </View>
 
           
@@ -1054,7 +1126,7 @@ export default function MyLease() {
                   {selectedLeaseData && transactionData?.length > 0 && (
                     <ScrollView showsVerticalScrollIndicator={false} className="h-[300px] w-full pb-20 space-y-2">
                       <View className="mb-4 gap-2">
-                        <Text className="text-xl font-semibold mb-2">Transaction</Text>
+                        
                         {transactionData
                           .filter(
                             (transaction) =>
@@ -1139,7 +1211,7 @@ export default function MyLease() {
                                   if (selectedLeaseData) {
                                     await SecureStore.setItemAsync('propertyId', selectedLeaseData.propertyId);
                                     await SecureStore.setItemAsync('userId', selectedLeaseData.ownerId);
-                                    router.push('../tabs/Property');
+                                    router.push('../tabs/LeaseProperty/PropertyDetails');
                                   } else {
                                     console.log('Lease data is not available');
                                   }
@@ -1235,7 +1307,7 @@ export default function MyLease() {
                       </View>
                     ) : (
                       <Text className="text-center mt-4 text-gray-500">
-                        It looks like you haven't rented any property. Browse available listings and find your new place!
+                        Your account is under review. This feature will be available after approval.
                       </Text>
                     )}
                     </ScrollView>
@@ -1257,7 +1329,7 @@ export default function MyLease() {
             <Text className="text-2xl font-bold">My Lease</Text>
           </View>
           <Text className="text-center mt-4 text-gray-500">
-            It looks like you haven't rented any property. Browse available listings and find your new place!
+            You have no active leases. Apply for a property to start your lease journey.
           </Text>
         </View>
         </ScrollView>

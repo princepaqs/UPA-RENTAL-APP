@@ -43,6 +43,12 @@ export default function MaintenanceScreen() {
     ? maintenances.filter(maintenance => maintenance.status === filterStatus)
     : maintenances;
 
+    console.log(filteredMaintenances.map((m) => m.id));
+
+    const uniqueMaintenances = Array.from(new Map(filteredMaintenances.map(m => [m.id, m])).values());
+
+
+
   const formatDate = (timestamp: Timestamp | null | undefined) =>
     timestamp ? timestamp.toDate().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) : '';
 
@@ -188,7 +194,7 @@ export default function MaintenanceScreen() {
               <Text className="text-xs text-white">{status}</Text>
               <View className="flex items-end pt-2">
                 <Text className="text-3xl font-semibold text-white">
-                  {maintenances.filter(tenant => tenant.status === status).length}
+                  {uniqueMaintenances.filter(tenant => tenant.status === status).length}
                 </Text>
               </View>
             </TouchableOpacity>
@@ -212,8 +218,8 @@ export default function MaintenanceScreen() {
         {/* Maintenance List */}
         <ScrollView contentContainerStyle={{ flexGrow: 1 }} showsVerticalScrollIndicator={false}>
           <View className="flex flex-col gap-3 px-4 mb-20">
-            {filteredMaintenances.length > 0 ? (
-              filteredMaintenances.map((maintenance) => (
+            {uniqueMaintenances.length > 0 ? (
+              uniqueMaintenances.map((maintenance) => (
                 <TouchableOpacity 
                   key={maintenance.id} 
                   className="w-full p-2.5 rounded-xl shadow-xl border border-gray-100 bg-white flex flex-row"

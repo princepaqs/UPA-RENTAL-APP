@@ -1,7 +1,10 @@
 import { View, Text, TouchableOpacity, TextInput, Pressable, ScrollView } from 'react-native'
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { Entypo, Ionicons } from '@expo/vector-icons'
 import { useRouter } from 'expo-router';
+import * as SecureStore from 'expo-secure-store';
+import { doc, getDoc } from 'firebase/firestore';
+import { db } from '@/_dbconfig/dbconfig';
 
 interface CustomCheckboxProps {
     label: string;
@@ -19,19 +22,103 @@ interface CustomCheckboxProps {
     </TouchableOpacity>
   );
 
+  interface ContractData {
+    propertyId: string;
+    uid: string;
+    tenantId: string;
+    propertyHomeAddress: string;
+    propertyType: string;
+    ownerFullName: string;
+    tenantFullName: string;
+    transactionId: string;
+    rentalStartDate: string;
+    rentalEndDate: string;
+    propertyMonthlyRent: string;
+    propertyPetPolicy: string;
+    propertyHouseRules: string;
+    propertyLeaseDuration: string;
+  }
+
 export default function rentalDetails() {
     const router = useRouter();
     const [petPolicy, setPetPolicy] = useState('');
     const [petAllowed, setPetAllowed] = useState(false);
     const [noPetsAllowed, setNoPetsAllowed] = useState(false);
     const [houseRules, setHouseRules] = useState('');
+    const [contractData, setContractData] = useState<ContractData | null>(null);
 
-    const [leaseDuration, setLeaseDuration] = useState("Short-term (6 months)");
+    const [leaseDuration, setLeaseDuration] = useState("Demo (1 minute)");
     const [isLeaseDropdownVisible, setLeaseDropdownVisible] = useState(false);
-    const leaseDurations = ["Short-term (6 months)", "Long-term (1 year)"];
+    const leaseDurations = ["Demo (1 minute)", "Short-term (6 months)", "Long-term (1 year)"];
 
-    const monthlyRent = 10000;
-    const Rules = "Lorem ipsum dolor sit amet consectetur adipisicing elit. Temporibus, nostrum? A deserunt quod aliquam ab nesciunt modi dolorum! Officiis quod quia nesciunt esse sint cum maiores velit modi laudantium quae!"
+    // const monthlyRent = 10000;
+    // const Rules = "Lorem ipsum dolor sit amet consectetur adipisicing elit. Temporibus, nostrum? A deserunt quod aliquam ab nesciunt modi dolorum! Officiis quod quia nesciunt esse sint cum maiores velit modi laudantium quae!"
+
+    useEffect(() => {
+          const fetchPropertyDetails = async() => {
+            try {
+              const uid = await SecureStore.getItemAsync('uid');
+              const propertyId = await SecureStore.getItemAsync('extensionPropertyId');
+              const tenantId = await SecureStore.getItemAsync('extensionTenantId');
+              console.log(uid, propertyId, tenantId);
+        
+              if(!uid || !propertyId || !tenantId) {
+                return
+              }
+        
+              const propertyRef = await getDoc(doc(db, 'properties', uid, 'propertyId', propertyId))
+              const tenantRef = await getDoc(doc(db, 'users', tenantId))
+              const ownerRef = await getDoc(doc(db, 'users', uid))
+        
+              if(!propertyRef.exists() || !tenantRef.exists() || !ownerRef.exists()){
+                return;
+              }
+        
+              const propertyData = propertyRef.data();
+              const tenantData = tenantRef.data();
+              const ownerData = ownerRef.data();
+              const transactionId = `${uid}-${propertyId}-${tenantId}`;
+              if(!propertyData || !tenantData || !ownerData || !transactionId) {
+                return;
+              }
+        
+              const transactionRef = await getDoc(doc(db, 'propertyTransactions', transactionId))
+              
+              if(!transactionRef.exists()){
+                return;
+              }
+        
+              const transactionData = transactionRef.data();
+        
+              if(!transactionData) {
+                return;
+              }
+        
+              const contractDetails = {
+                propertyId,
+                uid,
+                tenantId,
+                propertyHomeAddress: `${propertyData.propertyHomeAddress}, ${propertyData.propertyBarangay}, ${propertyData.propertyCity}, ${propertyData.propertyRegion}`,
+                propertyType: propertyData.propertyType,
+                ownerFullName: `${ownerData.firstName} ${ownerData.middleName} ${ownerData.lastName}`,
+                tenantFullName: `${tenantData.firstName} ${tenantData.middleName} ${tenantData.lastName}`,
+                transactionId,
+                rentalStartDate: transactionData.rentalStartDate,
+                rentalEndDate: transactionData.rentalEndDate,
+                propertyMonthlyRent: propertyData.propertyMonthlyRent,
+                propertyPetPolicy: propertyData.propertyPetPolicy,
+                propertyHouseRules: propertyData.propertyHouseRules,
+                propertyLeaseDuration: propertyData.propertyLeaseDuration,
+              }
+    
+              setContractData(contractDetails);
+            } catch (error) {
+              
+            }
+          }
+        
+          fetchPropertyDetails()
+        }, []);
 
   return (
     <View className="h-screen py-4 px-8">
@@ -54,7 +141,7 @@ export default function rentalDetails() {
                 <Text className='text-xs font-bold'>Monthly Rent Price</Text>
             </View>
             <View className='w-full px-4 py-3 bg-[#D9D9D9] rounded-2xl'>
-                <Text className='text-xs font-semibold text-gray-500'>₱ {monthlyRent}</Text>
+                <Text className='text-xs font-semibold text-gray-500'>₱ {contractData?.propertyMonthlyRent}</Text>
             </View>
         </View>
         
@@ -123,7 +210,7 @@ export default function rentalDetails() {
                     <Text className='text-xs font-bold'>House Rules</Text>
                 </View>
                 <View className='w-full px-4 py-3 bg-[#D9D9D9] rounded-2xl'>
-                    <Text className='text-xs font-semibold text-gray-500'>{Rules}</Text>
+                    <Text className='text-xs font-semibold text-gray-500'>{contractData?.propertyHouseRules}</Text>
                 </View>
             </View>
     </ScrollView>

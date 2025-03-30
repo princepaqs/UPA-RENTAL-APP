@@ -18,7 +18,7 @@ interface Users {
 
 export default function ReportIssue() {
   const router = useRouter();
-  const { reportIssue } = useAuth();
+  const { followUpReport } = useAuth();
 
   const [description, setDescription] = useState('');
   const [transactionID, setTransactionID] = useState('');
@@ -29,6 +29,13 @@ export default function ReportIssue() {
   // Modal state for confirmation
   const [confirmationModalVisible, setConfirmationModalVisible] = useState(false);
 
+  const generateTransactionID = () => {
+    const now = new Date();
+    const date = now.toISOString().slice(0, 10).replace(/-/g, ''); // Format YYYYMMDD
+    const randomNumbers = Math.floor(1000 + Math.random() * 9000); // Generate 4 random digits
+    return `${date}${randomNumbers}`; // Format: YYYYMMDDXXXX
+};
+
   const handleSubmit = () => {
     // Open the confirmation modal
     setConfirmationModalVisible(true);
@@ -37,17 +44,22 @@ export default function ReportIssue() {
   // Function to confirm submission
   const confirmSubmission = () => {
     setConfirmationModalVisible(false);
-    if(!user || !transactionID || !description){
-      Alert.alert("Report Issue", "Please fill all fields.")
+    if(!user || !transactionID){
+      Alert.alert("Report Issue", "Report ID is required.")
+      return
+    }
+
+    if(!user || !description){
+      Alert.alert("Report Issue", "Detailed desccription is required")
       return
     }
 
     if(user){
       console.log(user?.userFullName, user?.userAccountId, transactionID, description);
-
+      followUpReport(user?.userFullName, user?.userAccountId, 'Follow-up Report', generateTransactionID(), description);
       router.back();
     }
-    Alert.alert("Report Issue", "Your report is submitted")
+    Alert.alert("Report Issue", "Your report has been successfully submitted. It will be reviewed and handled promptly.")
   };
 
 
@@ -135,6 +147,7 @@ export default function ReportIssue() {
                 onChangeText={setDescription}
                 multiline
                 numberOfLines={4}
+                maxLength={1000}
                 style={{ textAlignVertical: 'top' }} // Ensures multiline input aligns from the top
               />
             </View>

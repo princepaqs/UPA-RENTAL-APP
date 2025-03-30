@@ -72,8 +72,8 @@ export default function TrackMaintenance() {
       return;
     }else{
       maintenanceRequest(uid, ownerId, propertyId, fullName, preferredTime, issueType, JSON.stringify(images), description);
-      sendNotification(uid, 'maintenance-request', 'Maintenance Request Sent', 'Your maintenance request has been successfully sent. The property owner will review and respond shortly.', 'Success', 'Unread');
-      sendNotification(ownerId, 'maintenance-request', 'New Maintenance Request Received', 'You have received a new maintenance request. Please review and take action as necessary.', 'Success', 'Unread');
+      sendNotification(uid, 'maintenance-request', 'Maintenance Request Sent', 'Your maintenance request has been successfully sent. The property owner will review and respond shortly.', 'Success', 'Unread', '', '');
+      sendNotification(ownerId, 'maintenance-request', 'New Maintenance Request Received', 'You have received a new maintenance request. Please review and take action as necessary.', 'Success', 'Unread', '', '');
     }
     router.replace('../tabs/Profile/TrackMaintenance/trackMaintenance')
   };

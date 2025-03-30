@@ -18,7 +18,7 @@ export default function SignIn() {
   const [modalMessage, setModalMessage] = useState(''); // Modal message
 
   const router = useRouter();
-  const { login } = useAuth();
+  const { login, logout } = useAuth();
 
   useEffect(() => {
     const getData = async () => {
@@ -44,11 +44,6 @@ export default function SignIn() {
         const tenantId = await SecureStore.getItemAsync('uid');
         const usePassword = await SecureStore.getItemAsync('usePassword');
         console.log(tenantId);
-
-        
-        if(usePassword === 'true' && email && password){
-          login(email, password);
-        }
 
         if(email){
           setEmail(email);
@@ -79,16 +74,27 @@ export default function SignIn() {
 
               //console.log(lastLoginTime, token, email, password);
 
-              const oneHourInMs = 3600000;
+              const oneHourInMs = (3600000 * 24) * 30; // one month
+
+              // if (userData?.onlineStatus === 'Online' && Date.now() - lastLoginTime < oneHourInMs){
+              //   console.log('Multiple device login detected. Signing out...');
+              //   setModalMessage('You have been logged out because you logged in on another device.');
+              //   setModalVisible(true);
+              //   logout();
+              //   return;
+              // }
+              
+              if(usePassword === 'true' && email && password){
+                login(email, password);
+              }
+
               if (Date.now() - lastLoginTime < oneHourInMs && email && password) {
                 setLoading(false); // Hide loading indicator
                 login(email, password); // Ensure email and password are strings
               } else {
-                return; // Token expired or login time exceeded
-              }
-            } else {
               //console.error("userLoginTime is undefined");
               return;
+              }
             }
           }
         }
@@ -108,7 +114,7 @@ export default function SignIn() {
 
   const handleLogin = async () => {
     if (!email || !password) {
-      setModalMessage('Please enter all fields');
+      setModalMessage('Please enter your Email and Password');
       setModalVisible(true);
       return;
     }
@@ -123,7 +129,11 @@ export default function SignIn() {
         setModalMessage('Invalid email or password. Please try again.');
       } else if (error.code === 'auth/user-not-found') {
         setModalMessage('User not found. Please try again.');
-      } else {
+      } else if (error.code === 'auth/too-many-requests') {
+        setModalMessage('Account temporarily locked. Please try again later.');
+      } else if (error.code === 'multiple-device-login') {
+        // setModalMessage('You have been logged out because you logged in on another device.');
+      }else {
         setModalMessage(error.message || 'Login failed. Please try again.');
       }
       setModalVisible(true); // Show modal with error message
@@ -215,7 +225,7 @@ export default function SignIn() {
       </View>
 
       <View className='items-center py-5'>
-        <Text className='text-xs text-gray-300 font-bold'>v2.0.3</Text>
+        <Text className='text-xs text-gray-300 font-bold'>v2.1.1</Text>
       </View>
 
       {/* Error Modal */}

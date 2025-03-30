@@ -72,33 +72,58 @@ export default function Wallet() {
   };
 
   const loadWalletTransactions = async () => {
-    try {
-      const uid = await SecureStore.getItemAsync('uid');
-  
-      if (uid) {
-        const transactionsQuery = query(collection(db, 'walletTransactions', uid, 'walletId'), where('uid', '==', uid));
-        const querySnapshot = await getDocs(transactionsQuery);
-  
-        const transactions = querySnapshot.docs.map(doc => {
-          const data = doc.data();
-          
-          return {
-            uid: data.uid,
-            transactionId: doc.id,
-            transactionType: data.transactionType,
-            dateTime: data.date,
-            value: parseInt(data.value),  // Ensure the value is correctly retrieved
-          };
-        });
-        
-        console.log(transactions.length);
-        console.log(transactions)
-        setTransactionData(transactions as TransactionData[]);
-      }
-    } catch (error) {
-      console.error("Error loading transactions:", error); // Log any errors that occur
+  try {
+    const uid = await SecureStore.getItemAsync("uid");
+
+    if (uid) {
+      const transactionsQuery = query(
+        collection(db, "walletTransactions", uid, "walletId"),
+        where("uid", "==", uid)
+      );
+      const querySnapshot = await getDocs(transactionsQuery);
+
+      const transactions = querySnapshot.docs.map((doc) => {
+        const data = doc.data();
+        let formattedDate: Date | null = null;
+
+        // Check if date is in "MM/DD/YYYY, hh:mm:ss AM/PM" format
+        if (/^\d{2}\/\d{2}\/\d{4}, \d{1,2}:\d{2}(:\d{2})? [APM]{2}$/.test(data.date)) {
+          const [datePart, timePart] = data.date.split(", ");
+          const [month, day, year] = datePart.split("/").map(Number);
+          const [time, meridian] = timePart.split(" ");
+          let [hours, minutes] = time.split(":").map(Number);
+
+          if (meridian === "PM" && hours !== 12) hours += 12;
+          if (meridian === "AM" && hours === 12) hours = 0;
+
+          formattedDate = new Date(year, month - 1, day, hours, minutes);
+        }
+
+        return {
+          uid: data.uid,
+          transactionId: doc.id,
+          transactionType: data.transactionType,
+          dateTime: data.date,
+          value: parseInt(data.value),
+          dateObject: formattedDate || new Date(0), // Default to epoch if parsing fails
+        };
+      });
+
+      // Sort transactions by date in descending order (latest → oldest)
+      transactions.sort((b, a) => a.dateObject.getTime() - b.dateObject.getTime());
+
+      console.log(transactions.length);
+      console.log(transactions);
+      setTransactionData(transactions as TransactionData[]);
     }
-  };
+  } catch (error) {
+    console.error("Error loading transactions:", error);
+  }
+};
+
+  
+  
+  
   
 
   // Function to determine color based on transaction type
@@ -213,7 +238,7 @@ export default function Wallet() {
               <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
             }
           >
-            <View className='px-5 h-screen'>
+            <View className='px-5 min-h-screen'>
               <Text className='text-lg font-bold'>Transactions</Text>
 
               {transactionData.length === 0 ? (
@@ -233,6 +258,9 @@ export default function Wallet() {
                   </View>
                 ))
               )}
+
+              {/* Dummy view at the bottom to ensure visibility */}
+              <View className="h-60" />
             </View>
           </ScrollView>
         </View>

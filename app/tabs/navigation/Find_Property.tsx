@@ -7,7 +7,8 @@ import * as Location from 'expo-location'; // Import Expo Locationimport { colle
 import { db, storage } from '../../../_dbconfig/dbconfig';
 import { getDownloadURL, ref } from "firebase/storage";
 import * as SecureStore from 'expo-secure-store';
-import { collection, doc, getDoc, getDocs } from "firebase/firestore";
+import { collection, doc, getDoc, getDocs, query, where } from "firebase/firestore";
+import { useAuth } from "@/context/authContext";
 
 interface Properties {
   userId: string;
@@ -21,6 +22,7 @@ interface Properties {
 
 const DirectionsMap = () => {
   const router = useRouter();
+  const { listenForLogout } = useAuth();
   const [loading, setLoading] = useState(true);
   const [properties, setProperties] = useState<Properties[] | null>(null)
   const [userLocation, setUserLocation] = useState<{ latitude: number, longitude: number } | null>(null); // State to store user location
@@ -94,7 +96,7 @@ const DirectionsMap = () => {
 
       for (const userId of filteredUserIds) {
         try {
-          const propertyQuerySnapshot = await getDocs(collection(db, 'properties', userId, 'propertyId'));
+          const propertyQuerySnapshot = await getDocs(query(collection(db, 'properties', userId, 'propertyId'), where('status' , '==', 'Available')));
 
           for (const doc of propertyQuerySnapshot.docs) {
             const propertyData = doc.data();
@@ -127,7 +129,7 @@ const DirectionsMap = () => {
         console.error('Error fetching properties:', error);
       }
     };
-
+    listenForLogout();
     fetchUserImage();
     fetchUserLocation();
     fetchProperties();
@@ -138,7 +140,7 @@ const DirectionsMap = () => {
   const [selectedId, setSelectedId] = useState<string>('');
 
   const handleMarkerPress = (userId: string, propertyId: string) => {
-    setSelectedUserId(userId === selectedUserId ? '' : userId);
+    setSelectedUserId(userId);
     setSelectedMarkerId(propertyId === selectedMarkerId ? '' : propertyId); // Toggle visibility
     setSelectedId(`${userId}-${propertyId}` === `${selectedUserId}-${selectedMarkerId}` ? '' : `${userId}-${propertyId}`);
   };
@@ -148,6 +150,7 @@ const DirectionsMap = () => {
       console.log(`Navigating to Property with ID: ${selectedUserId} ${selectedMarkerId}`);
       await SecureStore.setItemAsync('propertyId', selectedMarkerId);
       await SecureStore.setItemAsync('userId', selectedUserId);
+      console.log(selectedUserId);
       router.push('./Property');
     } else {
       // Handle case where no marker is selected
@@ -229,11 +232,11 @@ const DirectionsMap = () => {
       <View className="absolute bottom-[100px] w-full flex-row space-x-5 items-center justify-center">
         {selectedMarkerId ? (
           <TouchableOpacity
-            className="flex-row items-center space-x-2 bg-white rounded-lg px-4 py-1 border border-gray-500 shadow-lg"
+            className="flex-row items-center space-x-2 bg-[#B33939] rounded-lg px-4 py-1 border border-gray-500 shadow-lg"
             onPress={handleViewProperty}
           >
-            <AntDesign name="eye" size={15} color="black" />
-            <Text className=" text-sm font-bold">
+            <AntDesign name="eye" size={15} color="white" />
+            <Text className=" text-sm text-white font-bold">
               View
             </Text>
           </TouchableOpacity>

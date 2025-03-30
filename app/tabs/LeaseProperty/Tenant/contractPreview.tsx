@@ -64,7 +64,6 @@ export default function ContractPreview() {
     return date.toLocaleDateString('en-US', { year: 'numeric', month: '2-digit', day: '2-digit' });
   };
 
-
   const handleSendContract = () => {
     
     if (!Fullname.current) {
@@ -102,7 +101,7 @@ export default function ContractPreview() {
       );
       router.replace('./contractSuccess')
 
-      sendNotification(transactionData? transactionData.tenantId : '', 'approval', 'Application Approved', `Your application for the ${propertyData?.propertyName} at ${propertyData?.propertyAddress} has been approved. Please sign the contract and complete the downpayment and advance payment within 24 hours to secure your lease.`, 'Success', 'Unread');
+      sendNotification(transactionData? transactionData.tenantId : '', 'approval', 'Application Approved', `Your application for the ${propertyData?.propertyName} at ${propertyData?.propertyAddress} has been approved. Please sign the contract and complete the downpayment and advance payment within 24 hours to secure your lease.`, 'Success', 'Unread', '', '');
     }else{
       Alert.alert('Contract', "Please enter your correct fullname!");
       return;
@@ -359,7 +358,8 @@ export default function ContractPreview() {
 
           {/* Bottom Buttons */}
         <View className="flex-row items-center space-x-2 justify-end py-6">
-          <TouchableOpacity className="bg-[#333333] w-2/5 py-2.5 px-4 rounded-xl">
+          <TouchableOpacity className="bg-[#333333] w-2/5 py-2.5 px-4 rounded-xl"
+            onPress={() => router.back()}>
             <Text className="text-center text-xs text-white font-semibold">Cancel</Text>
           </TouchableOpacity>
           <TouchableOpacity className="bg-[#508D4E] w-2/5 py-2.5 px-2 rounded-xl"
