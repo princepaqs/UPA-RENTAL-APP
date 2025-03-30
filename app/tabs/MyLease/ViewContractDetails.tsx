@@ -3,6 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { Feather, Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import * as FileSystem from 'expo-file-system';
+import * as Print from 'expo-print';
 import * as Sharing from 'expo-sharing'; // Import Sharing to share the file
 import { collection, getDocs, query, where, doc, getDoc, Timestamp } from 'firebase/firestore';
 import { db, storage } from '../../../_dbconfig/dbconfig';
@@ -46,93 +47,125 @@ export default function ReceivedContract() {
   const [formatDate, setFormatDate] = useState<string>('');
   
 
-  const handleDownload = async () => {
-    // Define the file name and path
-    const fileName = `Contract_${contractData?.propertyName}.txt`;
-    const fileUri = `${FileSystem.documentDirectory}${fileName}`;
+//   
+const handleDownload = async () => {
+  const fileName = `Contract_${contractData?.propertyName}.pdf`;
 
+  // HTML Template for the PDF
+  const contractHTML = `
+    <html>
+      <head>
+        <style>
+          body { font-family: Arial, sans-serif; padding: 20px; }
+          h2 { text-align: center; }
+          p { margin: 5px 0; }
+          .section { margin-bottom: 2px; }
+          .signature { margin-top: 40px; }
+        </style>
+      </head>
+      <body>
+        <h2>PROPERTY RENTAL AGREEMENT</h2>
+        <p>This Rental Agreement (the "Agreement") is made and entered into as of ${formatDate}, by and between:</p>
+        
+        <div class="section">
+          <h3>Landlord</h3>
+          <p><strong>Name:</strong> ${contractData?.ownerFullName}</p>
+          <p><strong>Address:</strong> ${contractData?.ownerFullAddress}</p>
+          <p><strong>Contact:</strong> ${contractData?.ownerContact}</p>
+          <p><strong>Email:</strong> ${contractData?.ownerEmail}</p>
+        </div>
 
-    // Create a string from the contract data
-    const contractText = `
-PROPERTY RENTAL AGREEMENT
-This Rental Agreement (the "Agreement") is made and entered into as of ${formatDate}, by and between:
+        <div class="section">
+          <h3>Tenant</h3>
+          <p><strong>Name:</strong> ${contractData?.tenantFullName}</p>
+          <p><strong>Address:</strong> ${contractData?.tenantFullAddress}</p>
+          <p><strong>Contact:</strong> ${contractData?.tenantContact}</p>
+          <p><strong>Email:</strong> ${contractData?.tenantEmail}</p>
+        </div>
 
-Landlord
-Name: ${contractData?.ownerFullName}
-Address: ${contractData?.ownerFullAddress}
-Contact Number: ${contractData?.ownerContact}
-Email: ${contractData?.ownerEmail}
+        <div class="section">
+          <h3>Property Details</h3>
+          <p><strong>Address:</strong> ${contractData?.propertyAddress}</p>
+          <p><strong>Type:</strong> ${contractData?.propertyType}</p>
+        </div>
 
-Tenant
-Name: ${contractData?.tenantFullName}
-Address: ${contractData?.tenantFullAddress}
-Contact Number: ${contractData?.tenantContact}
-Email: ${contractData?.tenantEmail}
+        <div class="section">
+          <h3>1. TERM OF LEASE</h3>
+          <p>The lease starts on <strong>${contractData?.propertyLeaseStart}</strong> and ends on <strong>${contractData?.propertyLeaseEnd}</strong>.</p>
+        </div>
 
-Property Address
-${contractData?.propertyName}
-${contractData?.propertyAddress}
-${contractData?.propertyType}
+        <div class="section">
+          <h3>2. RENT</h3>
+          <p>The rent is ₱${parseInt(contractData?.propertyRentAmount || '0').toLocaleString()} due on the ${contractData?.propertyRentDueDay} of each month.</p>
+        </div>
 
-1. TERM OF LEASE
-The term of this lease shall commence on ${contractData?.propertyLeaseStart} and shall terminate on ${contractData?.propertyLeaseEnd}, unless terminated earlier in accordance with this Agreement.
+        <div class="section">
+          <h3>3. SECURITY DEPOSIT</h3>
+          <p>Amount: ₱${parseInt(contractData?.propertySecurityDepositAmount || '0').toLocaleString()}</p>
+          <p>Refundable within ${contractData?.propertySecurityDepositRefundPeriod} days after lease ends.</p>
+        </div>
 
-2. RENT
-The Tenant agrees to pay the Landlord a monthly rent of ₱${parseInt(contractData?.propertyRentAmount || '0').toLocaleString()} due on the ${contractData?.propertyRentDueDay} of each month. Rent shall be payable via the wallet feature in the UPA application.
+        <div class="section">
+          <h3>4. ADVANCE PAYMENT</h3>
+          <p>₱${parseInt(contractData?.propertyAdvancePaymentAmount || '0').toLocaleString()} (equivalent to one month's rent).</p>
+        </div>
 
-3. SECURITY DEPOSIT
-The Tenant agrees to pay a security deposit of ₱${parseInt(contractData?.propertySecurityDepositAmount || '0').toLocaleString()} prior to moving in. This deposit will be held by the Landlord and may be used for any damages beyond normal wear and tear. The deposit will be refunded to the Tenant within ${contractData?.propertySecurityDepositRefundPeriod} days after the end of the lease term, subject to any deductions for damages or unpaid rent.
+        <div class="section">
+          <h3>5. UTILITIES</h3>
+          <p>The tenant is responsible for utilities like water, gas, electricity, and internet.</p>
+        </div>
 
-4. ADVANCE PAYMENT
-The Tenant agrees to pay an advance rental payment of ₱${parseInt(contractData?.propertyAdvancePaymentAmount || '0').toLocaleString()} (equivalent to one month's rent), which will be applied to the first month’s rent. This amount is due prior to the commencement of the lease term and will be payable through the wallet feature in the UPA application.
+        <div class="section">
+          <h3>6. MAINTENANCE AND REPAIRS</h3>
+          <p>Tenant must keep the premises clean and report maintenance issues.</p>
+        </div>
 
-5. UTILITIES
-The Tenant shall be responsible for the payment of all utilities, including but not limited to water, gas, electricity, and internet, unless otherwise agreed upon.
+        <div class="section" style="margin-top: 20px">
+          <h3>7. HOUSE RULES</h3>
+          <p>${contractData?.propertyHouseRules}</p>
+        </div>
 
-6. MAINTENANCE AND REPAIRS
-The Tenant shall keep the premises clean and in good condition. Any maintenance or repairs required shall be reported to the Landlord in a timely manner.
+        <div class="section">
+          <h3>8. TERMINATION</h3>
+          <p>Either party may terminate with ${contractData?.propertyTerminationPeriod} days' notice.</p>
+        </div>
 
-7. HOUSE RULES
-The Tenant agrees to adhere to the following house rules: ${contractData?.propertyHouseRules}
+        <div class="section">
+          <h3>9. PAYMENT METHOD</h3>
+          <p>All payments must be made through the UPA application.</p>
+        </div>
 
-8. TERMINATION
-Either party may terminate this Agreement with written notice of ${contractData?.propertyTerminationPeriod} days prior to the intended termination date.
+        <div class="section">
+          <h3>10. DATA PRIVACY</h3>
+          <p>Both parties agreed to comply with the Data Privacy Act of 2012.</p>
+        </div>
 
-9. PAYMENT METHOD
-All payments, including rent, security deposits, and advance payments, must be made through the wallet feature in the UPA application.
+        <div class="section">
+          <h3>11. SIGNATURES</h3>
+          <p>Landlord Signature: <strong>${contractData?.ownerFullName}</strong></p>
+          <p>Date: ${formatDate}</p>
+          <p>Tenant Signature: <strong>${contractData?.tenantFullName}</strong></p>
+          <p>Date: ${formatDate}</p>
+        </div>
+      </body>
+    </html>
+  `;
 
-10. DATA PRIVACY
-Both parties agree to comply with the Data Privacy Act of 2012 (Republic Act No. 10173) of the Philippines. The Landlord shall handle the Tenant's personal information responsibly and shall only use it for purposes related to this Agreement. The Tenant has the right to access their personal data and request corrections if necessary. Any personal data collected will be protected and processed in accordance with applicable data privacy laws.
+  try {
+    // Generate the PDF
+    const { uri } = await Print.printToFileAsync({ html: contractHTML, base64: false });
 
-11. NOTE
-This contract is intended for use within the UPA application. For any additional agreements outside of this application, including notarized contracts, it is recommended to seek legal advice.
-
-12. SIGNATURES
-By signing below, both parties agree to the terms and conditions outlined in this Rental Agreement.
-
-Landlord Signature: ${contractData?.ownerFullName}  
-Date: ${formatDate}
-
-Tenant Signature: ${contractData?.tenantFullName}  
-Date: ${formatDate}
-`;
-
-    try {
-      // Create the file
-      await FileSystem.writeAsStringAsync(fileUri, contractText, {
-        encoding: FileSystem.EncodingType.UTF8,
-      });
-
-      // Optionally share the file using Expo's Sharing API
-      await Sharing.shareAsync(fileUri);
-
-      Alert.alert('Download Complete', `File saved to: ${fileUri}`);
-      Alert.alert('Success', 'Contract downloaded successfully!');
-    } catch (error) {
-      console.error(error);
-      Alert.alert('Error', 'Failed to download the contract.');
+    // Save or Share the PDF
+    if (await Sharing.isAvailableAsync()) {
+      await Sharing.shareAsync(uri, { mimeType: 'application/pdf', dialogTitle: 'Share Contract PDF' });
     }
-  };
+
+    Alert.alert('Success', 'Contract PDF generated and ready to share!');
+  } catch (error) {
+    console.error(error);
+    Alert.alert('Error', 'Failed to generate the contract PDF.');
+  }
+};
 
   useEffect(() => {
     const fetchContract = async () => {

@@ -218,6 +218,7 @@ export default function MyLease() {
           await SecureStore.setItemAsync('reviewOwnerId', ownerId);
           await SecureStore.setItemAsync('fullAddress', fullAddress);
           await updateDoc(doc(db, 'propertyTransactions', transactionId), {paymentStatus: 'done'});
+          await updateDoc(doc(db, 'contracts', transactionId), {status: 'done'});
           // return; // Skip this lease
         } else if (today > formattedRentalEndDate) {
           return; // Skip this lease

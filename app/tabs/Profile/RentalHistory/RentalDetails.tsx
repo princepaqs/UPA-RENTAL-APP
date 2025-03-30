@@ -3,10 +3,20 @@ import React, { useState, useEffect } from 'react';
 import { Ionicons, Feather, MaterialIcons, FontAwesome6, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import * as SecureStore from 'expo-secure-store';
+import { collection, getDocs, query, where } from 'firebase/firestore';
+import { db } from '@/_dbconfig/dbconfig';
+
+interface Payment {
+  date: string;
+  paymentTransactionId: string;
+  id: string;
+  value: string;
+}
 
 export default function RentalDetails() {
   const router = useRouter();
   const [rentalHistory, setRentalHistory] = useState<any>(null);
+  const [paymentHistory, setPaymentHistory] = useState<Payment[]>([]);
   const [propertyImage, setPropertyImage] = useState<string | null>(null);
   const [userImage, setUserImage] = useState<string | null>(null);
   const { rentalData } = useLocalSearchParams();
@@ -25,13 +35,52 @@ export default function RentalDetails() {
         // Log the images to check if they are passed correctly
         console.log('Property Image: ', pImage);
         console.log('User Image: ', uImage);
-  
-        console.log('Rental Data:', JSON.parse(rentalData as string));
+
+        
       }
     }
   
     getRentalData();
   }, [rentalData]);
+
+  useEffect(() => {
+    const getPaymentData = async () => {
+      try {
+        console.log("ID",rentalHistory?.tenantId)
+        console.log(rentalHistory?.transactionId)
+        if (!rentalHistory?.tenantId || !rentalHistory?.transactionId) return;
+        
+        const paymentRef = query(
+          collection(db, 'walletTransactions', rentalHistory.tenantId, 'walletId'), // Correct collection reference
+          where('paymentTransactionId', '==', rentalHistory.transactionId),
+          where('transactionType', '==', 'Payment')
+        );
+  
+        const paymentSnapshot = await getDocs(paymentRef);
+  
+        const paymentData: Payment[] = paymentSnapshot.docs.map(doc => {
+          const data = doc.data();
+
+          console.log(data)
+  
+          return {
+            id: doc.id,
+            date: data.date || '', // Ensure property exists, fallback to empty string
+            paymentTransactionId: data.paymentTransactionId || '',
+            value: data.value || '',
+          };
+        });
+  
+        setPaymentHistory(paymentData);
+      } catch (error) {
+        console.error('Error fetching payment history:', error);
+      }
+    };
+  
+    getPaymentData();
+  }, [rentalHistory, rentalData]);
+  
+  
 
   const handleViewAgreement = async () => {
     const uid = await SecureStore.getItemAsync('uid');
@@ -138,7 +187,7 @@ export default function RentalDetails() {
                     <View className="flex flex-row items-center justify-between">
                       <View className="flex flex-row items-center">
                         <Feather name="map-pin" size={15} color="black" />
-                        <Text className="pl-3 text-xs font-normal">{rentalHistory.propertyBarangay}, {rentalHistory.propertyCity}, {rentalHistory.propertyRegion}</Text>
+                        <Text className="pl-3 text-xs font-normal">{rentalHistory.propertyAddress}</Text>
                       </View>
                     </View>
                   </View>
@@ -149,7 +198,7 @@ export default function RentalDetails() {
                   <TouchableOpacity className="flex flex-row items-center p-3 bg-white rounded-xl shadow" onPress={handleOwnerProfile}>
                     <Image className="w-10 h-10 rounded-full mr-4" source={{ uri: userImage || '../../../assets/images/profile.png' }} />
                     <View className="flex-1">
-                      <Text className="text-sm font-bold">{rentalHistory.firstName} {rentalHistory.middleName} {rentalHistory.lastName}</Text>
+                      <Text className="text-sm font-bold">{rentalHistory.ownerFullName}</Text>
                       <Text className="text-xs text-[#6C6C6C]">Landlord</Text>
                     </View>
                     <View className="flex flex-row gap-2">
@@ -167,15 +216,15 @@ export default function RentalDetails() {
                 <View className="flex flex-col p-5 gap-3">
                   <View className="flex flex-row items-center">
                     <Feather name="calendar" size={15} color="black" />
-                    <Text className="text-xs font-bold pl-2">Rent Period: {rentalHistory.rentalStartDate} - {rentalHistory.rentalEndDate}</Text>
+                    <Text className="text-xs font-bold pl-2">Rent Period: {rentalHistory.propertyLeaseStart} - {rentalHistory.propertyLeaseEnd}</Text>
                   </View>
                   <View className="flex flex-row items-center">
                     <MaterialCommunityIcons name="cash-multiple" size={15} color="black" />
-                    <Text className="text-xs font-bold pl-2">Rent Fee:₱ {parseFloat(rentalHistory.propertyCurrentRentAmount).toFixed(2)}</Text>
+                    <Text className="text-xs font-bold pl-2">Rent Fee:₱ {parseFloat(rentalHistory.propertyRentAmount).toFixed(2)}</Text>
                   </View>
                   <View className="flex flex-row items-center">
                     <Feather name="shield" size={15} color="black" />
-                    <Text className="text-xs font-bold pl-2">Deposit Amount:₱ {parseFloat(rentalHistory.propertyCurrentRentDeposit).toFixed(2)}</Text>
+                    <Text className="text-xs font-bold pl-2">Deposit Amount:₱ {parseFloat(rentalHistory.propertySecurityDepositAmount).toFixed(2)}</Text>
                   </View>
                   <View className="flex flex-row items-center">
                     <Feather name="file-text" size={15} color="black" />
@@ -188,9 +237,12 @@ export default function RentalDetails() {
                   <View className="flex flex-col">
                     <Text className="text-xs font-bold">Payment History:</Text>
                     {/* Payment History Section */}
-                    {/* {rentalHistory.paymentHistory.map((payment, index) => (
-                      <Text key={index} className="text-xs">{payment.date} - {payment.amount}</Text>
-                    ))} */}
+                    {paymentHistory.map((payment, index) => (
+                      <View className="flex flex-row items-center rounded-md py-1 px-2 bg-[#FFFFFF]">
+                        <MaterialCommunityIcons name="cash-multiple" size={15} color="black" />
+                        <Text key={index} className="text-xs"> {payment.date} - ₱{payment.value}.00</Text>
+                      </View>
+                    ))}
                   </View>
                 </View>
               </>

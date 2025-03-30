@@ -40,23 +40,25 @@ export default function propertyFeedback() {
             return;
         }
 
-        const uid = await SecureStore.getItemAsync('reviewPropertyId') || 'test';
+        const propertyId = await SecureStore.getItemAsync('reviewPropertyId') || 'test';
+        const ownerId = await SecureStore.getItemAsync('reviewOwnerId') || '';
         const senderId = await SecureStore.getItemAsync('uid');
         const reviewId = generateTransactionID()
 
-        console.log(uid, senderId, reviewId);
+        console.log(propertyId, senderId, reviewId);
 
         const feedbackData = {
             feedbackType: 'Property',
-            uid,
+            propertyId,
+            ownerId,
             senderId,
             ratings,
             comment,
             createdAt: new Date()
         };
 
-        if(uid && feedbackData){
-            await setDoc(doc(db, 'reviews', uid, 'reviewId', reviewId), feedbackData);
+        if(propertyId && feedbackData){
+            await setDoc(doc(db, 'reviews', ownerId, 'reviewId', reviewId), feedbackData);
             console.log("Feedback Submitted:", feedbackData);
             router.replace('../OwnerFeedback/ownerFeedback');
         }

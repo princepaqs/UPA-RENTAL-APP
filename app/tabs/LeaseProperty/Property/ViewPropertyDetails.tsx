@@ -185,7 +185,7 @@ export default function ViewPropertyDetails() {
                     where('propertyId', '==', propertyId),
                     where('ownerId', '==', ownerId)));
 
-                    if(!contractRef.empty){
+                    if(!contractRef.empty && data.status !== 'Available'){
                         const contract = contractRef.docs[0];
                         const data = contract.data()
                         if(data){
