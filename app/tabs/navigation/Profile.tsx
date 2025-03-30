@@ -306,6 +306,12 @@ export default function Profile() {
                 <AntDesign name="questioncircleo" size={20} color="gray" />
                 <Text className='text-sm font-normal ml-3'>FAQ</Text>
               </TouchableOpacity>
+              <TouchableOpacity className='flex flex-row items-center bg-white p-2 border border-gray-100 rounded-lg shadow-md'
+                onPress={() => handleNavigate('../tabs/Profile/chatBot')}
+              >
+                <Ionicons name="chatbubble-ellipses-outline" size={20} color="gray" />
+                <Text className='text-sm font-normal ml-3'>Chat Support</Text>
+              </TouchableOpacity>
             </View>
           </View>
 

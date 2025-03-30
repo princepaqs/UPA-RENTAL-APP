@@ -605,6 +605,14 @@ export default function _layout() {
           header: ()=> <HomeHeader/>
         }}
       />
+
+      <Stack.Screen
+        name='Profile/chatBot'
+        options={{
+          header: ()=> <HomeHeader/>
+        }}
+      />
+
       
 
       <Stack.Screen
