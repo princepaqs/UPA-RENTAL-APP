@@ -464,7 +464,7 @@ const Explore = () => {
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
         }
       >
-          <View className='flex flex-col mb-10 flex-wrap'>
+          <View className='flex flex-col mb-28 flex-wrap'>
           {filteredProperties.length > 0 ? (
               filteredProperties.map((property) => (
                 <View key={`${property.ownerId}-${property.propertyId}-${property.tenantId}`} className='w-full p-2 space-y-1'>
