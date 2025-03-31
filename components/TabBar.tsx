@@ -4,9 +4,8 @@ import { View, TouchableOpacity, Dimensions, Pressable, Text } from 'react-nativ
 import { BottomTabBarProps } from "@react-navigation/bottom-tabs";
 import { AntDesign, Ionicons, MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
 import Animated, { useSharedValue, useAnimatedStyle, withTiming } from 'react-native-reanimated';
-import { collection, getDocs, doc, getDoc, query, where } from 'firebase/firestore';
-import { db, storage } from '../_dbconfig/dbconfig';
-import { getDownloadURL, ref } from "firebase/storage";
+import { doc, onSnapshot } from 'firebase/firestore';
+import { db } from '../_dbconfig/dbconfig';
 import * as SecureStore from 'expo-secure-store';
 
 type IconNames = 'Explore' | 'Favorite' | 'Find_Property' | 'My_Least' | 'Profile';
@@ -39,19 +38,24 @@ export function MyTabBar({ state, descriptors, navigation }: BottomTabBarProps) 
         const fetchAccountStatus = async () => {
             const uid = await SecureStore.getItemAsync('uid');
             if(uid){
-                const userRef = await getDoc(doc(db, 'users', uid))
-                if(userRef.exists()){
-                    const data = userRef.data()
-                    if(data){
-                        const accountStatus = data?.accountStatus || '';
+                const userRef = doc(db, 'users', uid);
+                const unsubscribe = onSnapshot(userRef, (doc) => {
+                    if (doc.exists()) {
+                        const data = doc.data();
+                        if (data) {
+                            const accountStatus = data.accountStatus || '';
                         setAccountStatus(accountStatus);
                     }
                 }
+                });
+
+                // Clean up listener
+                return () => unsubscribe();
             }
-        }
+        };
 
         fetchAccountStatus();
-    }, [])
+    }, []);
 
     return (
         <View>

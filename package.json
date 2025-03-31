@@ -17,6 +17,7 @@
   "dependencies": {
     "@babel/plugin-transform-template-literals": "^7.25.9",
     "@expo/vector-icons": "^14.0.2",
+    "@google/genai": "^0.7.0",
     "@react-native-community/datetimepicker": "^8.0.1",
     "@react-navigation/native": "^6.0.2",
     "expo": "^51.0.39",
