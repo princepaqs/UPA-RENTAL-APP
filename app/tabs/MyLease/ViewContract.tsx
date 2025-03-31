@@ -3,7 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { Feather, Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import * as FileSystem from 'expo-file-system';
-import * as Print from 'expo-print';
+// import * as Print from 'expo-print';
 import * as Sharing from 'expo-sharing'; // Import Sharing to share the file
 import { collection, getDocs, query, where, doc, getDoc, Timestamp } from 'firebase/firestore';
 import { db, storage } from '../../../_dbconfig/dbconfig';
